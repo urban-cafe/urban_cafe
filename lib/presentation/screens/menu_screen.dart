@@ -55,7 +55,7 @@ class _MenuScreenState extends State<MenuScreen> {
     final provider = context.watch<MenuProvider>();
     return Scaffold(
       appBar: AppBar(
-        title: const Text('UrbanCafe Menu'),
+        title: const Text(''),
         actions: [
           IconButton(
             icon: const Icon(Icons.admin_panel_settings),

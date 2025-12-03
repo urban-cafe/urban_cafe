@@ -15,7 +15,12 @@ class MainMenuScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 20),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
-        child: Text(label, style: Theme.of(context).textTheme.titleMedium),
+        child: Builder(
+          builder: (context) {
+            final cs = Theme.of(context).colorScheme;
+            return Text(label, style: Theme.of(context).textTheme.titleMedium?.copyWith(color: cs.onPrimary));
+          },
+        ),
       ),
     );
   }
@@ -25,30 +30,32 @@ class MainMenuScreen extends StatelessWidget {
     return Column(
       children: [
         Container(
-          width: 160,
-          height: 160,
-          decoration: BoxDecoration(color: cs.primary.withValues(alpha: 0.06), borderRadius: BorderRadius.circular(24)),
+          width: 250,
+          height: 250,
+          decoration: BoxDecoration(color: cs.primary.withValues(alpha: 0.00), borderRadius: BorderRadius.circular(24)),
           alignment: Alignment.center,
           child: Padding(
             padding: const EdgeInsets.all(12),
             child: Image.asset(
-              'assets/logo.png',
+              'assets/logos/urbancafelogo.png',
               fit: BoxFit.contain,
               errorBuilder: (context, error, stackTrace) => Icon(Icons.local_cafe, size: 80, color: cs.primary),
             ),
           ),
         ),
-        const SizedBox(height: 12),
-        Text('Urban Cafe', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w600)),
+        // const SizedBox(height: 12),
+        // Text('Urban Cafe', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w600)),
       ],
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Scaffold(
+      backgroundColor: cs.surfaceBright,
       appBar: AppBar(
-        title: const Text('UrbanCafe'),
+        title: const Text(''),
         actions: [
           IconButton(
             icon: const Icon(Icons.admin_panel_settings),
