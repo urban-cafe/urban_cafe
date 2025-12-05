@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:urban_cafe/presentation/providers/auth_provider.dart';
 
 class MainMenuScreen extends StatelessWidget {
@@ -53,7 +53,7 @@ class MainMenuScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: cs.surfaceBright,
+      backgroundColor: cs.surface,
       appBar: AppBar(
         title: const Text(''),
         actions: [

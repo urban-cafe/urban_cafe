@@ -1,8 +1,8 @@
 import 'dart:developer';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:urban_cafe/domain/entities/menu_item.dart';
 import 'package:urban_cafe/presentation/providers/admin_provider.dart';
 import 'package:urban_cafe/presentation/providers/menu_provider.dart';
@@ -98,7 +98,7 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               DropdownButtonFormField<String?>(
-                                value: _mainCat,
+                                initialValue: _mainCat,
                                 decoration: const InputDecoration(labelText: 'Main Category'),
                                 items: menu.mainCategories.map((c) => DropdownMenuItem<String?>(value: c, child: Text(c))).toList(),
                                 onChanged: (v) async {
@@ -124,7 +124,7 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
                               const SizedBox(height: 8),
                               if (_mainCat == 'COLD DRINKS')
                                 DropdownButtonFormField<String?>(
-                                  value: _subCat,
+                                  initialValue: _subCat,
                                   decoration: const InputDecoration(labelText: 'Sub Category'),
                                   items: context.watch<MenuProvider>().subCategories.map((c) => DropdownMenuItem<String?>(value: c, child: Text(c))).toList(),
                                   onChanged: (v) {
@@ -153,10 +153,12 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
                                     if (widget.id == null && widget.item == null) {
                                       final res = await admin.create(name: _nameCtrl.text.trim(), description: _descCtrl.text.trim().isEmpty ? null : _descCtrl.text.trim(), price: price, category: _category, isAvailable: _available, imageFile: _imageFile);
                                       log("Create menu item result: $res");
+                                      if (!context.mounted) return;
                                       if (res != null) Navigator.pop(context);
                                     } else {
                                       final id = widget.item?.id ?? widget.id!;
                                       final res = await admin.update(id: id, name: _nameCtrl.text.trim(), description: _descCtrl.text.trim().isEmpty ? null : _descCtrl.text.trim(), price: price, category: _category, isAvailable: _available, imageFile: _imageFile);
+                                      if (!context.mounted) return;
                                       if (res != null) Navigator.pop(context);
                                     }
                                   },

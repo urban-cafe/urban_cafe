@@ -1,10 +1,11 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:urban_cafe/core/theme.dart';
 import 'package:urban_cafe/presentation/providers/auth_provider.dart';
 import 'package:urban_cafe/presentation/providers/menu_provider.dart';
-import 'package:intl/intl.dart';
-import 'package:urban_cafe/core/theme.dart';
-import 'package:go_router/go_router.dart';
 
 class MenuScreen extends StatefulWidget {
   final String? initialMainCategory;
@@ -33,10 +34,11 @@ class _MenuScreenState extends State<MenuScreen> {
         menu.setCategory('Coffee');
       } else if (_mainCategory == 'COLD DRINKS') {
         menu.fetchSubCategories('COLD DRINKS').then((_) {
+          if (!context.mounted) return;
           setState(() {
             _subCategory = 'All';
           });
-          context.read<MenuProvider>().setCategories(context.read<MenuProvider>().subCategories);
+          menu.setCategories(menu.subCategories);
         });
       } else {
         menu.fetch();
@@ -136,7 +138,17 @@ class _MenuScreenState extends State<MenuScreen> {
                                     child: SizedBox(
                                       width: 90,
                                       height: 90,
-                                      child: item.imageUrl != null ? Image.network(item.imageUrl!, fit: BoxFit.contain) : Container(color: Colors.grey.shade200),
+                                      child: item.imageUrl != null
+                                          ? CachedNetworkImage(
+                                              imageUrl: item.imageUrl!,
+                                              fit: BoxFit.cover,
+                                              placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                                              errorWidget: (context, url, error) => Container(color: Colors.grey.shade300),
+                                              fadeInDuration: const Duration(milliseconds: 200),
+                                              memCacheWidth: 360,
+                                              memCacheHeight: 360,
+                                            )
+                                          : Container(color: Colors.grey.shade200),
                                     ),
                                   ),
                                   const SizedBox(width: 12),

@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
-import 'package:urban_cafe/domain/entities/menu_item.dart';
-import 'package:urban_cafe/core/theme.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:urban_cafe/core/theme.dart';
+import 'package:urban_cafe/domain/entities/menu_item.dart';
 
 class MenuDetailScreen extends StatelessWidget {
   final MenuItemEntity item;

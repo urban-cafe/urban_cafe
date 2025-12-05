@@ -24,7 +24,7 @@ class AppTheme {
 
   static ThemeData get theme => ThemeData(
     useMaterial3: true,
-    colorScheme: ColorScheme.fromSeed(seedColor: primary, brightness: Brightness.light, primary: primary, onPrimary: Colors.white, secondary: accent, onSecondary: Colors.white, background: neutralBg),
+    colorScheme: ColorScheme.fromSeed(seedColor: primary, brightness: Brightness.light, primary: primary, onPrimary: Colors.white, secondary: accent, onSecondary: Colors.white, surface: neutralBg),
     textTheme: GoogleFonts.openSansTextTheme(ThemeData.light().textTheme).apply(displayColor: const Color(0xFF4E3B2F), bodyColor: const Color(0xFF4E3B2F)),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
@@ -60,14 +60,12 @@ class AppTheme {
 
   static ThemeData get darkTheme => ThemeData(
     useMaterial3: true,
-    colorScheme: ColorScheme.fromSeed(seedColor: primary, brightness: Brightness.dark),
+    colorScheme: ColorScheme.fromSeed(seedColor: primary, brightness: Brightness.dark, primary: primary, onPrimary: Colors.white, secondary: accent, onSecondary: Colors.white, surface: const Color(0xFF1F1A17), onSurface: const Color(0xFFEDE3DD)),
     textTheme: GoogleFonts.openSansTextTheme(ThemeData.dark().textTheme).apply(displayColor: Colors.white, bodyColor: Colors.white),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(backgroundColor: primary, foregroundColor: Colors.white),
     ),
-    elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(backgroundColor: primary, foregroundColor: Colors.white),
-    ),
+    elevatedButtonTheme: const ElevatedButtonThemeData(style: ButtonStyle()),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         foregroundColor: accent,

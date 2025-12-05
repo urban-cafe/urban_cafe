@@ -1,4 +1,4 @@
-import '../repositories/menu_repository.dart';
+import 'package:urban_cafe/domain/repositories/menu_repository.dart';
 
 class GetCategories {
   final MenuRepository repository;

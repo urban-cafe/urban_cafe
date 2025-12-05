@@ -1,10 +1,10 @@
 import 'package:flutter/foundation.dart';
+import 'package:urban_cafe/data/repositories/menu_repository_impl.dart';
 import 'package:urban_cafe/domain/entities/menu_item.dart';
-import 'package:urban_cafe/domain/usecases/get_menu_items.dart';
 import 'package:urban_cafe/domain/usecases/get_categories.dart';
 import 'package:urban_cafe/domain/usecases/get_main_categories.dart';
+import 'package:urban_cafe/domain/usecases/get_menu_items.dart';
 import 'package:urban_cafe/domain/usecases/get_sub_categories.dart';
-import 'package:urban_cafe/data/repositories/menu_repository_impl.dart';
 
 class MenuProvider extends ChangeNotifier {
   final _getMenuItems = GetMenuItems(MenuRepositoryImpl());

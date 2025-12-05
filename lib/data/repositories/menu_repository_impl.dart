@@ -1,9 +1,9 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:urban_cafe/core/env.dart';
-import 'package:urban_cafe/domain/entities/menu_item.dart';
-import 'package:urban_cafe/domain/repositories/menu_repository.dart';
 import 'package:urban_cafe/data/datasources/supabase_client.dart';
 import 'package:urban_cafe/data/dtos/menu_item_dto.dart';
+import 'package:urban_cafe/domain/entities/menu_item.dart';
+import 'package:urban_cafe/domain/repositories/menu_repository.dart';
 
 class MenuRepositoryImpl implements MenuRepository {
   static const String table = 'menu_items';
@@ -70,7 +70,8 @@ class MenuRepositoryImpl implements MenuRepository {
     }
     try {
       final parent = await _client.from(categoriesTable).select('id').eq('name', parentName).limit(1);
-      final parentId = (parent as List<dynamic>).isNotEmpty ? (parent.first as Map<String, dynamic>)['id'] as dynamic : null;
+      final parentList = parent as List<dynamic>;
+      final parentId = parentList.isNotEmpty ? (parentList.first as Map<String, dynamic>)['id'] : null;
       if (parentId == null) return [];
       final data = await _client.from(categoriesTable).select('name,parent_id').eq('parent_id', parentId).order('name');
       return (data as List<dynamic>).map((e) => (e as Map<String, dynamic>)['name'] as String).toList();
@@ -85,7 +86,7 @@ class MenuRepositoryImpl implements MenuRepository {
       throw Exception('Supabase not configured');
     }
     final inserted = await _client.from(table).insert({'name': name, 'description': description, 'price': price, 'category': category, 'image_path': imagePath, 'image_url': imageUrl, 'is_available': isAvailable}).select().single();
-    return MenuItemDto.fromMap(inserted as Map<String, dynamic>).toEntity();
+    return MenuItemDto.fromMap(inserted).toEntity();
   }
 
   @override
@@ -94,7 +95,7 @@ class MenuRepositoryImpl implements MenuRepository {
       throw Exception('Supabase not configured');
     }
     final updated = await _client.from(table).update({if (name != null) 'name': name, if (description != null) 'description': description, if (price != null) 'price': price, if (category != null) 'category': category, if (isAvailable != null) 'is_available': isAvailable, if (imagePath != null) 'image_path': imagePath, if (imageUrl != null) 'image_url': imageUrl}).eq('id', id).select().single();
-    return MenuItemDto.fromMap(updated as Map<String, dynamic>).toEntity();
+    return MenuItemDto.fromMap(updated).toEntity();
   }
 
   @override

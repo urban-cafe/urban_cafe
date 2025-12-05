@@ -1,5 +1,5 @@
-import '../entities/menu_item.dart';
-import '../repositories/menu_repository.dart';
+import 'package:urban_cafe/domain/entities/menu_item.dart';
+import 'package:urban_cafe/domain/repositories/menu_repository.dart';
 
 class UpdateMenuItem {
   final MenuRepository repository;

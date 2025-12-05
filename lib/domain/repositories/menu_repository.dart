@@ -1,4 +1,4 @@
-import '../entities/menu_item.dart';
+import 'package:urban_cafe/domain/entities/menu_item.dart';
 
 abstract class MenuRepository {
   Future<List<MenuItemEntity>> getMenuItems({int page, int pageSize, String? search, String? category, List<String>? categories});

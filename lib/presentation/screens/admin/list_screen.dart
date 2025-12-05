@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:urban_cafe/presentation/providers/menu_provider.dart';
-import 'package:urban_cafe/presentation/providers/admin_provider.dart';
-import 'package:urban_cafe/presentation/widgets/admin_item_tile.dart';
-import 'package:urban_cafe/presentation/screens/admin/edit_screen.dart';
-import 'package:urban_cafe/presentation/providers/auth_provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:urban_cafe/presentation/providers/admin_provider.dart';
+import 'package:urban_cafe/presentation/providers/auth_provider.dart';
+import 'package:urban_cafe/presentation/providers/menu_provider.dart';
+import 'package:urban_cafe/presentation/widgets/admin_item_tile.dart';
 
 class AdminListScreen extends StatefulWidget {
   const AdminListScreen({super.key});
@@ -50,6 +49,7 @@ class _AdminListScreenState extends State<AdminListScreen> {
             onPressed: () async {
               final auth = context.read<AuthProvider>();
               await auth.signOut();
+              if (!context.mounted) return;
               context.go('/admin/login');
             },
           ),
@@ -57,8 +57,10 @@ class _AdminListScreenState extends State<AdminListScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
+          final menuProv = context.read<MenuProvider>();
           await context.push('/admin/edit');
-          await context.read<MenuProvider>().fetch();
+          if (!context.mounted) return;
+          await menuProv.fetch();
         },
         child: const Icon(Icons.add),
       ),
@@ -84,16 +86,21 @@ class _AdminListScreenState extends State<AdminListScreen> {
                   : ListView.separated(
                       controller: _scrollCtrl,
                       itemCount: menu.items.length,
-                      separatorBuilder: (_, __) => const Divider(height: 1),
+                      separatorBuilder: (context, _) => const Divider(height: 1),
                       itemBuilder: (context, index) {
                         final item = menu.items[index];
                         return AdminItemTile(
                           item: item,
                           onEdit: () async {
+                            final menuProv = context.read<MenuProvider>();
                             await context.push('/admin/edit', extra: item);
-                            await context.read<MenuProvider>().fetch();
+                            if (!context.mounted) return;
+                            await menuProv.fetch();
                           },
                           onDelete: () async {
+                            final adminProv = context.read<AdminProvider>();
+                            final menuProv = context.read<MenuProvider>();
+                            final messenger = ScaffoldMessenger.of(context);
                             final confirm = await showDialog<bool>(
                               context: context,
                               builder: (ctx) => AlertDialog(
@@ -106,10 +113,11 @@ class _AdminListScreenState extends State<AdminListScreen> {
                               ),
                             );
                             if (confirm == true) {
-                              final ok = await context.read<AdminProvider>().delete(item.id);
+                              final ok = await adminProv.delete(item.id);
+                              if (!context.mounted) return;
                               if (ok) {
-                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Deleted')));
-                                await context.read<MenuProvider>().fetch();
+                                messenger.showSnackBar(const SnackBar(content: Text('Deleted')));
+                                await menuProv.fetch();
                               }
                             }
                           },

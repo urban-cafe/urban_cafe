@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:urban_cafe/domain/entities/menu_item.dart';
 import 'package:urban_cafe/core/theme.dart';
+import 'package:urban_cafe/domain/entities/menu_item.dart';
 
 class MenuCard extends StatelessWidget {
   final MenuItemEntity item;
@@ -28,8 +28,11 @@ class MenuCard extends StatelessWidget {
                         imageUrl: item.imageUrl!,
                         fit: BoxFit.cover,
                         width: double.infinity,
-                        placeholder: (context, url) => Container(color: Colors.grey.shade200),
+                        placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
                         errorWidget: (context, url, error) => Container(color: Colors.grey.shade300),
+                        fadeInDuration: const Duration(milliseconds: 200),
+                        memCacheWidth: 600,
+                        memCacheHeight: 450,
                       )
                     : Container(color: Colors.grey.shade200),
               ),
