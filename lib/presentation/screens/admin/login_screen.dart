@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:urban_cafe/presentation/providers/auth_provider.dart';
+import 'package:go_router/go_router.dart';
 
 class AdminLoginScreen extends StatefulWidget {
   const AdminLoginScreen({super.key});
@@ -44,7 +45,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                       ? null
                       : () async {
                           final ok = await auth.signIn(_emailCtrl.text.trim(), _passCtrl.text);
-                          if (ok) Navigator.pop(context);
+                          if (ok) context.pop();
                         },
                   child: auth.loading ? const CircularProgressIndicator() : const Text('Sign In'),
                 ),

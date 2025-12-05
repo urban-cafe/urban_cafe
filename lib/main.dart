@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
+import 'package:urban_cafe/presentation/screens/admin/edit_screen.dart';
+import 'package:urban_cafe/presentation/screens/menu_detail_screen.dart';
 import 'core/theme.dart';
+import 'package:go_router/go_router.dart';
+import 'domain/entities/menu_item.dart';
 import 'core/env.dart';
 import 'data/datasources/supabase_client.dart';
 import 'presentation/screens/menu_screen.dart';
@@ -29,13 +33,32 @@ class UrbanCafeApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final router = GoRouter(
+      routes: [
+        GoRoute(path: '/', builder: (_, __) => const MainMenuScreen()),
+        GoRoute(
+          path: '/menu',
+          builder: (ctx, state) => MenuScreen(initialMainCategory: state.uri.queryParameters['initialMainCategory']),
+        ),
+        GoRoute(path: '/admin/login', builder: (_, __) => const AdminLoginScreen()),
+        GoRoute(path: '/admin', builder: (_, __) => const AdminListScreen()),
+        GoRoute(
+          path: '/detail',
+          builder: (ctx, state) => MenuDetailScreen(item: state.extra as MenuItemEntity),
+        ),
+        GoRoute(
+          path: '/admin/edit',
+          builder: (ctx, state) => AdminEditScreen(id: state.uri.queryParameters['id'], item: state.extra as MenuItemEntity?),
+        ),
+      ],
+    );
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => MenuProvider()),
         ChangeNotifierProvider(create: (_) => AdminProvider()),
       ],
-      child: MaterialApp(title: 'UrbanCafe', theme: AppTheme.theme, debugShowCheckedModeBanner: false, routes: {'/': (_) => const MainMenuScreen(), '/menu': (_) => const MenuScreen(), '/admin/login': (_) => const AdminLoginScreen(), '/admin': (_) => const AdminListScreen()}),
+      child: MaterialApp.router(title: 'UrbanCafe', theme: AppTheme.theme, darkTheme: AppTheme.darkTheme, themeMode: ThemeMode.system, debugShowCheckedModeBanner: false, routerConfig: router),
     );
   }
 }

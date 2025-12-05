@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:urban_cafe/domain/entities/menu_item.dart';
+import 'package:urban_cafe/core/theme.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
 
@@ -34,7 +35,12 @@ class MenuDetailScreen extends StatelessWidget {
                 const SizedBox(width: 6),
                 Text(item.category ?? 'Other'),
                 const Spacer(),
-                Icon(item.isAvailable ? Icons.check_circle : Icons.cancel, color: item.isAvailable ? Colors.green : Colors.red),
+                Builder(
+                  builder: (context) {
+                    final brand = Theme.of(context).extension<BrandColors>()!;
+                    return Icon(item.isAvailable ? Icons.check_circle : Icons.cancel, color: item.isAvailable ? brand.success : brand.danger);
+                  },
+                ),
                 const SizedBox(width: 6),
                 Text(item.isAvailable ? 'Available' : 'Unavailable'),
               ],

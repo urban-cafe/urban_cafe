@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:urban_cafe/presentation/screens/menu_screen.dart';
+import 'package:go_router/go_router.dart';
 import 'package:urban_cafe/presentation/providers/auth_provider.dart';
 
 class MainMenuScreen extends StatelessWidget {
@@ -63,13 +63,13 @@ class MainMenuScreen extends StatelessWidget {
             onPressed: () {
               final auth = context.read<AuthProvider>();
               if (!auth.isConfigured) {
-                Navigator.pushNamed(context, '/admin/login');
+                context.go('/admin/login');
                 return;
               }
               if (auth.isLoggedIn) {
-                Navigator.pushNamed(context, '/admin');
+                context.go('/admin');
               } else {
-                Navigator.pushNamed(context, '/admin/login');
+                context.go('/admin/login');
               }
             },
           ),
@@ -85,16 +85,7 @@ class MainMenuScreen extends StatelessWidget {
               _logoHeader(context),
               const SizedBox(height: 24),
               Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _bigButton(context, 'HOT DRINKS', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MenuScreen(initialMainCategory: 'HOT DRINKS')))),
-                    const SizedBox(height: 16),
-                    _bigButton(context, 'COLD DRINKS', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MenuScreen(initialMainCategory: 'COLD DRINKS')))),
-                    const SizedBox(height: 16),
-                    _bigButton(context, 'FOOD', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MenuScreen(initialMainCategory: 'FOOD')))),
-                  ],
-                ),
+                child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [_bigButton(context, 'HOT DRINKS', () => context.push('/menu?initialMainCategory=HOT%20DRINKS')), const SizedBox(height: 16), _bigButton(context, 'COLD DRINKS', () => context.push('/menu?initialMainCategory=COLD%20DRINKS')), const SizedBox(height: 16), _bigButton(context, 'FOOD', () => context.push('/menu?initialMainCategory=FOOD'))]),
               ),
             ],
           ),

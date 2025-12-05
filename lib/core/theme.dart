@@ -1,4 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+@immutable
+class BrandColors extends ThemeExtension<BrandColors> {
+  const BrandColors({required this.success, required this.danger});
+  final Color success;
+  final Color danger;
+
+  @override
+  BrandColors copyWith({Color? success, Color? danger}) => BrandColors(success: success ?? this.success, danger: danger ?? this.danger);
+
+  @override
+  ThemeExtension<BrandColors> lerp(ThemeExtension<BrandColors>? other, double t) {
+    if (other is! BrandColors) return this;
+    return BrandColors(success: Color.lerp(success, other.success, t)!, danger: Color.lerp(danger, other.danger, t)!);
+  }
+}
 
 class AppTheme {
   static const Color primary = Color(0xFF8B5E3C);
@@ -8,7 +25,7 @@ class AppTheme {
   static ThemeData get theme => ThemeData(
     useMaterial3: true,
     colorScheme: ColorScheme.fromSeed(seedColor: primary, brightness: Brightness.light, primary: primary, onPrimary: Colors.white, secondary: accent, onSecondary: Colors.white, background: neutralBg),
-    textTheme: Typography.blackCupertino.apply(displayColor: const Color(0xFF4E3B2F), bodyColor: const Color(0xFF4E3B2F)),
+    textTheme: GoogleFonts.openSansTextTheme(ThemeData.light().textTheme).apply(displayColor: const Color(0xFF4E3B2F), bodyColor: const Color(0xFF4E3B2F)),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
         backgroundColor: primary,
@@ -38,5 +55,25 @@ class AppTheme {
     ),
     scaffoldBackgroundColor: neutralBg,
     visualDensity: VisualDensity.adaptivePlatformDensity,
+    extensions: const <ThemeExtension<dynamic>>[BrandColors(success: Color(0xFF2E7D32), danger: Color(0xFFC62828))],
+  );
+
+  static ThemeData get darkTheme => ThemeData(
+    useMaterial3: true,
+    colorScheme: ColorScheme.fromSeed(seedColor: primary, brightness: Brightness.dark),
+    textTheme: GoogleFonts.openSansTextTheme(ThemeData.dark().textTheme).apply(displayColor: Colors.white, bodyColor: Colors.white),
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(backgroundColor: primary, foregroundColor: Colors.white),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(backgroundColor: primary, foregroundColor: Colors.white),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: accent,
+        side: const BorderSide(color: accent),
+      ),
+    ),
+    extensions: const <ThemeExtension<dynamic>>[BrandColors(success: Color(0xFF81C784), danger: Color(0xFFE57373))],
   );
 }

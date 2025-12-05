@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
 import 'package:urban_cafe/domain/entities/menu_item.dart';
+import 'package:urban_cafe/core/theme.dart';
 
 class MenuCard extends StatelessWidget {
   final MenuItemEntity item;
@@ -58,7 +59,12 @@ class MenuCard extends StatelessWidget {
                     children: [
                       Text(priceFormat.format(item.price), style: Theme.of(context).textTheme.titleSmall),
                       const Spacer(),
-                      Icon(item.isAvailable ? Icons.check_circle : Icons.cancel, color: item.isAvailable ? Colors.green : Colors.red, size: 18),
+                      Builder(
+                        builder: (context) {
+                          final brand = Theme.of(context).extension<BrandColors>()!;
+                          return Icon(item.isAvailable ? Icons.check_circle : Icons.cancel, color: item.isAvailable ? brand.success : brand.danger, size: 18);
+                        },
+                      ),
                     ],
                   ),
                 ],

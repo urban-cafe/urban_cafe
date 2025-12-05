@@ -4,8 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:urban_cafe/domain/entities/menu_item.dart';
-import '../../providers/admin_provider.dart';
-import '../../providers/menu_provider.dart';
+import 'package:urban_cafe/presentation/providers/admin_provider.dart';
+import 'package:urban_cafe/presentation/providers/menu_provider.dart';
 
 class AdminEditScreen extends StatefulWidget {
   final String? id;

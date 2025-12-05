@@ -5,6 +5,7 @@ import 'package:urban_cafe/presentation/providers/admin_provider.dart';
 import 'package:urban_cafe/presentation/widgets/admin_item_tile.dart';
 import 'package:urban_cafe/presentation/screens/admin/edit_screen.dart';
 import 'package:urban_cafe/presentation/providers/auth_provider.dart';
+import 'package:go_router/go_router.dart';
 
 class AdminListScreen extends StatefulWidget {
   const AdminListScreen({super.key});
@@ -23,7 +24,7 @@ class _AdminListScreenState extends State<AdminListScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final auth = context.read<AuthProvider>();
       if (!auth.isConfigured || !auth.isLoggedIn) {
-        Navigator.pushNamed(context, '/admin/login');
+        context.go('/admin/login');
         return;
       }
       context.read<MenuProvider>().fetch();
@@ -48,16 +49,15 @@ class _AdminListScreenState extends State<AdminListScreen> {
             tooltip: 'Log out',
             onPressed: () async {
               final auth = context.read<AuthProvider>();
-              final navigator = Navigator.of(context);
               await auth.signOut();
-              navigator.pushReplacementNamed('/admin/login');
+              context.go('/admin/login');
             },
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          await Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminEditScreen()));
+          await context.push('/admin/edit');
           await context.read<MenuProvider>().fetch();
         },
         child: const Icon(Icons.add),
@@ -90,12 +90,7 @@ class _AdminListScreenState extends State<AdminListScreen> {
                         return AdminItemTile(
                           item: item,
                           onEdit: () async {
-                            await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => AdminEditScreen(id: item.id, item: item),
-                              ),
-                            );
+                            await context.push('/admin/edit', extra: item);
                             await context.read<MenuProvider>().fetch();
                           },
                           onDelete: () async {

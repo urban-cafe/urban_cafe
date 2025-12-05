@@ -1,5 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../core/env.dart';
+import 'package:urban_cafe/core/env.dart';
 
 class SupabaseClientProvider {
   static SupabaseClient? _client;

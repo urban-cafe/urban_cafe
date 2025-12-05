@@ -1,4 +1,4 @@
-import '../../domain/entities/menu_item.dart';
+import 'package:urban_cafe/domain/entities/menu_item.dart';
 
 class MenuItemDto {
   final String id;

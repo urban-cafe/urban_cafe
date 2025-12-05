@@ -35,7 +35,8 @@ jobs:
           flutter build web --release \
             --dart-define=SUPABASE_URL=${SUPABASE_URL} \
             --dart-define=SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY} \
-            --base-href "/urban_cafe/"
+            --base-href "/urban_cafe/" \
+            --wasm
           cp web/404.html build/web/404.html
 
       - name: Upload Pages Artifact

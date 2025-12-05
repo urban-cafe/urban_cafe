@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../domain/entities/menu_item.dart';
+import 'package:urban_cafe/domain/entities/menu_item.dart';
 
 class AdminItemTile extends StatelessWidget {
   final MenuItemEntity item;

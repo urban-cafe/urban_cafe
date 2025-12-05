@@ -1,9 +1,9 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../core/env.dart';
-import '../../domain/entities/menu_item.dart';
-import '../../domain/repositories/menu_repository.dart';
-import '../datasources/supabase_client.dart';
-import '../dtos/menu_item_dto.dart';
+import 'package:urban_cafe/core/env.dart';
+import 'package:urban_cafe/domain/entities/menu_item.dart';
+import 'package:urban_cafe/domain/repositories/menu_repository.dart';
+import 'package:urban_cafe/data/datasources/supabase_client.dart';
+import 'package:urban_cafe/data/dtos/menu_item_dto.dart';
 
 class MenuRepositoryImpl implements MenuRepository {
   static const String table = 'menu_items';

@@ -3,7 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:urban_cafe/presentation/providers/auth_provider.dart';
 import 'package:urban_cafe/presentation/providers/menu_provider.dart';
 import 'package:intl/intl.dart';
-import 'package:urban_cafe/presentation/screens/menu_detail_screen.dart';
+import 'package:urban_cafe/core/theme.dart';
+import 'package:go_router/go_router.dart';
 
 class MenuScreen extends StatefulWidget {
   final String? initialMainCategory;
@@ -63,13 +64,13 @@ class _MenuScreenState extends State<MenuScreen> {
             onPressed: () {
               final auth = context.read<AuthProvider>();
               if (!auth.isConfigured) {
-                Navigator.pushNamed(context, '/admin/login');
+                context.go('/admin/login');
                 return;
               }
               if (auth.isLoggedIn) {
-                Navigator.pushNamed(context, '/admin');
+                context.go('/admin');
               } else {
-                Navigator.pushNamed(context, '/admin/login');
+                context.go('/admin/login');
               }
             },
           ),
@@ -122,7 +123,7 @@ class _MenuScreenState extends State<MenuScreen> {
                         final item = provider.items[index];
                         final priceFormat = NumberFormat.currency(symbol: '', decimalDigits: 0);
                         return InkWell(
-                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (ctx) => MenuDetailScreen(item: item))),
+                          onTap: () => context.push('/detail', extra: item),
                           child: Card(
                             elevation: 0,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -149,7 +150,12 @@ class _MenuScreenState extends State<MenuScreen> {
                                           children: [
                                             Text(priceFormat.format(item.price), style: Theme.of(context).textTheme.titleSmall),
                                             const Spacer(),
-                                            Icon(item.isAvailable ? Icons.check_circle : Icons.cancel, color: item.isAvailable ? Colors.green : Colors.red, size: 20),
+                                            Builder(
+                                              builder: (context) {
+                                                final brand = Theme.of(context).extension<BrandColors>()!;
+                                                return Icon(item.isAvailable ? Icons.check_circle : Icons.cancel, color: item.isAvailable ? brand.success : brand.danger, size: 20);
+                                              },
+                                            ),
                                           ],
                                         ),
                                       ],
