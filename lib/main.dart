@@ -10,6 +10,7 @@ import 'package:urban_cafe/domain/entities/menu_item.dart';
 import 'package:urban_cafe/presentation/providers/admin_provider.dart';
 import 'package:urban_cafe/presentation/providers/auth_provider.dart';
 import 'package:urban_cafe/presentation/providers/menu_provider.dart';
+import 'package:urban_cafe/presentation/providers/theme_provider.dart';
 import 'package:urban_cafe/presentation/screens/admin/edit_screen.dart';
 import 'package:urban_cafe/presentation/screens/admin/list_screen.dart';
 import 'package:urban_cafe/presentation/screens/admin/login_screen.dart';
@@ -57,8 +58,20 @@ class UrbanCafeApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => MenuProvider()),
         ChangeNotifierProvider(create: (_) => AdminProvider()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
       ],
-      child: MaterialApp.router(title: 'UrbanCafe', theme: AppTheme.theme, darkTheme: AppTheme.darkTheme, themeMode: ThemeMode.system, debugShowCheckedModeBanner: false, routerConfig: router),
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, child) {
+          return MaterialApp.router(
+            title: 'UrbanCafe',
+            theme: AppTheme.theme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: themeProvider.themeMode, // Use the provider's mode
+            debugShowCheckedModeBanner: false,
+            routerConfig: router,
+          );
+        },
+      ),
     );
   }
 }

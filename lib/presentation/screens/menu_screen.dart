@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -47,15 +48,14 @@ class _MenuScreenState extends State<MenuScreen> {
     _searchCtrl.dispose();
     _scrollCtrl.dispose();
     menuProvider.resetSearch("");
+    log("Menu Lists Dispose");
     super.dispose();
   }
 
-  // Fake items for initial full-screen loading
   List<MenuItemEntity> get _loadingItems {
     return List.generate(8, (index) => _dummyItem);
   }
 
-  // Single fake item for bottom loader
   MenuItemEntity get _dummyItem => MenuItemEntity(id: 'dummy', name: 'Loading Item Name ...', description: 'Loading delicious food description ...', price: 0, categoryId: null, categoryName: 'Category', imagePath: null, imageUrl: null, isAvailable: true, createdAt: DateTime.now(), updatedAt: DateTime.now());
 
   void _showCategorySelector(BuildContext context) {
@@ -68,6 +68,8 @@ class _MenuScreenState extends State<MenuScreen> {
       isScrollControlled: true,
       useSafeArea: true,
       backgroundColor: colorScheme.surface,
+      // RESPONSIVE FIX: Limit width on large screens
+      constraints: const BoxConstraints(maxWidth: 600),
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (ctx) {
         return ConstrainedBox(
@@ -188,96 +190,98 @@ class _MenuScreenState extends State<MenuScreen> {
           scrolledUnderElevation: 0,
           backgroundColor: colorScheme.surface,
         ),
-        body: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  if (provider.subCategories.isNotEmpty)
-                    InkWell(
-                      onTap: () => _showCategorySelector(context),
-                      borderRadius: BorderRadius.circular(20),
-                      child: Container(
-                        margin: const EdgeInsets.only(right: 12),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: colorScheme.surfaceContainer,
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
+        // RESPONSIVE FIX: Center and constrain width for large screens
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      if (provider.subCategories.isNotEmpty)
+                        InkWell(
+                          onTap: () => _showCategorySelector(context),
+                          borderRadius: BorderRadius.circular(20),
+                          child: Container(
+                            margin: const EdgeInsets.only(right: 12),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: colorScheme.surfaceContainer,
+                              borderRadius: BorderRadius.circular(24),
+                              border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(_selectedSubName, style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+                                const SizedBox(width: 4),
+                                Icon(Icons.keyboard_arrow_down, size: 18, color: colorScheme.onSurfaceVariant),
+                              ],
+                            ),
+                          ),
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(_selectedSubName, style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
-                            const SizedBox(width: 4),
-                            Icon(Icons.keyboard_arrow_down, size: 18, color: colorScheme.onSurfaceVariant),
-                          ],
-                        ),
-                      ),
-                    ),
 
-                  Expanded(
-                    child: Container(
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: colorScheme.surface,
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: colorScheme.outlineVariant),
+                      Expanded(
+                        child: Container(
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: colorScheme.surface,
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(color: colorScheme.outlineVariant),
+                          ),
+                          child: TextField(
+                            controller: _searchCtrl,
+                            textAlignVertical: TextAlignVertical.center,
+                            decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Search', border: InputBorder.none, contentPadding: EdgeInsets.symmetric(horizontal: 16), isDense: true),
+                            onChanged: (v) => provider.setSearch(v),
+                            onSubmitted: (v) => FocusScope.of(context).unfocus(),
+                          ),
+                        ),
                       ),
-                      child: TextField(
-                        controller: _searchCtrl,
-                        textAlignVertical: TextAlignVertical.center,
-                        decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Search', border: InputBorder.none, contentPadding: EdgeInsets.symmetric(horizontal: 16), isDense: true),
-                        onChanged: (v) => provider.setSearch(v),
-                        onSubmitted: (v) => FocusScope.of(context).unfocus(),
-                      ),
-                    ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+
+                Expanded(
+                  child: Skeletonizer(
+                    enabled: isLoadingInitial,
+                    effect: ShimmerEffect(baseColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5), highlightColor: colorScheme.surface),
+                    child: provider.items.isEmpty && !isLoadingInitial
+                        ? const Center(child: Text('No items found'))
+                        : ListView.separated(
+                            controller: _scrollCtrl,
+                            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                            padding: const EdgeInsets.only(bottom: 16),
+                            itemCount: displayItems.length + (provider.loadingMore ? 1 : 0),
+                            separatorBuilder: (_, _) => Divider(height: 1, thickness: 1, indent: 16, endIndent: 16, color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
+                            itemBuilder: (context, index) {
+                              if (index == displayItems.length) {
+                                return Skeletonizer(
+                                  enabled: true,
+                                  effect: ShimmerEffect(baseColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5), highlightColor: colorScheme.surface),
+                                  child: MenuCard(item: _dummyItem, onTap: null),
+                                );
+                              }
+
+                              final item = displayItems[index];
+                              return MenuCard(
+                                item: item,
+                                onTap: isLoadingInitial
+                                    ? null
+                                    : () {
+                                        FocusScope.of(context).unfocus();
+                                        context.push('/detail', extra: item);
+                                      },
+                              );
+                            },
+                          ),
+                  ),
+                ),
+              ],
             ),
-
-            Expanded(
-              // Wrap the ListView in Skeletonizer for initial load
-              child: Skeletonizer(
-                enabled: isLoadingInitial,
-                effect: ShimmerEffect(baseColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5), highlightColor: colorScheme.surface),
-                child: provider.items.isEmpty && !isLoadingInitial
-                    ? const Center(child: Text('No items found'))
-                    : ListView.separated(
-                        controller: _scrollCtrl,
-                        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-                        padding: const EdgeInsets.only(bottom: 16),
-                        // Count includes real items + 1 dummy item if loading more
-                        itemCount: displayItems.length + (provider.loadingMore ? 1 : 0),
-                        separatorBuilder: (_, _) => Divider(height: 1, thickness: 1, indent: 16, endIndent: 16, color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
-                        itemBuilder: (context, index) {
-                          // REPLACED: CircularProgressIndicator with Skeletonizer MenuCard
-                          if (index == displayItems.length) {
-                            return Skeletonizer(
-                              enabled: true,
-                              effect: ShimmerEffect(baseColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5), highlightColor: colorScheme.surface),
-                              child: MenuCard(item: _dummyItem, onTap: null),
-                            );
-                          }
-
-                          final item = displayItems[index];
-
-                          return MenuCard(
-                            item: item,
-                            onTap: isLoadingInitial
-                                ? null
-                                : () {
-                                    FocusScope.of(context).unfocus();
-                                    context.push('/detail', extra: item);
-                                  },
-                          );
-                        },
-                      ),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

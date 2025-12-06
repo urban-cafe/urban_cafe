@@ -1,74 +1,100 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:urban_cafe/presentation/providers/auth_provider.dart';
+import 'package:urban_cafe/presentation/providers/theme_provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class MainMenuScreen extends StatelessWidget {
   const MainMenuScreen({super.key});
 
-  Widget _bigButton(BuildContext context, String label, VoidCallback onTap) {
-    final cs = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+  Widget _socialButton(BuildContext context, IconData icon, String url) {
+    final colorScheme = Theme.of(context).colorScheme;
 
-    return SizedBox(
-      width: double.infinity,
-      child: FilledButton(
-        onPressed: onTap,
-        style: FilledButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 20),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          // Dark Mode Adjustment:
-          // Use 'secondaryContainer' (muted/pastel) in Dark Mode.
-          // Use 'primary' (vibrant) in Light Mode.
-          backgroundColor: isDark ? cs.secondaryContainer : cs.primary,
-          foregroundColor: isDark ? cs.onSecondaryContainer : cs.onPrimary,
-          elevation: isDark ? 0 : 2, // Remove shadow in dark mode for a flat look
-        ),
-        child: Text(
-          label,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-            // Ensure text color matches the background contrast
-            color: isDark ? cs.onSecondaryContainer : cs.onPrimary,
+    return IconButton(
+      onPressed: () async {
+        final uri = Uri.parse(url);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        }
+      },
+      icon: FaIcon(icon, size: 22),
+      style: IconButton.styleFrom(
+        foregroundColor: colorScheme.primary,
+        side: BorderSide(color: colorScheme.outlineVariant),
+        padding: const EdgeInsets.all(12),
+      ),
+    );
+  }
+
+  Widget _menuButton(BuildContext context, {required String label, required IconData icon, required VoidCallback onTap}) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          width: double.infinity,
+          height: 68, // REDUCED: Smaller height for a cleaner look (was 80)
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          decoration: BoxDecoration(
+            color: isDark ? colorScheme.secondaryContainer : colorScheme.primary,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [if (!isDark) BoxShadow(color: colorScheme.primary.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 4))],
+          ),
+          child: Row(
+            children: [
+              Icon(
+                icon,
+                size: 28, // Slightly smaller icon to match new height
+                color: isDark ? colorScheme.onSecondaryContainer : colorScheme.onPrimary,
+              ),
+              const SizedBox(width: 20),
+              Text(
+                label,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.0,
+                  fontSize: 18, // Adjusted font size slightly
+                  color: isDark ? colorScheme.onSecondaryContainer : colorScheme.onPrimary,
+                ),
+              ),
+              const Spacer(),
+              Icon(Icons.arrow_forward_ios_rounded, size: 18, color: (isDark ? colorScheme.onSecondaryContainer : colorScheme.onPrimary).withValues(alpha: 0.5)),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _logoHeader(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Column(
-      children: [
-        Container(
-          width: 250,
-          height: 250,
-          decoration: BoxDecoration(color: cs.primary.withValues(alpha: 0.00), borderRadius: BorderRadius.circular(24)),
-          alignment: Alignment.center,
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Image.asset(
-              'assets/logos/urbancafelogo.png',
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) => Icon(Icons.local_cafe, size: 80, color: cs.primary),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        title: const Text(''),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode, color: colorScheme.onSurface),
+          tooltip: 'Toggle Theme',
+          onPressed: () {
+            context.read<ThemeProvider>().toggleTheme();
+          },
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.admin_panel_settings),
-            tooltip: 'Admin',
+            icon: Icon(Icons.admin_panel_settings_outlined, color: colorScheme.onSurface),
+            tooltip: 'Admin Area',
             onPressed: () {
               final auth = context.read<AuthProvider>();
               if (!auth.isConfigured) {
@@ -84,19 +110,43 @@ class MainMenuScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(height: 32),
-              _logoHeader(context),
-              const SizedBox(height: 24),
-              Expanded(
-                child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [_bigButton(context, 'HOT DRINKS', () => context.push('/menu?initialMainCategory=HOT%20DRINKS')), const SizedBox(height: 16), _bigButton(context, 'COLD DRINKS', () => context.push('/menu?initialMainCategory=COLD%20DRINKS')), const SizedBox(height: 16), _bigButton(context, 'FOOD', () => context.push('/menu?initialMainCategory=FOOD'))]),
-              ),
-            ],
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 500),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Spacer(flex: 1),
+
+                Hero(
+                  tag: 'app_logo',
+                  child: Image.asset(
+                    'assets/logos/urbancafelogo.png',
+                    height: 220,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) => Icon(Icons.local_cafe, size: 100, color: colorScheme.primary),
+                  ),
+                ),
+
+                const SizedBox(height: 48),
+
+                _menuButton(context, label: 'HOT DRINKS', icon: Icons.local_cafe_rounded, onTap: () => context.push('/menu?initialMainCategory=HOT%20DRINKS')),
+                _menuButton(context, label: 'COLD DRINKS', icon: Icons.local_drink_rounded, onTap: () => context.push('/menu?initialMainCategory=COLD%20DRINKS')),
+                _menuButton(context, label: 'FOOD', icon: Icons.restaurant_menu_rounded, onTap: () => context.push('/menu?initialMainCategory=FOOD')),
+
+                const Spacer(flex: 2),
+
+                Text(
+                  "Follow Us",
+                  style: theme.textTheme.labelLarge?.copyWith(color: colorScheme.onSurfaceVariant, fontWeight: FontWeight.bold, letterSpacing: 1.5, fontFamily: 'Playfair Display'),
+                ),
+                const SizedBox(height: 16),
+                Row(mainAxisAlignment: MainAxisAlignment.center, children: [_socialButton(context, FontAwesomeIcons.tiktok, 'https://www.tiktok.com/@urbantea.mm?_r=1&_t=ZS-9206DYuBDJQ'), const SizedBox(width: 16), _socialButton(context, FontAwesomeIcons.facebookF, 'https://www.facebook.com/urbantea915?mibextid=wwXIfr'), const SizedBox(width: 16), _socialButton(context, FontAwesomeIcons.instagram, 'https://www.facebook.com/urbantea915?mibextid=wwXIfr')]),
+                const SizedBox(height: 32),
+              ],
+            ),
           ),
         ),
       ),
