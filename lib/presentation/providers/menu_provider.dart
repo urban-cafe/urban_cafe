@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:urban_cafe/data/repositories/menu_repository_impl.dart';
@@ -75,6 +73,17 @@ class MenuProvider extends ChangeNotifier {
     }
   }
 
+  // NEW: Fetch all categories for Admin Filter
+  Future<void> loadCategoriesForAdminFilter() async {
+    try {
+      final allCats = await _repo.getAllCategories();
+      subCategories = allCats.map((e) => CategoryObj(e['id'], e['name'])).toList();
+      notifyListeners();
+    } catch (e) {
+      debugPrint("Error loading admin categories: $e");
+    }
+  }
+
   void filterBySubCategory(String? categoryId) {
     if (categoryId == null) {
       _currentCategoryId = null;
@@ -125,7 +134,7 @@ class MenuProvider extends ChangeNotifier {
       }
 
       hasMore = result.length == _pageSize;
-      if (!reset) _page++;
+      if (hasMore) _page++;
     } catch (e) {
       error = e.toString();
     } finally {

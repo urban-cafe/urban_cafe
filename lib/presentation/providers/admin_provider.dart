@@ -43,6 +43,21 @@ class AdminProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> renameCategory(String id, String newName) async {
+    loading = true;
+    notifyListeners();
+    try {
+      await _repo.updateCategory(id, newName);
+      return true;
+    } catch (e) {
+      error = e.toString();
+      return false;
+    } finally {
+      loading = false;
+      notifyListeners();
+    }
+  }
+
   Future<bool> create({required String name, String? description, required double price, String? categoryId, bool isAvailable = true, PlatformFile? imageFile}) async {
     loading = true;
     error = null;

@@ -13,7 +13,9 @@ abstract class MenuRepository {
   // Category Management
   Future<List<Map<String, dynamic>>> getMainCategories(); // Returns [{id, name}, ...]
   Future<List<Map<String, dynamic>>> getSubCategories(String parentId);
+  Future<List<Map<String, dynamic>>> getAllCategories();
   Future<String> createCategory(String name, {String? parentId});
+  Future<void> updateCategory(String id, String newName);
 
   // CRUD
   Future<MenuItemEntity> createMenuItem({

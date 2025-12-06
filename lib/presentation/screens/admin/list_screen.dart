@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:skeletonizer/skeletonizer.dart'; // Import Skeletonizer
+import 'package:urban_cafe/domain/entities/menu_item.dart'; // Import Entity for Dummy Data
 import 'package:urban_cafe/presentation/providers/admin_provider.dart';
 import 'package:urban_cafe/presentation/providers/auth_provider.dart';
 import 'package:urban_cafe/presentation/providers/menu_provider.dart';
+import 'package:urban_cafe/presentation/screens/admin/category_manager_screen.dart';
 import 'package:urban_cafe/presentation/widgets/admin_item_tile.dart';
 
 class AdminListScreen extends StatefulWidget {
@@ -16,6 +19,7 @@ class AdminListScreen extends StatefulWidget {
 class _AdminListScreenState extends State<AdminListScreen> {
   final _searchCtrl = TextEditingController();
   final ScrollController _scrollCtrl = ScrollController();
+  String? _selectedFilterName;
 
   @override
   void initState() {
@@ -26,8 +30,13 @@ class _AdminListScreenState extends State<AdminListScreen> {
         context.go('/admin/login');
         return;
       }
-      context.read<MenuProvider>().fetchAdminList();
+      // Load everything needed
+      final menu = context.read<MenuProvider>();
+      menu.fetchAdminList();
+      // Initialize categories for the filter
+      menu.loadCategoriesForAdminFilter();
     });
+
     _scrollCtrl.addListener(() {
       final menu = context.read<MenuProvider>();
       if (_scrollCtrl.position.pixels >= _scrollCtrl.position.maxScrollExtent - 200) {
@@ -36,7 +45,26 @@ class _AdminListScreenState extends State<AdminListScreen> {
     });
   }
 
-  // FIX: Updated logout handler with Confirmation Dialog
+  // --- Dummy Data for Skeleton ---
+  MenuItemEntity get _dummyItem => MenuItemEntity(
+    id: 'dummy',
+    name: 'Loading Item Name ...',
+    description: null,
+    price: 0,
+    categoryId: null,
+    categoryName: 'Category',
+    imagePath: null,
+    imageUrl: null, // Null image renders placeholder
+    isAvailable: true,
+    createdAt: DateTime.now(),
+    updatedAt: DateTime.now(),
+  );
+
+  List<MenuItemEntity> get _loadingItems {
+    return List.generate(8, (index) => _dummyItem);
+  }
+  // -------------------------------
+
   Future<void> _handleLogout() async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -50,7 +78,6 @@ class _AdminListScreenState extends State<AdminListScreen> {
       ),
     );
 
-    // Only proceed if user clicked "Log out" (true)
     if (confirm == true && mounted) {
       final auth = context.read<AuthProvider>();
       await auth.signOut();
@@ -59,9 +86,58 @@ class _AdminListScreenState extends State<AdminListScreen> {
     }
   }
 
+  void _showFilterSheet() {
+    final provider = context.read<MenuProvider>();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => Container(
+        height: MediaQuery.of(context).size.height * 0.7,
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Text("Filter by Category", style: Theme.of(context).textTheme.titleLarge),
+            const Divider(),
+            ListTile(
+              title: const Text("Show All"),
+              onTap: () {
+                setState(() => _selectedFilterName = null);
+                provider.fetchAdminList(); // Reset
+                Navigator.pop(ctx);
+              },
+            ),
+            Expanded(
+              child: ListView.builder(
+                itemCount: provider.subCategories.length,
+                itemBuilder: (context, index) {
+                  final cat = provider.subCategories[index];
+                  return ListTile(
+                    title: Text(cat.name),
+                    onTap: () {
+                      setState(() => _selectedFilterName = cat.name);
+                      provider.filterBySubCategory(cat.id);
+                      Navigator.pop(ctx);
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final menu = context.watch<MenuProvider>();
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    // Loading Logic
+    final isLoadingInitial = menu.loading && menu.items.isEmpty;
+    final displayItems = isLoadingInitial ? _loadingItems : menu.items;
 
     return PopScope(
       canPop: false,
@@ -72,88 +148,144 @@ class _AdminListScreenState extends State<AdminListScreen> {
       child: Scaffold(
         appBar: AppBar(
           leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.go('/')),
-          title: const Text('Admin: Menu Items'),
+          title: const Text('Admin Dashboard'),
           actions: [
             IconButton(
-              icon: const Icon(Icons.logout),
-              tooltip: 'Log out',
-              onPressed: _handleLogout, // Calls the new dialog logic
+              icon: const Icon(Icons.category),
+              tooltip: 'Manage Categories',
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminCategoryManagerScreen())),
             ),
+            IconButton(icon: const Icon(Icons.logout), tooltip: 'Log out', onPressed: _handleLogout),
           ],
         ),
-        floatingActionButton: FloatingActionButton(
+        floatingActionButton: FloatingActionButton.extended(
           onPressed: () async {
             final menuProv = context.read<MenuProvider>();
             await context.push('/admin/edit');
             if (!mounted) return;
             await menuProv.fetchAdminList();
           },
-          child: const Icon(Icons.add),
+          label: const Text("New Item"),
+          icon: const Icon(Icons.add),
         ),
-        body: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              Row(
+        body: Column(
+          children: [
+            // DASHBOARD HEADER
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Row(
                 children: [
                   Expanded(
                     child: TextField(
                       controller: _searchCtrl,
-                      decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Search menu'),
-                      onSubmitted: (v) => menu.setSearch(v),
+                      decoration: InputDecoration(
+                        prefixIcon: const Icon(Icons.search),
+                        hintText: 'Search items...',
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        filled: true,
+                        fillColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                      ),
+                      onChanged: (v) => menu.setSearch(v),
                     ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Filter Button
+                  IconButton.filledTonal(
+                    icon: Icon(Icons.filter_list, color: _selectedFilterName != null ? theme.colorScheme.primary : null),
+                    tooltip: "Filter",
+                    onPressed: _showFilterSheet,
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              Expanded(
-                child: menu.loading && menu.items.isEmpty
-                    ? const Center(child: CircularProgressIndicator())
+            ),
+
+            // STATS ROW
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              child: Row(
+                children: [
+                  Text(
+                    "Total Items: ${menu.items.length}",
+                    style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold, color: Colors.grey),
+                  ),
+                  if (_selectedFilterName != null) ...[
+                    const SizedBox(width: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(color: theme.colorScheme.secondaryContainer, borderRadius: BorderRadius.circular(4)),
+                      child: Text(_selectedFilterName!, style: TextStyle(fontSize: 12, color: theme.colorScheme.onSecondaryContainer)),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+
+            const Divider(height: 1),
+
+            // LIST WITH SKELETONIZER
+            Expanded(
+              child: Skeletonizer(
+                enabled: isLoadingInitial,
+                effect: ShimmerEffect(baseColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5), highlightColor: colorScheme.surface),
+                child: menu.items.isEmpty && !isLoadingInitial
+                    ? const Center(child: Text('No items found'))
                     : ListView.separated(
                         controller: _scrollCtrl,
-                        itemCount: menu.items.length,
-                        separatorBuilder: (context, _) => const Divider(height: 1),
+                        itemCount: displayItems.length + (menu.loadingMore ? 1 : 0),
+                        separatorBuilder: (context, _) => const Divider(height: 1, indent: 72),
                         itemBuilder: (context, index) {
-                          final item = menu.items[index];
+                          // Bottom Loader
+                          if (index == displayItems.length) {
+                            return Skeletonizer(
+                              enabled: true,
+                              child: AdminItemTile(item: _dummyItem, onEdit: () {}, onDelete: () {}),
+                            );
+                          }
+
+                          final item = displayItems[index];
                           return AdminItemTile(
                             item: item,
-                            onEdit: () async {
-                              final menuProv = context.read<MenuProvider>();
-                              await context.push('/admin/edit', extra: item);
-                              if (!mounted) return;
-                              await menuProv.fetchAdminList();
-                            },
-                            onDelete: () async {
-                              final adminProv = context.read<AdminProvider>();
-                              final menuProv = context.read<MenuProvider>();
-                              final messenger = ScaffoldMessenger.of(context);
-                              final confirm = await showDialog<bool>(
-                                context: context,
-                                builder: (ctx) => AlertDialog(
-                                  title: const Text('Delete item?'),
-                                  content: const Text('This action cannot be undone.'),
-                                  actions: [
-                                    TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-                                    FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Delete')),
-                                  ],
-                                ),
-                              );
-                              if (confirm == true) {
-                                final ok = await adminProv.delete(item.id);
-                                if (!context.mounted) return;
-                                if (ok) {
-                                  messenger.showSnackBar(const SnackBar(content: Text('Deleted')));
-                                  await menuProv.fetchAdminList();
-                                }
-                              }
-                            },
+                            onEdit: isLoadingInitial
+                                ? () {}
+                                : () async {
+                                    final menuProv = context.read<MenuProvider>();
+                                    await context.push('/admin/edit', extra: item);
+                                    if (!mounted) return;
+                                    await menuProv.fetchAdminList();
+                                  },
+                            onDelete: isLoadingInitial
+                                ? () {}
+                                : () async {
+                                    final adminProv = context.read<AdminProvider>();
+                                    final menuProv = context.read<MenuProvider>();
+                                    final messenger = ScaffoldMessenger.of(context);
+                                    final confirm = await showDialog<bool>(
+                                      context: context,
+                                      builder: (ctx) => AlertDialog(
+                                        title: const Text('Delete item?'),
+                                        content: const Text('This action cannot be undone.'),
+                                        actions: [
+                                          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                                          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Delete')),
+                                        ],
+                                      ),
+                                    );
+                                    if (confirm == true) {
+                                      final ok = await adminProv.delete(item.id);
+                                      if (!context.mounted) return;
+                                      if (ok) {
+                                        messenger.showSnackBar(const SnackBar(content: Text('Deleted')));
+                                        await menuProv.fetchAdminList();
+                                      }
+                                    }
+                                  },
                           );
                         },
                       ),
               ),
-              if (menu.loadingMore) const Padding(padding: EdgeInsets.symmetric(vertical: 12), child: CircularProgressIndicator()),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

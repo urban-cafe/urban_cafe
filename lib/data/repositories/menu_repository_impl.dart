@@ -54,10 +54,24 @@ class MenuRepositoryImpl implements MenuRepository {
   }
 
   @override
+  Future<List<Map<String, dynamic>>> getAllCategories() async {
+    if (!Env.isConfigured) return [];
+    // Fetch all categories (Main and Sub) to show in the filter list
+    final data = await _client.from(catTable).select('id, name').order('name');
+    return List<Map<String, dynamic>>.from(data);
+  }
+
+  @override
   Future<String> createCategory(String name, {String? parentId}) async {
     if (!Env.isConfigured) throw Exception('Supabase not configured');
     final res = await _client.from(catTable).insert({'name': name, 'parent_id': parentId}).select('id').single();
     return res['id'] as String;
+  }
+
+  @override
+  Future<void> updateCategory(String id, String newName) async {
+    if (!Env.isConfigured) throw Exception('Supabase not configured');
+    await _client.from(catTable).update({'name': newName}).eq('id', id);
   }
 
   @override
