@@ -4,7 +4,7 @@ class GetSubCategories {
   final MenuRepository repository;
   const GetSubCategories(this.repository);
 
-  Future<List<String>> call(String parentName) {
-    return repository.getSubCategories(parentName);
+  Future<List<Map<String, dynamic>>> call(String parentId) {
+    return repository.getSubCategories(parentId);
   }
 }

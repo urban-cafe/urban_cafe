@@ -4,7 +4,8 @@ class GetMainCategories {
   final MenuRepository repository;
   const GetMainCategories(this.repository);
 
-  Future<List<String>> call() {
+  // Now returns objects with IDs, not just strings
+  Future<List<Map<String, dynamic>>> call() {
     return repository.getMainCategories();
   }
 }

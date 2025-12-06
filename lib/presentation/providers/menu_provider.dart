@@ -1,43 +1,117 @@
 import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:urban_cafe/data/repositories/menu_repository_impl.dart';
 import 'package:urban_cafe/domain/entities/menu_item.dart';
-import 'package:urban_cafe/domain/usecases/get_categories.dart';
-import 'package:urban_cafe/domain/usecases/get_main_categories.dart';
-import 'package:urban_cafe/domain/usecases/get_menu_items.dart';
-import 'package:urban_cafe/domain/usecases/get_sub_categories.dart';
+
+class CategoryObj {
+  final String id;
+  final String name;
+  CategoryObj(this.id, this.name);
+}
 
 class MenuProvider extends ChangeNotifier {
-  final _getMenuItems = GetMenuItems(MenuRepositoryImpl());
-  final _getCategories = GetCategories(MenuRepositoryImpl());
-  final _getMainCategories = GetMainCategories(MenuRepositoryImpl());
-  final _getSubCategories = GetSubCategories(MenuRepositoryImpl());
+  final _repo = MenuRepositoryImpl();
+
   List<MenuItemEntity> items = [];
-  List<String> categories = [];
-  List<String> mainCategories = [];
-  List<String> subCategories = [];
+  List<CategoryObj> subCategories = [];
+
   bool loading = false;
   bool loadingMore = false;
   String? error;
-  String? category;
-  List<String>? categoryList;
-  String? search;
+
+  // Filters
+  String? _currentCategoryId; // The selected sub-category ID
+  List<String>? _currentCategoryIds; // List of IDs (e.g. all sub-cats of a main cat)
+  String? _searchQuery;
+
   int _page = 1;
   final int _pageSize = 20;
   bool hasMore = true;
 
-  Future<void> fetch({int page = 1}) async {
+  // Initializer for the Menu Screen
+  Future<void> initForMainCategory(String mainCategoryName) async {
     loading = true;
-    error = null;
     notifyListeners();
+
     try {
-      final result = await _getMenuItems(page: page, pageSize: _pageSize, search: search, category: category, categories: categoryList);
-      if (page <= 1) {
+      // 1. Find the ID of the Main Category (e.g. "HOT DRINKS" -> uuid)
+      final client = Supabase.instance.client;
+      final parentRes = await client.from('categories').select('id').ilike('name', mainCategoryName).maybeSingle();
+
+      if (parentRes == null) {
+        items = [];
+        loading = false;
+        notifyListeners();
+        return;
+      }
+
+      final parentId = parentRes['id'] as String;
+
+      // 2. Fetch its sub-categories
+      final subs = await _repo.getSubCategories(parentId);
+      subCategories = subs.map((e) => CategoryObj(e['id'], e['name'])).toList();
+
+      // 3. Set default filter to include ALL sub-categories of this parent
+      _currentCategoryIds = subCategories.map((e) => e.id).toList();
+      _currentCategoryId = null; // "All" selected
+
+      // 4. Fetch items
+      await _fetchItems(reset: true);
+    } catch (e) {
+      error = e.toString();
+      loading = false;
+      notifyListeners();
+    }
+  }
+
+  void filterBySubCategory(String? categoryId) {
+    if (categoryId == null) {
+      // Revert to "All" (all sub IDs)
+      _currentCategoryId = null;
+    } else {
+      _currentCategoryId = categoryId;
+    }
+    _fetchItems(reset: true);
+  }
+
+  void setSearch(String query) {
+    _searchQuery = query;
+    _fetchItems(reset: true);
+  }
+
+  Future<void> loadMore() async {
+    if (loadingMore || !hasMore) return;
+    loadingMore = true;
+    notifyListeners();
+    await _fetchItems(reset: false);
+    loadingMore = false;
+    notifyListeners();
+  }
+
+  Future<void> _fetchItems({required bool reset}) async {
+    if (reset) {
+      _page = 1;
+      items = [];
+      hasMore = true;
+      loading = true;
+      notifyListeners();
+    }
+
+    try {
+      // If specific sub-cat selected, use that. Else use list of all sub-cats.
+      final singleId = _currentCategoryId;
+      final listIds = _currentCategoryId == null ? _currentCategoryIds : null;
+
+      final result = await _repo.getMenuItems(page: _page, pageSize: _pageSize, search: _searchQuery, categoryId: singleId, categoryIds: listIds);
+
+      if (reset) {
         items = result;
       } else {
-        items = [...items, ...result];
+        items.addAll(result);
       }
+
       hasMore = result.length == _pageSize;
-      _page = page;
+      if (!reset) _page++;
     } catch (e) {
       error = e.toString();
     } finally {
@@ -46,65 +120,11 @@ class MenuProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> fetchCategories() async {
-    try {
-      categories = await _getCategories();
-      notifyListeners();
-    } catch (_) {}
-  }
-
-  Future<void> fetchMainCategories() async {
-    try {
-      mainCategories = await _getMainCategories();
-      notifyListeners();
-    } catch (_) {}
-  }
-
-  Future<void> fetchSubCategories(String parentName) async {
-    try {
-      subCategories = await _getSubCategories(parentName);
-      notifyListeners();
-    } catch (_) {}
-  }
-
-  void setCategory(String? value) {
-    category = value;
-    categoryList = null;
-    _page = 1;
-    hasMore = true;
-    fetch(page: 1);
-  }
-
-  void setCategories(List<String>? values) {
-    categoryList = values;
-    category = null;
-    _page = 1;
-    hasMore = true;
-    fetch(page: 1);
-  }
-
-  void setSearch(String? value) {
-    search = value;
-    _page = 1;
-    hasMore = true;
-    fetch(page: 1);
-  }
-
-  Future<void> loadMore() async {
-    if (loadingMore || !hasMore) return;
-    loadingMore = true;
-    notifyListeners();
-    try {
-      final nextPage = _page + 1;
-      final result = await _getMenuItems(page: nextPage, pageSize: _pageSize, search: search, category: category, categories: categoryList);
-      items = [...items, ...result];
-      hasMore = result.length == _pageSize;
-      _page = nextPage;
-    } catch (e) {
-      error = e.toString();
-    } finally {
-      loadingMore = false;
-      notifyListeners();
-    }
+  // Simple fetch for Admin List
+  Future<void> fetchAdminList() async {
+    _currentCategoryIds = null;
+    _currentCategoryId = null;
+    _searchQuery = null;
+    await _fetchItems(reset: true);
   }
 }

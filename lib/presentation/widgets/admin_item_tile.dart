@@ -10,9 +10,10 @@ class AdminItemTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: CircleAvatar(backgroundImage: item.imageUrl != null ? NetworkImage(item.imageUrl!) : null),
+      leading: CircleAvatar(backgroundImage: item.imageUrl != null ? NetworkImage(item.imageUrl!) : null, child: item.imageUrl == null ? const Icon(Icons.fastfood) : null),
       title: Text(item.name),
-      subtitle: Text(item.category ?? 'Other'),
+      // Fix: Use categoryName from the relation
+      subtitle: Text(item.categoryName ?? 'Uncategorized'),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

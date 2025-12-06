@@ -10,20 +10,11 @@ class UpdateMenuItem {
     String? name,
     String? description,
     double? price,
-    String? category,
+    String? categoryId, // Changed from 'category'
     bool? isAvailable,
     String? imagePath,
     String? imageUrl,
   }) {
-    return repository.updateMenuItem(
-      id: id,
-      name: name,
-      description: description,
-      price: price,
-      category: category,
-      isAvailable: isAvailable,
-      imagePath: imagePath,
-      imageUrl: imageUrl,
-    );
+    return repository.updateMenuItem(id: id, name: name, description: description, price: price, categoryId: categoryId, isAvailable: isAvailable, imagePath: imagePath, imageUrl: imageUrl);
   }
 }

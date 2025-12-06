@@ -7,6 +7,9 @@ class MainMenuScreen extends StatelessWidget {
   const MainMenuScreen({super.key});
 
   Widget _bigButton(BuildContext context, String label, VoidCallback onTap) {
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return SizedBox(
       width: double.infinity,
       child: FilledButton(
@@ -14,12 +17,20 @@ class MainMenuScreen extends StatelessWidget {
         style: FilledButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 20),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          // Dark Mode Adjustment:
+          // Use 'secondaryContainer' (muted/pastel) in Dark Mode.
+          // Use 'primary' (vibrant) in Light Mode.
+          backgroundColor: isDark ? cs.secondaryContainer : cs.primary,
+          foregroundColor: isDark ? cs.onSecondaryContainer : cs.onPrimary,
+          elevation: isDark ? 0 : 2, // Remove shadow in dark mode for a flat look
         ),
-        child: Builder(
-          builder: (context) {
-            final cs = Theme.of(context).colorScheme;
-            return Text(label, style: Theme.of(context).textTheme.titleMedium?.copyWith(color: cs.onPrimary));
-          },
+        child: Text(
+          label,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+            // Ensure text color matches the background contrast
+            color: isDark ? cs.onSecondaryContainer : cs.onPrimary,
+          ),
         ),
       ),
     );
@@ -43,8 +54,6 @@ class MainMenuScreen extends StatelessWidget {
             ),
           ),
         ),
-        // const SizedBox(height: 12),
-        // Text('Urban Cafe', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w600)),
       ],
     );
   }

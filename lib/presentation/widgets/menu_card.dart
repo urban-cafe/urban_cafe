@@ -34,7 +34,10 @@ class MenuCard extends StatelessWidget {
                         memCacheWidth: 600,
                         memCacheHeight: 450,
                       )
-                    : Container(color: Colors.grey.shade200),
+                    : Container(
+                        color: Colors.grey.shade200,
+                        child: const Center(child: Icon(Icons.fastfood, color: Colors.grey)),
+                      ),
               ),
             ),
             Padding(
@@ -51,7 +54,8 @@ class MenuCard extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)),
-                        child: Text(item.category ?? 'Other', style: Theme.of(context).textTheme.labelSmall),
+                        // Fix: Use categoryName
+                        child: Text(item.categoryName ?? 'Other', style: Theme.of(context).textTheme.labelSmall),
                       ),
                     ],
                   ),

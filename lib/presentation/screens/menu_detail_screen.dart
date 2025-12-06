@@ -21,7 +21,12 @@ class MenuDetailScreen extends StatelessWidget {
               aspectRatio: 4 / 3,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(16),
-                child: item.imageUrl != null ? CachedNetworkImage(imageUrl: item.imageUrl!, fit: BoxFit.cover) : Container(color: Colors.grey.shade200),
+                child: item.imageUrl != null
+                    ? CachedNetworkImage(imageUrl: item.imageUrl!, fit: BoxFit.cover)
+                    : Container(
+                        color: Colors.grey.shade200,
+                        child: const Center(child: Icon(Icons.fastfood, size: 50, color: Colors.grey)),
+                      ),
               ),
             ),
             const SizedBox(height: 16),
@@ -33,7 +38,8 @@ class MenuDetailScreen extends StatelessWidget {
               children: [
                 const Icon(Icons.category, size: 18),
                 const SizedBox(width: 6),
-                Text(item.category ?? 'Other'),
+                // Fix: Use categoryName
+                Text(item.categoryName ?? 'Other'),
                 const Spacer(),
                 Builder(
                   builder: (context) {

@@ -7,10 +7,26 @@ void main() {
   testWidgets('MenuGrid shows item names', (tester) async {
     final now = DateTime.now();
     final items = [
-      MenuItemEntity(id: '1', name: 'Espresso', description: '', price: 2.99, category: 'Coffee', imagePath: null, imageUrl: null, isAvailable: true, createdAt: now, updatedAt: now),
-      MenuItemEntity(id: '2', name: 'Cappuccino', description: '', price: 3.99, category: 'Coffee', imagePath: null, imageUrl: null, isAvailable: true, createdAt: now, updatedAt: now),
+      MenuItemEntity(
+        id: '1',
+        name: 'Espresso',
+        description: '',
+        price: 2.99,
+        categoryId: 'cat-1', // Mock ID
+        categoryName: 'Coffee',
+        imagePath: null,
+        imageUrl: null,
+        isAvailable: true,
+        createdAt: now,
+        updatedAt: now,
+      ),
+      MenuItemEntity(id: '2', name: 'Cappuccino', description: '', price: 3.99, categoryId: 'cat-1', categoryName: 'Coffee', imagePath: null, imageUrl: null, isAvailable: true, createdAt: now, updatedAt: now),
     ];
-    await tester.pumpWidget(MaterialApp(home: Scaffold(body: MenuGrid(items: items))));
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: MenuGrid(items: items)),
+      ),
+    );
     expect(find.text('Espresso'), findsOneWidget);
     expect(find.text('Cappuccino'), findsOneWidget);
   });

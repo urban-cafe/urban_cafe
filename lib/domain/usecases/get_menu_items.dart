@@ -5,7 +5,14 @@ class GetMenuItems {
   final MenuRepository repository;
   const GetMenuItems(this.repository);
 
-  Future<List<MenuItemEntity>> call({int page = 1, int pageSize = 20, String? search, String? category, List<String>? categories}) {
-    return repository.getMenuItems(page: page, pageSize: pageSize, search: search, category: category, categories: categories);
+  // Updated parameters to match the new Repository signature
+  Future<List<MenuItemEntity>> call({
+    int page = 1,
+    int pageSize = 20,
+    String? search,
+    String? categoryId, // Changed from 'category'
+    List<String>? categoryIds, // Changed from 'categories'
+  }) {
+    return repository.getMenuItems(page: page, pageSize: pageSize, search: search, categoryId: categoryId, categoryIds: categoryIds);
   }
 }
