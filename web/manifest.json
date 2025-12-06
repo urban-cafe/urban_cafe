@@ -1,11 +1,11 @@
 {
-    "name": "urban_cafe",
-    "short_name": "urban_cafe",
+    "name": "Urban Cafe",
+    "short_name": "Urban Cafe",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#F7F7F7",
     "theme_color": "#8B5E3C",
-    "description": "A new Flutter project.",
+    "description": "Urban Cafe",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
