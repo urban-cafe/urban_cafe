@@ -20,8 +20,8 @@ class MenuProvider extends ChangeNotifier {
   String? error;
 
   // Filters
-  String? _currentCategoryId; // The selected sub-category ID
-  List<String>? _currentCategoryIds; // List of IDs (e.g. all sub-cats of a main cat)
+  String? _currentCategoryId;
+  List<String>? _currentCategoryIds;
   String? _searchQuery;
 
   int _page = 1;
@@ -30,16 +30,25 @@ class MenuProvider extends ChangeNotifier {
 
   // Initializer for the Menu Screen
   Future<void> initForMainCategory(String mainCategoryName) async {
+    // 1. CLEAR DATA IMMEDIATELY
+    // This ensures the UI sees an empty list and shows the loading spinner
+    // instead of the old data from the previous screen.
+    items = [];
+    subCategories = [];
+    _currentCategoryId = null;
+    _currentCategoryIds = null;
+    error = null;
+
+    // 2. Set loading to true and notify listeners to trigger the UI rebuild
     loading = true;
     notifyListeners();
 
     try {
-      // 1. Find the ID of the Main Category (e.g. "HOT DRINKS" -> uuid)
+      // 3. Find the ID of the Main Category
       final client = Supabase.instance.client;
       final parentRes = await client.from('categories').select('id').ilike('name', mainCategoryName).maybeSingle();
 
       if (parentRes == null) {
-        items = [];
         loading = false;
         notifyListeners();
         return;
@@ -47,15 +56,14 @@ class MenuProvider extends ChangeNotifier {
 
       final parentId = parentRes['id'] as String;
 
-      // 2. Fetch its sub-categories
+      // 4. Fetch its sub-categories
       final subs = await _repo.getSubCategories(parentId);
       subCategories = subs.map((e) => CategoryObj(e['id'], e['name'])).toList();
 
-      // 3. Set default filter to include ALL sub-categories of this parent
+      // 5. Set default filter to include ALL sub-categories of this parent
       _currentCategoryIds = subCategories.map((e) => e.id).toList();
-      _currentCategoryId = null; // "All" selected
 
-      // 4. Fetch items
+      // 6. Fetch items (API Call)
       await _fetchItems(reset: true);
     } catch (e) {
       error = e.toString();
@@ -66,7 +74,6 @@ class MenuProvider extends ChangeNotifier {
 
   void filterBySubCategory(String? categoryId) {
     if (categoryId == null) {
-      // Revert to "All" (all sub IDs)
       _currentCategoryId = null;
     } else {
       _currentCategoryId = categoryId;
@@ -91,14 +98,14 @@ class MenuProvider extends ChangeNotifier {
   Future<void> _fetchItems({required bool reset}) async {
     if (reset) {
       _page = 1;
-      items = [];
+      // Double check items are cleared if calling this directly
+      if (items.isNotEmpty) items = [];
       hasMore = true;
       loading = true;
       notifyListeners();
     }
 
     try {
-      // If specific sub-cat selected, use that. Else use list of all sub-cats.
       final singleId = _currentCategoryId;
       final listIds = _currentCategoryId == null ? _currentCategoryIds : null;
 
@@ -122,9 +129,16 @@ class MenuProvider extends ChangeNotifier {
 
   // Simple fetch for Admin List
   Future<void> fetchAdminList() async {
+    // Clear data here too
+    items = [];
     _currentCategoryIds = null;
     _currentCategoryId = null;
     _searchQuery = null;
+    error = null;
+
+    loading = true;
+    notifyListeners();
+
     await _fetchItems(reset: true);
   }
 }

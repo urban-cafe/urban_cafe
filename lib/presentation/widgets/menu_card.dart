@@ -1,7 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:urban_cafe/core/theme.dart';
 import 'package:urban_cafe/domain/entities/menu_item.dart';
 
 class MenuCard extends StatelessWidget {
@@ -12,71 +11,84 @@ class MenuCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final priceFormat = NumberFormat.currency(symbol: '', decimalDigits: 0);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return InkWell(
       onTap: onTap,
-      child: Card(
-        elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: Column(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+        child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                child: item.imageUrl != null
-                    ? CachedNetworkImage(
-                        imageUrl: item.imageUrl!,
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                        placeholder: (context, url) => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-                        errorWidget: (context, url, error) => Container(color: Colors.grey.shade300),
-                        fadeInDuration: const Duration(milliseconds: 200),
-                        memCacheWidth: 600,
-                        memCacheHeight: 450,
-                      )
-                    : Container(
-                        color: Colors.grey.shade200,
-                        child: const Center(child: Icon(Icons.fastfood, color: Colors.grey)),
+            // 1. Image on the Left
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: SizedBox(
+                    width: 100,
+                    height: 100,
+                    child: item.imageUrl != null
+                        ? CachedNetworkImage(
+                            imageUrl: item.imageUrl!,
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => Container(color: colorScheme.surfaceContainerHighest),
+                            errorWidget: (context, url, error) => Container(
+                              color: colorScheme.surfaceContainerHighest,
+                              child: Icon(Icons.fastfood, color: colorScheme.onSurfaceVariant),
+                            ),
+                          )
+                        : Container(
+                            color: colorScheme.surfaceContainerHighest,
+                            child: Icon(Icons.fastfood, color: colorScheme.onSurfaceVariant),
+                          ),
+                  ),
+                ),
+                // "Sold Out" Overlay on Image (if needed)
+                if (!item.isAvailable)
+                  Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(color: Colors.black.withOpacity(0.5), borderRadius: BorderRadius.circular(12)),
+                      alignment: Alignment.center,
+                      child: Text(
+                        'SOLD OUT',
+                        style: theme.textTheme.labelSmall?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
                       ),
-              ),
+                    ),
+                  ),
+              ],
             ),
-            Padding(
-              padding: const EdgeInsets.all(12),
+
+            const SizedBox(width: 16),
+
+            // 2. Details on the Right
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(item.name, style: Theme.of(context).textTheme.titleMedium, maxLines: 1, overflow: TextOverflow.ellipsis),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)),
-                        // Fix: Use categoryName
-                        child: Text(item.categoryName ?? 'Other', style: Theme.of(context).textTheme.labelSmall),
-                      ),
-                    ],
+                  const SizedBox(height: 4), // Visual alignment with image top
+                  Text(
+                    item.name,
+                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, fontSize: 16),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 6),
-                  Text(item.description ?? '', maxLines: 2, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.bodySmall),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Text(priceFormat.format(item.price), style: Theme.of(context).textTheme.titleSmall),
-                      const Spacer(),
-                      Builder(
-                        builder: (context) {
-                          final brand = Theme.of(context).extension<BrandColors>()!;
-                          return Icon(item.isAvailable ? Icons.check_circle : Icons.cancel, color: item.isAvailable ? brand.success : brand.danger, size: 18);
-                        },
-                      ),
-                    ],
-                  ),
+                  const SizedBox(height: 4),
+                  if (item.categoryName != null)
+                    Text(
+                      item.categoryName!,
+                      style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.primary, fontWeight: FontWeight.w500),
+                    ),
+                  const SizedBox(height: 8),
+                  Text(priceFormat.format(item.price), style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800, fontSize: 17)),
                 ],
               ),
             ),
+
+            // Optional: Add Icon button or arrow here if you want
+            // const Icon(Icons.add_circle, color: Colors.green, size: 28),
           ],
         ),
       ),

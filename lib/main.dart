@@ -58,7 +58,7 @@ class UrbanCafeApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => MenuProvider()),
         ChangeNotifierProvider(create: (_) => AdminProvider()),
       ],
-      child: MaterialApp.router(title: 'UrbanCafe', theme: AppTheme.theme, darkTheme: AppTheme.darkTheme, themeMode: ThemeMode.light, debugShowCheckedModeBanner: false, routerConfig: router),
+      child: MaterialApp.router(title: 'UrbanCafe', theme: AppTheme.theme, darkTheme: AppTheme.darkTheme, themeMode: ThemeMode.system, debugShowCheckedModeBanner: false, routerConfig: router),
     );
   }
 }
