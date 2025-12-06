@@ -23,6 +23,7 @@ dependencies:
   flutter_dotenv: ^6.0.0
   go_router: ^14.2.1
   google_fonts: ^6.2.1
+  skeletonizer: ^2.1.1
 
 dev_dependencies:
   flutter_test:
@@ -40,8 +41,8 @@ flutter_launcher_icons:
   web:
     generate: true
     image_path: "assets/logos/urbancafe_logo.png"
-    background_color: "#F7F7F7" # Matches your AppTheme.neutralBg
-    theme_color: "#8B5E3C"      # Matches your AppTheme.primary
+    background_color: "#F7F7F7"
+    theme_color: "#8B5E3C"
   windows:
     generate: true
     image_path: "assets/logos/urbancafe_logo.png"
@@ -55,7 +56,7 @@ flutter_launcher_icons:
 flutter:
   uses-material-design: true
   assets:
-  #  - .env
+    #- .env
     - assets/logos/
   #   - images/a_dot_ham.jpeg
 

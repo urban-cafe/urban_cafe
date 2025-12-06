@@ -49,7 +49,7 @@ class MenuCard extends StatelessWidget {
                 if (!item.isAvailable)
                   Positioned.fill(
                     child: Container(
-                      decoration: BoxDecoration(color: Colors.black.withOpacity(0.5), borderRadius: BorderRadius.circular(12)),
+                      decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(12)),
                       alignment: Alignment.center,
                       child: Text(
                         'SOLD OUT',

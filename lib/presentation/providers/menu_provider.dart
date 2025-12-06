@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:urban_cafe/data/repositories/menu_repository_impl.dart';
@@ -22,7 +24,8 @@ class MenuProvider extends ChangeNotifier {
   // Filters
   String? _currentCategoryId;
   List<String>? _currentCategoryIds;
-  String? _searchQuery;
+
+  String _searchQuery = '';
 
   int _page = 1;
   final int _pageSize = 20;
@@ -86,6 +89,10 @@ class MenuProvider extends ChangeNotifier {
     _fetchItems(reset: true);
   }
 
+  void resetSearch(String query) {
+    _searchQuery = query;
+  }
+
   Future<void> loadMore() async {
     if (loadingMore || !hasMore) return;
     loadingMore = true;
@@ -133,7 +140,7 @@ class MenuProvider extends ChangeNotifier {
     items = [];
     _currentCategoryIds = null;
     _currentCategoryId = null;
-    _searchQuery = null;
+    _searchQuery = '';
     error = null;
 
     loading = true;

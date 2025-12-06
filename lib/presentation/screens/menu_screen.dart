@@ -1,6 +1,9 @@
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:skeletonizer/skeletonizer.dart';
+import 'package:urban_cafe/domain/entities/menu_item.dart';
 import 'package:urban_cafe/presentation/providers/menu_provider.dart';
 import 'package:urban_cafe/presentation/widgets/menu_card.dart';
 
@@ -17,20 +20,19 @@ class _MenuScreenState extends State<MenuScreen> {
   final ScrollController _scrollCtrl = ScrollController();
   String? _selectedSubId;
   String _selectedSubName = 'All';
+  late MenuProvider menuProvider;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final provider = context.read<MenuProvider>();
-
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      menuProvider = Provider.of<MenuProvider>(context, listen: false);
       _searchCtrl.clear();
-      provider.setSearch('');
 
       if (widget.initialMainCategory != null) {
-        provider.initForMainCategory(widget.initialMainCategory!);
+        await menuProvider.initForMainCategory(widget.initialMainCategory!);
       } else {
-        provider.fetchAdminList();
+        await menuProvider.fetchAdminList();
       }
     });
 
@@ -45,8 +47,17 @@ class _MenuScreenState extends State<MenuScreen> {
   void dispose() {
     _searchCtrl.dispose();
     _scrollCtrl.dispose();
+    menuProvider.resetSearch("");
     super.dispose();
   }
+
+  // Fake items for initial full-screen loading
+  List<MenuItemEntity> get _loadingItems {
+    return List.generate(8, (index) => _dummyItem);
+  }
+
+  // Single fake item for bottom loader
+  MenuItemEntity get _dummyItem => MenuItemEntity(id: 'dummy', name: 'Loading Item Name ...', description: 'Loading delicious food description ...', price: 0, categoryId: null, categoryName: 'Category', imagePath: null, imageUrl: null, isAvailable: true, createdAt: DateTime.now(), updatedAt: DateTime.now());
 
   void _showCategorySelector(BuildContext context) {
     final provider = context.read<MenuProvider>();
@@ -66,29 +77,15 @@ class _MenuScreenState extends State<MenuScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               const SizedBox(height: 12),
-              // Drag Handle
               Center(
                 child: Container(
                   width: 40,
                   height: 4,
-                  decoration: BoxDecoration(
-                    // FIX: Use withValues(alpha: ...) instead of withOpacity
-                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
+                  decoration: BoxDecoration(color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4), borderRadius: BorderRadius.circular(2)),
                 ),
               ),
               const SizedBox(height: 12),
-
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8.0),
-                child: Text(
-                  "Select Category",
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: colorScheme.onSurface),
-                ),
-              ),
               const Divider(height: 1),
-
               Flexible(
                 child: SingleChildScrollView(
                   child: Column(
@@ -107,9 +104,7 @@ class _MenuScreenState extends State<MenuScreen> {
                           Navigator.pop(ctx);
                         },
                       ),
-
                       const Divider(height: 1, indent: 20, endIndent: 20),
-
                       ListView.separated(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
@@ -152,7 +147,6 @@ class _MenuScreenState extends State<MenuScreen> {
       onTap: onTap,
       child: Container(
         width: double.infinity,
-        // FIX: Use withValues(alpha: ...) instead of withOpacity
         color: isSelected ? colorScheme.primary.withValues(alpha: 0.08) : null,
         padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 24),
         child: Row(
@@ -176,92 +170,116 @@ class _MenuScreenState extends State<MenuScreen> {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        title: Text(
-          widget.initialMainCategory ?? 'Menu',
-          style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.0, color: colorScheme.onSurface),
+    final isLoadingInitial = provider.loading && provider.items.isEmpty;
+    final displayItems = isLoadingInitial ? _loadingItems : provider.items;
+
+    return PopScope(
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          FocusScope.of(context).unfocus();
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          centerTitle: true,
+          title: Text(
+            widget.initialMainCategory ?? 'Menu',
+            style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.0, color: colorScheme.onSurface),
+          ),
+          scrolledUnderElevation: 0,
+          backgroundColor: colorScheme.surface,
         ),
-        scrolledUnderElevation: 0,
-        backgroundColor: colorScheme.surface,
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                if (provider.subCategories.isNotEmpty)
-                  InkWell(
-                    onTap: () => _showCategorySelector(context),
-                    borderRadius: BorderRadius.circular(20),
+        body: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  if (provider.subCategories.isNotEmpty)
+                    InkWell(
+                      onTap: () => _showCategorySelector(context),
+                      borderRadius: BorderRadius.circular(20),
+                      child: Container(
+                        margin: const EdgeInsets.only(right: 12),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: colorScheme.surfaceContainer,
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(_selectedSubName, style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+                            const SizedBox(width: 4),
+                            Icon(Icons.keyboard_arrow_down, size: 18, color: colorScheme.onSurfaceVariant),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                  Expanded(
                     child: Container(
-                      margin: const EdgeInsets.only(right: 12),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      height: 48,
                       decoration: BoxDecoration(
-                        color: colorScheme.surfaceContainer,
+                        color: colorScheme.surface,
                         borderRadius: BorderRadius.circular(24),
-                        // FIX: Use withValues(alpha: ...) instead of withOpacity
-                        border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
+                        border: Border.all(color: colorScheme.outlineVariant),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(_selectedSubName, style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
-                          const SizedBox(width: 4),
-                          Icon(Icons.keyboard_arrow_down, size: 18, color: colorScheme.onSurfaceVariant),
-                        ],
+                      child: TextField(
+                        controller: _searchCtrl,
+                        textAlignVertical: TextAlignVertical.center,
+                        decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Search', border: InputBorder.none, contentPadding: EdgeInsets.symmetric(horizontal: 16), isDense: true),
+                        onChanged: (v) => provider.setSearch(v),
+                        onSubmitted: (v) => FocusScope.of(context).unfocus(),
                       ),
                     ),
                   ),
-
-                Expanded(
-                  child: Container(
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: colorScheme.surface,
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: colorScheme.outlineVariant),
-                    ),
-                    child: TextField(
-                      controller: _searchCtrl,
-                      textAlignVertical: TextAlignVertical.center,
-                      decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Search', border: InputBorder.none, contentPadding: EdgeInsets.symmetric(horizontal: 16), isDense: true),
-                      onChanged: (v) => provider.setSearch(v),
-                    ),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
 
-          Expanded(
-            child: provider.loading && provider.items.isEmpty
-                ? const Center(child: CircularProgressIndicator())
-                : provider.items.isEmpty
-                ? const Center(child: Text('No items found'))
-                : ListView.separated(
-                    controller: _scrollCtrl,
-                    padding: const EdgeInsets.only(bottom: 16),
-                    itemCount: provider.items.length + (provider.loadingMore ? 1 : 0),
-                    separatorBuilder: (_, _) => Divider(height: 1, thickness: 1, indent: 16, endIndent: 16, color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
-                    itemBuilder: (context, index) {
-                      if (index == provider.items.length) {
-                        return const Center(
-                          child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator()),
-                        );
-                      }
+            Expanded(
+              // Wrap the ListView in Skeletonizer for initial load
+              child: Skeletonizer(
+                enabled: isLoadingInitial,
+                effect: ShimmerEffect(baseColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5), highlightColor: colorScheme.surface),
+                child: provider.items.isEmpty && !isLoadingInitial
+                    ? const Center(child: Text('No items found'))
+                    : ListView.separated(
+                        controller: _scrollCtrl,
+                        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                        padding: const EdgeInsets.only(bottom: 16),
+                        // Count includes real items + 1 dummy item if loading more
+                        itemCount: displayItems.length + (provider.loadingMore ? 1 : 0),
+                        separatorBuilder: (_, _) => Divider(height: 1, thickness: 1, indent: 16, endIndent: 16, color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
+                        itemBuilder: (context, index) {
+                          // REPLACED: CircularProgressIndicator with Skeletonizer MenuCard
+                          if (index == displayItems.length) {
+                            return Skeletonizer(
+                              enabled: true,
+                              effect: ShimmerEffect(baseColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5), highlightColor: colorScheme.surface),
+                              child: MenuCard(item: _dummyItem, onTap: null),
+                            );
+                          }
 
-                      final item = provider.items[index];
-                      return MenuCard(
-                        item: item,
-                        onTap: () => context.push('/detail', extra: item),
-                      );
-                    },
-                  ),
-          ),
-        ],
+                          final item = displayItems[index];
+
+                          return MenuCard(
+                            item: item,
+                            onTap: isLoadingInitial
+                                ? null
+                                : () {
+                                    FocusScope.of(context).unfocus();
+                                    context.push('/detail', extra: item);
+                                  },
+                          );
+                        },
+                      ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
