@@ -143,7 +143,7 @@ class MainMenuScreen extends StatelessWidget {
                   style: theme.textTheme.labelLarge?.copyWith(color: colorScheme.onSurfaceVariant, fontWeight: FontWeight.bold, letterSpacing: 1.5, fontFamily: 'Playfair Display'),
                 ),
                 const SizedBox(height: 16),
-                Row(mainAxisAlignment: MainAxisAlignment.center, children: [_socialButton(context, FontAwesomeIcons.tiktok, 'https://www.tiktok.com/@urbantea.mm?_r=1&_t=ZS-9206DYuBDJQ'), const SizedBox(width: 16), _socialButton(context, FontAwesomeIcons.facebookF, 'https://www.facebook.com/urbantea915?mibextid=wwXIfr'), const SizedBox(width: 16), _socialButton(context, FontAwesomeIcons.instagram, 'https://www.facebook.com/urbantea915?mibextid=wwXIfr')]),
+                Row(mainAxisAlignment: MainAxisAlignment.center, children: [_socialButton(context, FontAwesomeIcons.tiktok, 'https://www.tiktok.com/@urbantea.mm?_r=1&_t=ZS-9206DYuBDJQ'), const SizedBox(width: 16), _socialButton(context, FontAwesomeIcons.facebookF, 'https://www.facebook.com/urbantea915?mibextid=wwXIfr'), const SizedBox(width: 16), _socialButton(context, FontAwesomeIcons.instagram, 'https://www.instagram.com/urbantea.mm?igsh=MTJjeHpjMXhnODduag==')]),
                 const SizedBox(height: 32),
               ],
             ),
