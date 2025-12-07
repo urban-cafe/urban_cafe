@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:urban_cafe/domain/entities/menu_item.dart';
 import 'package:urban_cafe/presentation/providers/menu_provider.dart';
+import 'package:urban_cafe/presentation/widgets/category_sheet_tile.dart'; // Import this
 import 'package:urban_cafe/presentation/widgets/menu_card.dart';
 
 class MenuScreen extends StatefulWidget {
@@ -38,7 +39,7 @@ class _MenuScreenState extends State<MenuScreen> {
 
     _scrollCtrl.addListener(() {
       if (_scrollCtrl.position.pixels >= _scrollCtrl.position.maxScrollExtent - 200) {
-        context.read<MenuProvider>().loadMore();
+        menuProvider.loadMore();
       }
     });
   }
@@ -52,23 +53,19 @@ class _MenuScreenState extends State<MenuScreen> {
     super.dispose();
   }
 
-  List<MenuItemEntity> get _loadingItems {
-    return List.generate(8, (index) => _dummyItem);
-  }
-
-  MenuItemEntity get _dummyItem => MenuItemEntity(id: 'dummy', name: 'Loading Item Name ...', description: 'Loading delicious food description ...', price: 0, categoryId: null, categoryName: 'Category', imagePath: null, imageUrl: null, isAvailable: true, createdAt: DateTime.now(), updatedAt: DateTime.now());
+  // Moved Dummy Data to a static helper or keep here if simple
+  MenuItemEntity get _dummyItem => MenuItemEntity(id: 'dummy', name: 'Loading Item ...', description: 'Loading description ...', price: 0, categoryId: null, categoryName: 'Category', imagePath: null, imageUrl: null, isAvailable: true, createdAt: DateTime.now(), updatedAt: DateTime.now());
 
   void _showCategorySelector(BuildContext context) {
+    // We need to access the provider here to read categories
     final provider = context.read<MenuProvider>();
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
       backgroundColor: colorScheme.surface,
-      // RESPONSIVE FIX: Limit width on large screens
       constraints: const BoxConstraints(maxWidth: 600),
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (ctx) {
@@ -92,8 +89,7 @@ class _MenuScreenState extends State<MenuScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      _buildCategoryTile(
-                        ctx,
+                      CategorySheetTile(
                         label: 'All',
                         isSelected: _selectedSubId == null,
                         onTap: () {
@@ -106,27 +102,25 @@ class _MenuScreenState extends State<MenuScreen> {
                         },
                       ),
                       const Divider(height: 1, indent: 20, endIndent: 20),
-                      ListView.separated(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: provider.subCategories.length,
-                        separatorBuilder: (_, _) => const Divider(height: 1, indent: 20, endIndent: 20),
-                        itemBuilder: (context, index) {
-                          final cat = provider.subCategories[index];
-                          return _buildCategoryTile(
-                            ctx,
-                            label: cat.name,
-                            isSelected: _selectedSubId == cat.id,
-                            onTap: () {
-                              setState(() {
-                                _selectedSubId = cat.id;
-                                _selectedSubName = cat.name;
-                              });
-                              provider.filterBySubCategory(cat.id);
-                              Navigator.pop(ctx);
-                            },
-                          );
-                        },
+                      // Access the list directly from the provider instance we captured
+                      ...provider.subCategories.map(
+                        (cat) => Column(
+                          children: [
+                            CategorySheetTile(
+                              label: cat.name,
+                              isSelected: _selectedSubId == cat.id,
+                              onTap: () {
+                                setState(() {
+                                  _selectedSubId = cat.id;
+                                  _selectedSubName = cat.name;
+                                });
+                                provider.filterBySubCategory(cat.id);
+                                Navigator.pop(ctx);
+                              },
+                            ),
+                            const Divider(height: 1, indent: 20, endIndent: 20),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -140,45 +134,14 @@ class _MenuScreenState extends State<MenuScreen> {
     );
   }
 
-  Widget _buildCategoryTile(BuildContext context, {required String label, required bool isSelected, required VoidCallback onTap}) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        color: isSelected ? colorScheme.primary.withValues(alpha: 0.08) : null,
-        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 24),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                label,
-                style: theme.textTheme.titleMedium?.copyWith(fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500, color: isSelected ? colorScheme.primary : colorScheme.onSurface, letterSpacing: 0.5),
-              ),
-            ),
-            if (isSelected) Icon(Icons.check_circle, color: colorScheme.primary, size: 20),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<MenuProvider>();
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    final isLoadingInitial = provider.loading && provider.items.isEmpty;
-    final displayItems = isLoadingInitial ? _loadingItems : provider.items;
-
     return PopScope(
       onPopInvokedWithResult: (didPop, result) {
-        if (didPop) {
-          FocusScope.of(context).unfocus();
-        }
+        if (didPop) FocusScope.of(context).unfocus();
       },
       child: Scaffold(
         appBar: AppBar(
@@ -199,28 +162,36 @@ class _MenuScreenState extends State<MenuScreen> {
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     children: [
-                      if (provider.subCategories.isNotEmpty)
-                        InkWell(
-                          onTap: () => _showCategorySelector(context),
-                          borderRadius: BorderRadius.circular(20),
-                          child: Container(
-                            margin: const EdgeInsets.only(right: 12),
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                            decoration: BoxDecoration(
-                              color: colorScheme.surfaceContainer,
-                              borderRadius: BorderRadius.circular(24),
-                              border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
+                      // SELECTOR: Only rebuilds if subCategories availability changes
+                      Selector<MenuProvider, bool>(
+                        selector: (_, provider) => provider.subCategories.isNotEmpty,
+                        builder: (context, hasCategories, child) {
+                          if (!hasCategories) return const SizedBox.shrink();
+                          return InkWell(
+                            onTap: () => _showCategorySelector(context),
+                            borderRadius: BorderRadius.circular(24),
+                            child: Container(
+                              height: 48,
+                              margin: const EdgeInsets.only(right: 12),
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              decoration: BoxDecoration(
+                                color: colorScheme.surfaceContainer,
+                                borderRadius: BorderRadius.circular(24),
+                                border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
+                              ),
+                              alignment: Alignment.center,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(_selectedSubName, style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+                                  const SizedBox(width: 4),
+                                  Icon(Icons.keyboard_arrow_down, size: 18, color: colorScheme.onSurfaceVariant),
+                                ],
+                              ),
                             ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(_selectedSubName, style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
-                                const SizedBox(width: 4),
-                                Icon(Icons.keyboard_arrow_down, size: 18, color: colorScheme.onSurfaceVariant),
-                              ],
-                            ),
-                          ),
-                        ),
+                          );
+                        },
+                      ),
 
                       Expanded(
                         child: Container(
@@ -234,7 +205,8 @@ class _MenuScreenState extends State<MenuScreen> {
                             controller: _searchCtrl,
                             textAlignVertical: TextAlignVertical.center,
                             decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Search', border: InputBorder.none, contentPadding: EdgeInsets.symmetric(horizontal: 16), isDense: true),
-                            onChanged: (v) => provider.setSearch(v),
+                            // Using read() ensures typing doesn't rebuild this widget itself
+                            onChanged: (v) => context.read<MenuProvider>().setSearch(v),
                             onSubmitted: (v) => FocusScope.of(context).unfocus(),
                           ),
                         ),
@@ -243,39 +215,42 @@ class _MenuScreenState extends State<MenuScreen> {
                   ),
                 ),
 
+                // CONSUMER: Only this part rebuilds when data changes
                 Expanded(
-                  child: Skeletonizer(
-                    enabled: isLoadingInitial,
-                    effect: ShimmerEffect(baseColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5), highlightColor: colorScheme.surface),
-                    child: provider.items.isEmpty && !isLoadingInitial
-                        ? const Center(child: Text('No items found'))
-                        : ListView.separated(
-                            controller: _scrollCtrl,
-                            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-                            padding: const EdgeInsets.only(bottom: 16),
-                            itemCount: displayItems.length + (provider.loadingMore ? 1 : 0),
-                            separatorBuilder: (_, _) => Divider(height: 1, thickness: 1, indent: 16, endIndent: 16, color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
-                            itemBuilder: (context, index) {
-                              if (index == displayItems.length) {
-                                return Skeletonizer(
-                                  enabled: true,
-                                  effect: ShimmerEffect(baseColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5), highlightColor: colorScheme.surface),
-                                  child: MenuCard(item: _dummyItem, onTap: null),
-                                );
-                              }
+                  child: Consumer<MenuProvider>(
+                    builder: (context, provider, child) {
+                      final isLoadingInitial = provider.loading && provider.items.isEmpty;
+                      final displayItems = isLoadingInitial ? List.generate(8, (index) => _dummyItem) : provider.items;
 
-                              final item = displayItems[index];
-                              return MenuCard(
-                                item: item,
-                                onTap: isLoadingInitial
-                                    ? null
-                                    : () {
-                                        FocusScope.of(context).unfocus();
-                                        context.push('/detail', extra: item);
-                                      },
-                              );
-                            },
-                          ),
+                      return Skeletonizer(
+                        enabled: isLoadingInitial,
+                        effect: ShimmerEffect(baseColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5), highlightColor: colorScheme.surface),
+                        child: provider.items.isEmpty && !isLoadingInitial
+                            ? const Center(child: Text('No items found'))
+                            : ListView.separated(
+                                controller: _scrollCtrl,
+                                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                                padding: const EdgeInsets.only(bottom: 16),
+                                itemCount: displayItems.length + (provider.loadingMore ? 1 : 0),
+                                separatorBuilder: (_, _) => Divider(height: 1, thickness: 1, indent: 16, endIndent: 16, color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
+                                itemBuilder: (context, index) {
+                                  if (index == displayItems.length) {
+                                    return Skeletonizer(enabled: true, child: MenuCard(item: _dummyItem, onTap: null));
+                                  }
+                                  final item = displayItems[index];
+                                  return MenuCard(
+                                    item: item,
+                                    onTap: isLoadingInitial
+                                        ? null
+                                        : () {
+                                            FocusScope.of(context).unfocus();
+                                            context.push('/detail', extra: item);
+                                          },
+                                  );
+                                },
+                              ),
+                      );
+                    },
                   ),
                 ),
               ],

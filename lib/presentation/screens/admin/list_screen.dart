@@ -19,7 +19,6 @@ class AdminListScreen extends StatefulWidget {
 class _AdminListScreenState extends State<AdminListScreen> {
   final _searchCtrl = TextEditingController();
   final ScrollController _scrollCtrl = ScrollController();
-  // REMOVED: _selectedFilterName
 
   @override
   void initState() {
@@ -31,20 +30,22 @@ class _AdminListScreenState extends State<AdminListScreen> {
         return;
       }
 
-      final menu = context.read<MenuProvider>();
-      menu.fetchAdminList();
-      // REMOVED: menu.loadCategoriesForAdminFilter() since filtering is gone
+      context.read<MenuProvider>().fetchAdminList();
     });
 
     _scrollCtrl.addListener(() {
-      final menu = context.read<MenuProvider>();
       if (_scrollCtrl.position.pixels >= _scrollCtrl.position.maxScrollExtent - 200) {
-        menu.loadMore();
+        context.read<MenuProvider>().loadMore();
       }
     });
   }
 
-  // REMOVED: _showFilterSheet() method
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    _scrollCtrl.dispose();
+    super.dispose();
+  }
 
   // --- Dummy Data for Skeleton ---
   MenuItemEntity get _dummyItem => MenuItemEntity(id: 'dummy', name: 'Loading Item Name ...', description: null, price: 0, categoryId: null, categoryName: 'Category', imagePath: null, imageUrl: null, isAvailable: true, createdAt: DateTime.now(), updatedAt: DateTime.now());
@@ -77,12 +78,10 @@ class _AdminListScreenState extends State<AdminListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final menu = context.watch<MenuProvider>();
+    // OPTIMIZATION: Removed context.watch here.
+    // The scaffold won't rebuild when provider changes, saving resources.
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-
-    final isLoadingInitial = menu.loading && menu.items.isEmpty;
-    final displayItems = isLoadingInitial ? _loadingItems : menu.items;
 
     return PopScope(
       canPop: false,
@@ -93,7 +92,10 @@ class _AdminListScreenState extends State<AdminListScreen> {
       child: Scaffold(
         appBar: AppBar(
           leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.go('/')),
-          title: const Text('Admin Dashboard'),
+          title: Text(
+            'Admin Dashboard',
+            style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.0, color: colorScheme.onSurface),
+          ),
           actions: [
             IconButton(
               icon: const Icon(Icons.category),
@@ -115,7 +117,7 @@ class _AdminListScreenState extends State<AdminListScreen> {
         ),
         body: Column(
           children: [
-            // DASHBOARD HEADER
+            // DASHBOARD HEADER (Search)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               child: Row(
@@ -131,91 +133,104 @@ class _AdminListScreenState extends State<AdminListScreen> {
                         filled: true,
                         fillColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                       ),
-                      onChanged: (v) => menu.setSearch(v),
+                      // OPTIMIZATION: Use read() to trigger search without rebuilding this widget
+                      onChanged: (v) => context.read<MenuProvider>().setSearch(v),
                     ),
                   ),
-                  // REMOVED: Filter Button and SizedBox here
                 ],
               ),
             ),
 
-            // STATS ROW
+            // STATS ROW (Selector)
+            // OPTIMIZATION: Only rebuilds this specific Text widget when item count changes
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               child: Row(
                 children: [
-                  Text(
-                    "Total Items: ${menu.items.length}",
-                    style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold, color: Colors.grey),
+                  Selector<MenuProvider, int>(
+                    selector: (_, provider) => provider.items.length,
+                    builder: (context, count, child) {
+                      return Text(
+                        "Total Items: $count",
+                        style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold, color: Colors.grey),
+                      );
+                    },
                   ),
-                  // REMOVED: Selected Filter Name indicator
                 ],
               ),
             ),
 
             const Divider(height: 1),
 
-            // LIST WITH SKELETONIZER
+            // LIST WITH SKELETONIZER (Consumer)
+            // OPTIMIZATION: Only this Expanded area rebuilds when data loads/changes
             Expanded(
-              child: Skeletonizer(
-                enabled: isLoadingInitial,
-                effect: ShimmerEffect(baseColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5), highlightColor: colorScheme.surface),
-                child: menu.items.isEmpty && !isLoadingInitial
-                    ? const Center(child: Text('No items found'))
-                    : ListView.separated(
-                        controller: _scrollCtrl,
-                        itemCount: displayItems.length + (menu.loadingMore ? 1 : 0),
-                        separatorBuilder: (context, _) => const Divider(height: 1, indent: 72),
-                        itemBuilder: (context, index) {
-                          if (index == displayItems.length) {
-                            return Skeletonizer(
-                              enabled: true,
-                              child: AdminItemTile(item: _dummyItem, onEdit: () {}, onDelete: () {}),
-                            );
-                          }
+              child: Consumer<MenuProvider>(
+                builder: (context, menu, child) {
+                  final isLoadingInitial = menu.loading && menu.items.isEmpty;
+                  final displayItems = isLoadingInitial ? _loadingItems : menu.items;
 
-                          final item = displayItems[index];
-                          return AdminItemTile(
-                            item: item,
-                            onEdit: isLoadingInitial
-                                ? () {}
-                                : () async {
-                                    final menuProv = context.read<MenuProvider>();
-                                    await context.push('/admin/edit', extra: item);
-                                    if (!mounted) return;
-                                    await menuProv.fetchAdminList();
-                                  },
-                            onDelete: isLoadingInitial
-                                ? () {}
-                                : () async {
-                                    final adminProv = context.read<AdminProvider>();
-                                    final menuProv = context.read<MenuProvider>();
-                                    // Use Global Utils for Snackbar? Or keep local for now.
-                                    // Assuming you want to keep existing logic unless specified.
-                                    final messenger = ScaffoldMessenger.of(context);
-                                    final confirm = await showDialog<bool>(
-                                      context: context,
-                                      builder: (ctx) => AlertDialog(
-                                        title: const Text('Delete item?'),
-                                        content: const Text('This action cannot be undone.'),
-                                        actions: [
-                                          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-                                          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Delete')),
-                                        ],
-                                      ),
-                                    );
-                                    if (confirm == true) {
-                                      final ok = await adminProv.delete(item.id);
-                                      if (!context.mounted) return;
-                                      if (ok) {
-                                        messenger.showSnackBar(const SnackBar(content: Text('Deleted')));
+                  return Skeletonizer(
+                    enabled: isLoadingInitial,
+                    effect: ShimmerEffect(baseColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5), highlightColor: colorScheme.surface),
+                    child: menu.items.isEmpty && !isLoadingInitial
+                        ? const Center(child: Text('No items found'))
+                        : ListView.separated(
+                            controller: _scrollCtrl,
+                            itemCount: displayItems.length + (menu.loadingMore ? 1 : 0),
+                            separatorBuilder: (context, _) => const Divider(height: 1, indent: 72),
+                            itemBuilder: (context, index) {
+                              if (index == displayItems.length) {
+                                return Skeletonizer(
+                                  enabled: true,
+                                  child: AdminItemTile(item: _dummyItem, onEdit: () {}, onDelete: () {}),
+                                );
+                              }
+
+                              final item = displayItems[index];
+                              return AdminItemTile(
+                                item: item,
+                                onEdit: isLoadingInitial
+                                    ? () {}
+                                    : () async {
+                                        final menuProv = context.read<MenuProvider>();
+                                        await context.push('/admin/edit', extra: item);
+                                        if (!context.mounted) return;
                                         await menuProv.fetchAdminList();
-                                      }
-                                    }
-                                  },
-                          );
-                        },
-                      ),
+                                      },
+                                onDelete: isLoadingInitial
+                                    ? () {}
+                                    : () async {
+                                        final adminProv = context.read<AdminProvider>();
+                                        final menuProv = context.read<MenuProvider>();
+                                        final messenger = ScaffoldMessenger.of(context);
+
+                                        final confirm = await showDialog<bool>(
+                                          context: context,
+                                          builder: (ctx) => AlertDialog(
+                                            title: const Text('Delete item?'),
+                                            content: const Text('This action cannot be undone.'),
+                                            actions: [
+                                              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                                              FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Delete')),
+                                            ],
+                                          ),
+                                        );
+
+                                        if (confirm == true) {
+                                          final ok = await adminProv.delete(item.id);
+                                          if (!context.mounted) return;
+                                          if (ok) {
+                                            messenger.showSnackBar(const SnackBar(content: Text('Deleted')));
+                                            await menuProv.fetchAdminList();
+                                          }
+                                        }
+                                      },
+                              );
+                            },
+                          ),
+                  );
+                },
               ),
             ),
           ],

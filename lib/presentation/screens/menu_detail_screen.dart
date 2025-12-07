@@ -1,5 +1,7 @@
+import 'dart:ui';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:urban_cafe/domain/entities/menu_item.dart';
 
@@ -14,7 +16,6 @@ class MenuDetailScreen extends StatelessWidget {
     final priceFormat = NumberFormat.currency(symbol: '', decimalDigits: 0);
 
     return Scaffold(
-      // RESPONSIVE FIX: Center content and limit max width
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 600),
@@ -25,34 +26,61 @@ class MenuDetailScreen extends StatelessWidget {
                 pinned: true,
                 backgroundColor: colorScheme.surface,
                 foregroundColor: colorScheme.onSurface,
-                title: Text(item.name, style: const TextStyle(color: Colors.transparent)),
-                flexibleSpace: FlexibleSpaceBar(
-                  background: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      item.imageUrl != null
-                          ? CachedNetworkImage(
-                              imageUrl: item.imageUrl!,
-                              fit: BoxFit.cover,
-                              placeholder: (context, url) => Container(color: colorScheme.surfaceContainerHighest),
-                              errorWidget: (context, url, error) => Container(
-                                color: colorScheme.surfaceContainerHighest,
-                                child: Icon(Icons.fastfood, size: 60, color: colorScheme.onSurfaceVariant),
-                              ),
-                            )
-                          : Container(
-                              color: colorScheme.surfaceContainerHighest,
-                              child: Icon(Icons.fastfood, size: 60, color: colorScheme.onSurfaceVariant),
-                            ),
-                      const DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.black26, Colors.transparent, Colors.transparent], stops: [0.0, 0.3, 1.0]),
-                        ),
-                      ),
-                    ],
+                leading: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: CircleAvatar(
+                    backgroundColor: colorScheme.surface.withValues(alpha: 0.7),
+                    child: IconButton(icon: const Icon(Icons.arrow_back), color: colorScheme.onSurface, tooltip: 'Back', onPressed: () => context.pop()),
                   ),
                 ),
+                title: Text(item.name, style: const TextStyle(color: Colors.transparent)),
+                flexibleSpace: FlexibleSpaceBar(
+                  background: item.imageUrl == null
+                      ? Container(
+                          color: colorScheme.surfaceContainerHighest,
+                          child: Icon(Icons.fastfood, size: 60, color: colorScheme.onSurfaceVariant),
+                        )
+                      : Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            // 1. BLURRED BACKGROUND
+                            CachedNetworkImage(imageUrl: item.imageUrl!, fit: BoxFit.cover),
+                            BackdropFilter(
+                              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                              child: Container(color: Colors.black.withValues(alpha: 0.3)),
+                            ),
+
+                            // 2. MAIN IMAGE (Safe Area Applied Universally)
+                            // Now applies to both Mobile and Web
+                            SafeArea(
+                              top: true,
+                              bottom: false,
+                              child: CachedNetworkImage(
+                                imageUrl: item.imageUrl!,
+                                fit: BoxFit.contain,
+                                placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                                errorWidget: (context, url, error) => const Icon(Icons.error),
+                              ),
+                            ),
+
+                            // 3. BOTTOM SHADOW
+                            const Positioned(
+                              bottom: 0,
+                              left: 0,
+                              right: 0,
+                              height: 80,
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.transparent, Colors.black45]),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
               ),
+
+              // CONTENT
               SliverToBoxAdapter(
                 child: Container(
                   transform: Matrix4.translationValues(0, -20, 0),

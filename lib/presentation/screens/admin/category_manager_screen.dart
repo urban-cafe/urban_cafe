@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:urban_cafe/core/utils.dart'; // IMPORT THE GLOBAL UTILS
+import 'package:urban_cafe/core/utils.dart';
 import 'package:urban_cafe/data/repositories/menu_repository_impl.dart';
 import 'package:urban_cafe/presentation/providers/admin_provider.dart';
+import 'package:urban_cafe/presentation/widgets/add_category_dialog.dart'; // Import global dialog
 
 class AdminCategoryManagerScreen extends StatefulWidget {
   const AdminCategoryManagerScreen({super.key});
@@ -21,8 +22,6 @@ class _AdminCategoryManagerScreenState extends State<AdminCategoryManagerScreen>
     super.initState();
     _loadTree();
   }
-
-  // NOTE: _showMsg function is removed. We use showAppSnackBar directly.
 
   Future<void> _loadTree() async {
     setState(() => _isLoading = true);
@@ -43,16 +42,33 @@ class _AdminCategoryManagerScreenState extends State<AdminCategoryManagerScreen>
     }
   }
 
-  Future<void> _showEditDialog({required String title, String? currentName, String? id, String? parentId, required bool isCreating}) async {
+  // UPDATED: Now creates categories using the global dialog
+  Future<void> _triggerCreate({String? parentId}) async {
+    // Call the global dialog
+    final newId = await showAddCategoryDialog(context, parentId: parentId);
+
+    // If successful (ID returned), reload the tree and show success message
+    if (newId != null && mounted) {
+      showAppSnackBar(context, "Category Created Successfully");
+      _loadTree();
+    }
+  }
+
+  // Renaming is specific to this screen (editing existing data), so we keep a simple dialog here
+  Future<void> _showRenameDialog(String id, String currentName) async {
     final ctrl = TextEditingController(text: currentName);
+
     await showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(title, style: Theme.of(context).textTheme.titleLarge),
-        content: TextField(
-          controller: ctrl,
-          autofocus: true,
-          decoration: const InputDecoration(labelText: 'Category Name', border: OutlineInputBorder()),
+        title: Text('Rename Category', style: Theme.of(context).textTheme.titleLarge),
+        content: SingleChildScrollView(
+          child: TextField(
+            controller: ctrl,
+            autofocus: true,
+            scrollPadding: const EdgeInsets.only(bottom: 200),
+            decoration: const InputDecoration(labelText: 'Category Name', border: OutlineInputBorder()),
+          ),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
@@ -61,31 +77,18 @@ class _AdminCategoryManagerScreenState extends State<AdminCategoryManagerScreen>
               if (ctrl.text.trim().isEmpty) return;
               Navigator.pop(ctx);
 
-              final adminProv = context.read<AdminProvider>();
-              bool success = false;
-              String actionType = "";
-
-              if (isCreating) {
-                actionType = "Created";
-                final newId = await adminProv.addCategory(ctrl.text.trim(), parentId: parentId);
-                success = newId != null;
-              } else {
-                actionType = "Updated";
-                if (id != null) {
-                  success = await adminProv.renameCategory(id, ctrl.text.trim());
-                }
-              }
+              final success = await context.read<AdminProvider>().renameCategory(id, ctrl.text.trim());
 
               if (mounted) {
                 if (success) {
-                  showAppSnackBar(context, "Category $actionType Successfully"); // GLOBAL USAGE
+                  showAppSnackBar(context, "Category Renamed Successfully");
                   _loadTree();
                 } else {
-                  showAppSnackBar(context, "Failed to $actionType Category", isError: true); // GLOBAL USAGE
+                  showAppSnackBar(context, "Failed to Rename", isError: true);
                 }
               }
             },
-            child: Text(isCreating ? 'Create' : 'Save'),
+            child: const Text('Save'),
           ),
         ],
       ),
@@ -113,27 +116,25 @@ class _AdminCategoryManagerScreenState extends State<AdminCategoryManagerScreen>
       final success = await context.read<AdminProvider>().deleteCategory(id);
       if (mounted) {
         if (success) {
-          showAppSnackBar(context, "Category Deleted Successfully"); // GLOBAL USAGE
+          showAppSnackBar(context, "Category Deleted Successfully");
           _loadTree();
         } else {
-          showAppSnackBar(context, "Failed to delete category", isError: true); // GLOBAL USAGE
+          showAppSnackBar(context, "Failed to delete category", isError: true);
         }
       }
     }
   }
 
-  // ... (Build method remains exactly the same as previous step) ...
   @override
   Widget build(BuildContext context) {
-    // ... Copy the Build method from the previous response ...
-    // Just ensure you import the new utils file at the top.
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Manage Categories')),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showEditDialog(title: 'New Main Category', isCreating: true),
+        // UPDATED: Use new trigger
+        onPressed: () => _triggerCreate(parentId: null),
         label: const Text("Add Main"),
         icon: const Icon(Icons.add),
       ),
@@ -169,7 +170,8 @@ class _AdminCategoryManagerScreenState extends State<AdminCategoryManagerScreen>
                           IconButton(
                             icon: const Icon(Icons.edit, size: 20),
                             tooltip: "Rename Main Category",
-                            onPressed: () => _showEditDialog(title: 'Rename Category', currentName: main['name'], id: main['id'], isCreating: false),
+                            // UPDATED: Use rename dialog
+                            onPressed: () => _showRenameDialog(main['id'], main['name']),
                           ),
                           IconButton(
                             icon: Icon(Icons.delete_outline, size: 20, color: colorScheme.error),
@@ -192,7 +194,8 @@ class _AdminCategoryManagerScreenState extends State<AdminCategoryManagerScreen>
                               "Add Sub-Category",
                               style: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.w600),
                             ),
-                            onTap: () => _showEditDialog(title: 'New Sub Category for ${main['name']}', parentId: main['id'], isCreating: true),
+                            // UPDATED: Use new trigger with parentId
+                            onTap: () => _triggerCreate(parentId: main['id']),
                           ),
                         ),
 
@@ -217,7 +220,8 @@ class _AdminCategoryManagerScreenState extends State<AdminCategoryManagerScreen>
                                   children: [
                                     IconButton(
                                       icon: const Icon(Icons.edit, size: 18),
-                                      onPressed: () => _showEditDialog(title: 'Rename Sub Category', currentName: sub['name'], id: sub['id'], isCreating: false),
+                                      // UPDATED: Use rename dialog
+                                      onPressed: () => _showRenameDialog(sub['id'], sub['name']),
                                     ),
                                     IconButton(
                                       icon: Icon(Icons.delete_outline, size: 18, color: colorScheme.error),

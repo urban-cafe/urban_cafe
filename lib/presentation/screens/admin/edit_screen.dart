@@ -2,10 +2,11 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart'; // Added for querying parent_id
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:urban_cafe/data/repositories/menu_repository_impl.dart';
 import 'package:urban_cafe/domain/entities/menu_item.dart';
 import 'package:urban_cafe/presentation/providers/admin_provider.dart';
+import 'package:urban_cafe/presentation/widgets/add_category_dialog.dart'; // Import the new widget
 
 class AdminEditScreen extends StatefulWidget {
   final String? id;
@@ -25,7 +26,6 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
   bool _available = true;
   PlatformFile? _imageFile;
 
-  // Category State
   List<Map<String, dynamic>> _mainCategories = [];
   List<Map<String, dynamic>> _subCategories = [];
   String? _selectedMainId;
@@ -39,13 +39,10 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
 
   Future<void> _loadInitialData() async {
     try {
-      // 1. Load Main Categories
       final mains = await _repo.getMainCategories();
-
       if (!mounted) return;
       setState(() => _mainCategories = mains);
 
-      // 2. Pre-fill data if editing
       if (widget.item != null) {
         final item = widget.item!;
         _nameCtrl.text = item.name;
@@ -53,25 +50,18 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
         _priceCtrl.text = item.price.toString();
         _available = item.isAvailable;
 
-        // 3. Resolve Category Hierarchy
         if (item.categoryId != null) {
-          // We have the Sub Category ID (item.categoryId).
-          // We must find its PARENT ID to set the Main Dropdown.
           final client = Supabase.instance.client;
-
           final catResult = await client.from('categories').select('parent_id').eq('id', item.categoryId!).single();
-
           final parentId = catResult['parent_id'] as String?;
 
           if (parentId != null) {
-            // It has a parent, so fetch the siblings (sub-categories) for this parent
             final subs = await _repo.getSubCategories(parentId);
-
             if (mounted) {
               setState(() {
-                _selectedMainId = parentId; // Select Main
-                _subCategories = subs; // Populate Sub List
-                _selectedSubId = item.categoryId; // Select Sub
+                _selectedMainId = parentId;
+                _subCategories = subs;
+                _selectedSubId = item.categoryId;
               });
             }
           }
@@ -94,47 +84,31 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
     }
   }
 
-  // Dialog to create new category
-  Future<void> _showAddCategoryDialog(bool isMain, {String? parentId}) async {
-    final ctrl = TextEditingController();
-    await showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(isMain ? 'New Main Category' : 'New Sub Category'),
-        content: TextField(
-          controller: ctrl,
-          decoration: const InputDecoration(labelText: 'Name'),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          FilledButton(
-            onPressed: () async {
-              if (ctrl.text.isEmpty) return;
-              final id = await context.read<AdminProvider>().addCategory(ctrl.text, parentId: parentId);
-              if (ctx.mounted) Navigator.pop(ctx);
+  // UPDATED: Now uses the global dialog and handles the result
+  Future<void> _triggerAddCategory({String? parentId}) async {
+    // 1. Show global dialog
+    final newId = await showAddCategoryDialog(context, parentId: parentId);
 
-              // Refresh lists
-              if (isMain) {
-                final mains = await _repo.getMainCategories();
-                setState(() {
-                  _mainCategories = mains;
-                  _selectedMainId = id;
-                  _subCategories = [];
-                  _selectedSubId = null;
-                });
-              } else if (parentId != null) {
-                final subs = await _repo.getSubCategories(parentId);
-                setState(() {
-                  _subCategories = subs;
-                  _selectedSubId = id;
-                });
-              }
-            },
-            child: const Text('Create'),
-          ),
-        ],
-      ),
-    );
+    // 2. If user created something, refresh the specific list
+    if (newId != null && mounted) {
+      if (parentId == null) {
+        // Main Category Created
+        final mains = await _repo.getMainCategories();
+        setState(() {
+          _mainCategories = mains;
+          _selectedMainId = newId; // Auto-select new category
+          _subCategories = [];
+          _selectedSubId = null;
+        });
+      } else {
+        // Sub Category Created
+        final subs = await _repo.getSubCategories(parentId);
+        setState(() {
+          _subCategories = subs;
+          _selectedSubId = newId; // Auto-select new sub-category
+        });
+      }
+    }
   }
 
   @override
@@ -151,7 +125,6 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Image Picker
                 Center(
                   child: InkWell(
                     onTap: () async {
@@ -195,14 +168,18 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
                   children: [
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        initialValue: _selectedMainId, // Changed from initialValue to value for updates
+                        initialValue: _selectedMainId,
                         decoration: const InputDecoration(labelText: 'Main Category', border: OutlineInputBorder()),
                         items: _mainCategories.map((c) => DropdownMenuItem(value: c['id'] as String, child: Text(c['name']))).toList(),
                         onChanged: _onMainCategoryChanged,
                       ),
                     ),
                     const SizedBox(width: 8),
-                    IconButton.filledTonal(icon: const Icon(Icons.add), onPressed: () => _showAddCategoryDialog(true), tooltip: 'Add Main Category'),
+                    IconButton.filledTonal(
+                      icon: const Icon(Icons.add),
+                      onPressed: () => _triggerAddCategory(), // Calls new helper
+                      tooltip: 'Add Main Category',
+                    ),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -212,7 +189,7 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
                   children: [
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        initialValue: _selectedSubId, // Changed from initialValue to value
+                        initialValue: _selectedSubId,
                         decoration: const InputDecoration(labelText: 'Sub Category', border: OutlineInputBorder()),
                         items: _subCategories.map((c) => DropdownMenuItem(value: c['id'] as String, child: Text(c['name']))).toList(),
                         onChanged: (v) => setState(() => _selectedSubId = v),
@@ -221,8 +198,7 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
                     const SizedBox(width: 8),
                     IconButton.filledTonal(
                       icon: const Icon(Icons.add),
-                      // Only enable if main is selected
-                      onPressed: _selectedMainId == null ? null : () => _showAddCategoryDialog(false, parentId: _selectedMainId),
+                      onPressed: _selectedMainId == null ? null : () => _triggerAddCategory(parentId: _selectedMainId), // Calls new helper
                       tooltip: 'Add Sub Category',
                     ),
                   ],
@@ -243,14 +219,7 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
                             bool success;
 
                             if (widget.item == null) {
-                              success = await admin.create(
-                                name: _nameCtrl.text,
-                                description: _descCtrl.text,
-                                price: price,
-                                categoryId: _selectedSubId, // IMPORTANT: Save UUID
-                                isAvailable: _available,
-                                imageFile: _imageFile,
-                              );
+                              success = await admin.create(name: _nameCtrl.text, description: _descCtrl.text, price: price, categoryId: _selectedSubId, isAvailable: _available, imageFile: _imageFile);
                             } else {
                               success = await admin.update(id: widget.item!.id, name: _nameCtrl.text, description: _descCtrl.text, price: price, categoryId: _selectedSubId, isAvailable: _available, imageFile: _imageFile);
                             }
