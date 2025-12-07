@@ -69,6 +69,12 @@ class MenuRepositoryImpl implements MenuRepository {
   }
 
   @override
+  Future<void> deleteCategory(String id) async {
+    if (!Env.isConfigured) throw Exception('Supabase not configured');
+    await _client.from(catTable).delete().eq('id', id);
+  }
+
+  @override
   Future<void> updateCategory(String id, String newName) async {
     if (!Env.isConfigured) throw Exception('Supabase not configured');
     await _client.from(catTable).update({'name': newName}).eq('id', id);

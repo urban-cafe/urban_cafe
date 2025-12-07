@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:skeletonizer/skeletonizer.dart'; // Import Skeletonizer
-import 'package:urban_cafe/domain/entities/menu_item.dart'; // Import Entity for Dummy Data
+import 'package:skeletonizer/skeletonizer.dart';
+import 'package:urban_cafe/domain/entities/menu_item.dart';
 import 'package:urban_cafe/presentation/providers/admin_provider.dart';
 import 'package:urban_cafe/presentation/providers/auth_provider.dart';
 import 'package:urban_cafe/presentation/providers/menu_provider.dart';
@@ -19,7 +19,7 @@ class AdminListScreen extends StatefulWidget {
 class _AdminListScreenState extends State<AdminListScreen> {
   final _searchCtrl = TextEditingController();
   final ScrollController _scrollCtrl = ScrollController();
-  String? _selectedFilterName;
+  // REMOVED: _selectedFilterName
 
   @override
   void initState() {
@@ -30,11 +30,10 @@ class _AdminListScreenState extends State<AdminListScreen> {
         context.go('/admin/login');
         return;
       }
-      // Load everything needed
+
       final menu = context.read<MenuProvider>();
       menu.fetchAdminList();
-      // Initialize categories for the filter
-      menu.loadCategoriesForAdminFilter();
+      // REMOVED: menu.loadCategoriesForAdminFilter() since filtering is gone
     });
 
     _scrollCtrl.addListener(() {
@@ -45,20 +44,10 @@ class _AdminListScreenState extends State<AdminListScreen> {
     });
   }
 
+  // REMOVED: _showFilterSheet() method
+
   // --- Dummy Data for Skeleton ---
-  MenuItemEntity get _dummyItem => MenuItemEntity(
-    id: 'dummy',
-    name: 'Loading Item Name ...',
-    description: null,
-    price: 0,
-    categoryId: null,
-    categoryName: 'Category',
-    imagePath: null,
-    imageUrl: null, // Null image renders placeholder
-    isAvailable: true,
-    createdAt: DateTime.now(),
-    updatedAt: DateTime.now(),
-  );
+  MenuItemEntity get _dummyItem => MenuItemEntity(id: 'dummy', name: 'Loading Item Name ...', description: null, price: 0, categoryId: null, categoryName: 'Category', imagePath: null, imageUrl: null, isAvailable: true, createdAt: DateTime.now(), updatedAt: DateTime.now());
 
   List<MenuItemEntity> get _loadingItems {
     return List.generate(8, (index) => _dummyItem);
@@ -86,56 +75,12 @@ class _AdminListScreenState extends State<AdminListScreen> {
     }
   }
 
-  void _showFilterSheet() {
-    final provider = context.read<MenuProvider>();
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (ctx) => Container(
-        height: MediaQuery.of(context).size.height * 0.7,
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Text("Filter by Category", style: Theme.of(context).textTheme.titleLarge),
-            const Divider(),
-            ListTile(
-              title: const Text("Show All"),
-              onTap: () {
-                setState(() => _selectedFilterName = null);
-                provider.fetchAdminList(); // Reset
-                Navigator.pop(ctx);
-              },
-            ),
-            Expanded(
-              child: ListView.builder(
-                itemCount: provider.subCategories.length,
-                itemBuilder: (context, index) {
-                  final cat = provider.subCategories[index];
-                  return ListTile(
-                    title: Text(cat.name),
-                    onTap: () {
-                      setState(() => _selectedFilterName = cat.name);
-                      provider.filterBySubCategory(cat.id);
-                      Navigator.pop(ctx);
-                    },
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final menu = context.watch<MenuProvider>();
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    // Loading Logic
     final isLoadingInitial = menu.loading && menu.items.isEmpty;
     final displayItems = isLoadingInitial ? _loadingItems : menu.items;
 
@@ -189,13 +134,7 @@ class _AdminListScreenState extends State<AdminListScreen> {
                       onChanged: (v) => menu.setSearch(v),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  // Filter Button
-                  IconButton.filledTonal(
-                    icon: Icon(Icons.filter_list, color: _selectedFilterName != null ? theme.colorScheme.primary : null),
-                    tooltip: "Filter",
-                    onPressed: _showFilterSheet,
-                  ),
+                  // REMOVED: Filter Button and SizedBox here
                 ],
               ),
             ),
@@ -209,14 +148,7 @@ class _AdminListScreenState extends State<AdminListScreen> {
                     "Total Items: ${menu.items.length}",
                     style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold, color: Colors.grey),
                   ),
-                  if (_selectedFilterName != null) ...[
-                    const SizedBox(width: 12),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(color: theme.colorScheme.secondaryContainer, borderRadius: BorderRadius.circular(4)),
-                      child: Text(_selectedFilterName!, style: TextStyle(fontSize: 12, color: theme.colorScheme.onSecondaryContainer)),
-                    ),
-                  ],
+                  // REMOVED: Selected Filter Name indicator
                 ],
               ),
             ),
@@ -235,7 +167,6 @@ class _AdminListScreenState extends State<AdminListScreen> {
                         itemCount: displayItems.length + (menu.loadingMore ? 1 : 0),
                         separatorBuilder: (context, _) => const Divider(height: 1, indent: 72),
                         itemBuilder: (context, index) {
-                          // Bottom Loader
                           if (index == displayItems.length) {
                             return Skeletonizer(
                               enabled: true,
@@ -259,6 +190,8 @@ class _AdminListScreenState extends State<AdminListScreen> {
                                 : () async {
                                     final adminProv = context.read<AdminProvider>();
                                     final menuProv = context.read<MenuProvider>();
+                                    // Use Global Utils for Snackbar? Or keep local for now.
+                                    // Assuming you want to keep existing logic unless specified.
                                     final messenger = ScaffoldMessenger.of(context);
                                     final confirm = await showDialog<bool>(
                                       context: context,

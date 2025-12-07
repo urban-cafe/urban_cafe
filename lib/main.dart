@@ -26,14 +26,28 @@ Future<void> main() async {
     } catch (_) {}
   }
   await SupabaseClientProvider.initialize(url: Env.supabaseUrl, anonKey: Env.supabaseAnonKey);
+
   runApp(const UrbanCafeApp());
 }
 
-class UrbanCafeApp extends StatelessWidget {
+class UrbanCafeApp extends StatefulWidget {
   const UrbanCafeApp({super.key});
 
   @override
+  State<UrbanCafeApp> createState() => _UrbanCafeAppState();
+}
+
+class _UrbanCafeAppState extends State<UrbanCafeApp> {
+  // Precache the image when the app starts
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    precacheImage(const AssetImage('assets/logos/urbancafelogo.png'), context);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    // ... Router definition ...
     final router = GoRouter(
       routes: [
         GoRoute(path: '/', builder: (context, state) => const MainMenuScreen()),
@@ -53,6 +67,7 @@ class UrbanCafeApp extends StatelessWidget {
         ),
       ],
     );
+
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
@@ -62,14 +77,7 @@ class UrbanCafeApp extends StatelessWidget {
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {
-          return MaterialApp.router(
-            title: 'UrbanCafe',
-            theme: AppTheme.theme,
-            darkTheme: AppTheme.darkTheme,
-            themeMode: themeProvider.themeMode, // Use the provider's mode
-            debugShowCheckedModeBanner: false,
-            routerConfig: router,
-          );
+          return MaterialApp.router(title: 'UrbanCafe', theme: AppTheme.theme, darkTheme: AppTheme.darkTheme, themeMode: themeProvider.themeMode, debugShowCheckedModeBanner: false, routerConfig: router);
         },
       ),
     );

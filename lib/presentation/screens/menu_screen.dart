@@ -190,7 +190,6 @@ class _MenuScreenState extends State<MenuScreen> {
           scrolledUnderElevation: 0,
           backgroundColor: colorScheme.surface,
         ),
-        // RESPONSIVE FIX: Center and constrain width for large screens
         body: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 600),

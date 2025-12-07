@@ -85,7 +85,7 @@ class MainMenuScreen extends StatelessWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode, color: colorScheme.onSurface),
+          icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode, color: colorScheme.primary),
           tooltip: 'Toggle Theme',
           onPressed: () {
             context.read<ThemeProvider>().toggleTheme();
@@ -93,7 +93,7 @@ class MainMenuScreen extends StatelessWidget {
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.admin_panel_settings_outlined, color: colorScheme.onSurface),
+            icon: Icon(Icons.admin_panel_settings_outlined, color: colorScheme.primary),
             tooltip: 'Admin Area',
             onPressed: () {
               final auth = context.read<AuthProvider>();
@@ -126,6 +126,7 @@ class MainMenuScreen extends StatelessWidget {
                     'assets/logos/urbancafelogo.png',
                     height: 220,
                     fit: BoxFit.contain,
+                    color: isDark ? colorScheme.onSecondaryContainer : null,
                     errorBuilder: (context, error, stackTrace) => Icon(Icons.local_cafe, size: 100, color: colorScheme.primary),
                   ),
                 ),
