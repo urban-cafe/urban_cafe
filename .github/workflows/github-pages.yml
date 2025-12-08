@@ -33,11 +33,10 @@ jobs:
       - name: Build Flutter Web
         run: |
           flutter build web --release \
-            --renderer=html \
             --dart-define=SUPABASE_URL=${SUPABASE_URL} \
             --dart-define=SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY} \
             --base-href "/urban_cafe/" 
-            
+  
           cp web/404.html build/web/404.html
 
       - name: Upload Pages Artifact
