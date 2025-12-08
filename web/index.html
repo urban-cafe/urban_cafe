@@ -249,70 +249,74 @@
   <script src="flutter_bootstrap.js" async></script>
 
   <script>
-    // Progress bar animator: loop until Flutter is ready.
     (function () {
       const bar = document.getElementById('progress_bar');
       let pct = 12;
       let direction = 1;
-      // gentle oscillation to suggest progress
       const tick = () => {
-        pct += direction * (Math.random() * 8 + 1); // add 1-9
+        pct += direction * (Math.random() * 8 + 1);
         if (pct > 92) { pct = 92; direction = -1; }
         if (pct < 12) { pct = 12; direction = 1; }
         if (bar) bar.style.width = pct + '%';
       };
-      const t = setInterval(tick, 420);
+      const intervalId = setInterval(tick, 420);
 
-      // Remove loader function
-      function removeLoader() {
-        clearInterval(t);
+      function removeLoaderImmediate() {
+        clearInterval(intervalId);
         const loader = document.getElementById('loading_container');
         if (!loader) return;
         loader.style.transition = 'opacity 280ms ease, transform 300ms ease';
         loader.style.opacity = '0';
         loader.style.transform = 'translateY(-6px)';
-        setTimeout(() => loader.remove(), 320);
+        setTimeout(() => { loader.remove(); }, 320);
       }
 
-      // Flutter bootstrap hook: same approach you had but resilient
+      // Expose for Dart to call
+      window.flutterAppReady = function () {
+        try { remosveLoaderImmediate(); } catch (e) { console.warn('removeLoader failed', e); }
+      };
+
+      // Also watch for bootstrap success via _flutter.loader if available
       window.addEventListener('load', function () {
-        if (!window._flutter || !window._flutter.loader) {
-          // fallback: remove loader after a timeout
-          setTimeout(removeLoader, 3000);
-          return;
+        try {
+          if (window._flutter && _flutter.loader && typeof _flutter.loader.loadEntrypoint === 'function') {
+            _flutter.loader.loadEntrypoint({
+              serviceWorker: {
+                serviceWorkerVersion: {{ flutter_service_worker_version }},
+        },
+        onEntrypointLoaded: function (engineInitializer) {
+          engineInitializer.initializeEngine().then(function (appRunner) {
+            appRunner.runApp();
+            // give Flutter a small moment to paint, but also ensure fallback
+            setTimeout(removeLoaderImmediate, 220);
+          }).catch(function (e) {
+            console.error('Flutter engine init error', e);
+            // still remove loader after a short delay so UI isn't stuck
+            setTimeout(removeLoaderImmediate, 600);
+          });
         }
-
-        _flutter.loader.loadEntrypoint({
-          serviceWorker: {
-            serviceWorkerVersion: {{ flutter_service_worker_version }},
-          },
-      onEntrypointLoaded: function (engineInitializer) {
-        engineInitializer.initializeEngine().then(function (appRunner) {
-          appRunner.runApp();
-          // small delay to ensure first paint
-          setTimeout(removeLoader, 220);
-        }).catch(function (e) {
-          // if something goes wrong, still remove loader after showing error
-          console.error(e);
-          setTimeout(removeLoader, 600);
-        });
-      }
-        });
+      });
+    } else {
+      // If bootstrap isn't present, fallback to removing loader after 5s
+      console.warn('_flutter.loader not detected - using fallback removal');
+      setTimeout(removeLoaderImmediate, 5000);
+    }
+        } catch (err) {
+      console.error('Loader bootstrap error', err);
+      setTimeout(removeLoaderImmediate, 5000);
+    }
       });
 
-    // Also remove loader if the page visibility indicates app is ready (edge-case)
-    document.addEventListener('visibilitychange', function () {
-      if (document.visibilityState === 'visible' && window.flutterAppStarted) {
-        removeLoader();
+    // Final safety: if nothing calls flutterAppReady or bootstrap stalls, remove after 10s
+    setTimeout(function () {
+      if (!window.flutterAppStarted) {
+        console.warn('Final fallback: removing loader after timeout');
+        removeLoaderImmediate();
       }
-    }, { once: true });
-
-    // Expose a hook for Flutter to call JS when it's ready (optional)
-    window.flutterAppReady = function () {
-      removeLoader();
-    };
+    }, 10000);
     }) ();
   </script>
+
 
   <!-- VisualViewport forwarding (useful for PWAs + keyboard) -->
   <script>
