@@ -6,9 +6,6 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
   <meta name="description" content="Urban Cafe">
 
   <meta name="mobile-web-app-capable" content="yes">
@@ -22,53 +19,321 @@
 
   <title>Urban Cafe</title>
   <link rel="manifest" href="manifest.json">
+
+  <style>
+    :root {
+      --bg: #F7F7F7;
+      --surface: #FFFFFF;
+      --accent: #8B5E3C;
+      --muted: #E9E9E9;
+      --text: #222;
+      --card-radius: 12px;
+    }
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* center container */
+    #loading_container {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      z-index: 9999;
+      background: linear-gradient(0deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.6));
+      backdrop-filter: blur(4px);
+      box-sizing: border-box;
+    }
+
+    .loader-card {
+      width: 100%;
+      max-width: 760px;
+      background: var(--surface);
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(16, 24, 40, 0.06);
+      padding: 20px;
+      display: flex;
+      gap: 18px;
+      align-items: center;
+    }
+
+    .logo-wrap {
+      width: 96px;
+      min-width: 96px;
+      height: 96px;
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(139, 94, 60, 0.08), rgba(139, 94, 60, 0.03));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 -6px 18px rgba(139, 94, 60, 0.04);
+    }
+
+    .logo-wrap img {
+      width: 64px;
+      height: 64px;
+      object-fit: contain;
+    }
+
+    .loader-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 12px;
+    }
+
+    /* progress bar */
+    .progress {
+      position: relative;
+      height: 8px;
+      background: var(--muted);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .progress .bar {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent), #C88C64);
+      border-radius: 999px;
+      transition: width 400ms cubic-bezier(.2, .8, .2, 1);
+    }
+
+    /* shimmer skeleton row */
+    .row-skeleton {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .thumb {
+      width: 84px;
+      height: 60px;
+      border-radius: 8px;
+      background: linear-gradient(90deg, #f4f4f4, #efefef, #f4f4f4);
+      background-size: 200% 100%;
+      animation: shimmer 1.6s linear infinite;
+      flex-shrink: 0;
+    }
+
+    .text-skel {
+      flex: 1;
+      height: 60px;
+      border-radius: 8px;
+      background: linear-gradient(90deg, #f4f4f4, #efefef, #f4f4f4);
+      background-size: 200% 100%;
+      animation: shimmer 1.6s linear infinite;
+    }
+
+    @keyframes shimmer {
+      0% {
+        background-position: 200% 0;
+      }
+
+      100% {
+        background-position: -200% 0;
+      }
+    }
+
+    /* small helper row for mobile */
+    .small-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--muted);
+    }
+
+    /* accessibility: reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      .progress .bar {
+        transition: none;
+        animation: none !important;
+        width: 50% !important;
+      }
+
+      .thumb,
+      .text-skel {
+        animation: none;
+        background: var(--muted);
+      }
+    }
+
+    /* responsive */
+    @media (max-width:420px) {
+      .loader-card {
+        padding: 16px;
+        gap: 12px;
+        border-radius: 12px;
+      }
+
+      .logo-wrap {
+        width: 80px;
+        height: 80px;
+      }
+
+      .logo-wrap img {
+        width: 52px;
+        height: 52px;
+      }
+    }
+  </style>
 </head>
 
 <body>
-  <div id="loading_indicator" style="position: fixed; width: 100%; height: 100%; background: #F7F7F7; display: flex; justify-content: center; align-items: center; flex-direction: column; z-index: 9999;">
-    <img src="icons/Icon-192.png" alt="Loading..." style="width: 150px; height: 150px; margin-bottom: 30px;">
-    <div class="loader"></div>
-    <style>
-      .loader {
-        border: 5px solid #E0E0E0;
-        /* Thicker border */
-        border-top: 5px solid #8B5E3C;
-        border-radius: 50%;
-        width: 50px;
-        /* Bigger loader */
-        height: 50px;
-        animation: spin 1s linear infinite;
-      }
+  <div id="loading_container" role="status" aria-live="polite" aria-label="Loading Urban Cafe">
+    <div class="loader-card" id="loader_card">
+      <div class="logo-wrap" aria-hidden="true">
+        <!-- Use png icon; replace with inline SVG for even crisper results -->
+        <img src="icons/Icon-192.png" alt="Urban Cafe logo" />
+      </div>
 
-      @keyframes spin {
-        0% {
-          transform: rotate(0deg);
-        }
+      <div class="loader-body">
+        <div class="title">Urban Cafe</div>
+        <div class="subtitle">Loading menu — please wait a moment…</div>
 
-        100% {
-          transform: rotate(360deg);
-        }
-      }
-    </style>
+        <div class="progress" aria-hidden="true">
+          <div class="bar" id="progress_bar" style="width:12%"></div>
+        </div>
+
+        <!-- skeleton rows give perceived speed -->
+        <div class="row-skeleton" aria-hidden="true">
+          <div class="thumb"></div>
+          <div class="text-skel"></div>
+        </div>
+        <div class="row-skeleton" aria-hidden="true" style="margin-top:10px;">
+          <div class="thumb"></div>
+          <div class="text-skel"></div>
+        </div>
+
+        <div class="small-row" aria-hidden="true">
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>
+      </div>
+    </div>
   </div>
 
+  <!-- Flutter bootstrap (keep async) -->
   <script src="flutter_bootstrap.js" async></script>
 
   <script>
-    window.addEventListener('load', function (ev) {
-      _flutter.loader.loadEntrypoint({
-        serviceWorker: {
-          serviceWorkerVersion: {{ flutter_service_worker_version }},
-        },
+    // Progress bar animator: loop until Flutter is ready.
+    (function () {
+      const bar = document.getElementById('progress_bar');
+      let pct = 12;
+      let direction = 1;
+      // gentle oscillation to suggest progress
+      const tick = () => {
+        pct += direction * (Math.random() * 8 + 1); // add 1-9
+        if (pct > 92) { pct = 92; direction = -1; }
+        if (pct < 12) { pct = 12; direction = 1; }
+        if (bar) bar.style.width = pct + '%';
+      };
+      const t = setInterval(tick, 420);
+
+      // Remove loader function
+      function removeLoader() {
+        clearInterval(t);
+        const loader = document.getElementById('loading_container');
+        if (!loader) return;
+        loader.style.transition = 'opacity 280ms ease, transform 300ms ease';
+        loader.style.opacity = '0';
+        loader.style.transform = 'translateY(-6px)';
+        setTimeout(() => loader.remove(), 320);
+      }
+
+      // Flutter bootstrap hook: same approach you had but resilient
+      window.addEventListener('load', function () {
+        if (!window._flutter || !window._flutter.loader) {
+          // fallback: remove loader after a timeout
+          setTimeout(removeLoader, 3000);
+          return;
+        }
+
+        _flutter.loader.loadEntrypoint({
+          serviceWorker: {
+            serviceWorkerVersion: {{ flutter_service_worker_version }},
+          },
       onEntrypointLoaded: function (engineInitializer) {
         engineInitializer.initializeEngine().then(function (appRunner) {
           appRunner.runApp();
-          var loader = document.querySelector('#loading_indicator');
-          if (loader) loader.remove();
+          // small delay to ensure first paint
+          setTimeout(removeLoader, 220);
+        }).catch(function (e) {
+          // if something goes wrong, still remove loader after showing error
+          console.error(e);
+          setTimeout(removeLoader, 600);
         });
       }
+        });
       });
-    });
+
+    // Also remove loader if the page visibility indicates app is ready (edge-case)
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'visible' && window.flutterAppStarted) {
+        removeLoader();
+      }
+    }, { once: true });
+
+    // Expose a hook for Flutter to call JS when it's ready (optional)
+    window.flutterAppReady = function () {
+      removeLoader();
+    };
+    }) ();
+  </script>
+
+  <!-- VisualViewport forwarding (useful for PWAs + keyboard) -->
+  <script>
+    (function () {
+      function forwardResize() {
+        setTimeout(function () {
+          window.dispatchEvent(new Event('resize'));
+        }, 50);
+      }
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', forwardResize);
+        window.visualViewport.addEventListener('scroll', forwardResize);
+      } else {
+        window.addEventListener('resize', forwardResize);
+      }
+      function setVh() {
+        document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px');
+      }
+      window.addEventListener('resize', setVh);
+      setVh();
+    })();
   </script>
 </body>
 
