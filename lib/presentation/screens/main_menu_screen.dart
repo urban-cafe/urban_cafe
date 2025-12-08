@@ -58,7 +58,7 @@ class MainMenuScreen extends StatelessWidget {
                     height: 220,
                     fit: BoxFit.contain,
                     color: isDark ? colorScheme.onSecondaryContainer : null,
-                    errorBuilder: (_, __, ___) => Icon(Icons.local_cafe, size: 100, color: colorScheme.primary),
+                    errorBuilder: (_, _, _) => Icon(Icons.local_cafe, size: 100, color: colorScheme.primary),
                   ),
                 ),
                 const SizedBox(height: 48),

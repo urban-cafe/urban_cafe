@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -12,129 +11,94 @@ class MenuDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final cs = theme.colorScheme;
     final priceFormat = NumberFormat.currency(symbol: '', decimalDigits: 0);
 
     return Scaffold(
+      appBar: AppBar(
+        title: const Text(""),
+        backgroundColor: cs.surface,
+        foregroundColor: cs.onSurface,
+        elevation: 0.4,
+        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop()),
+      ),
+
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 600),
-          child: CustomScrollView(
-            slivers: [
-              SliverAppBar(
-                expandedHeight: 400,
-                pinned: true,
-                backgroundColor: colorScheme.surface,
-                foregroundColor: colorScheme.onSurface,
-                leading: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: CircleAvatar(
-                    backgroundColor: colorScheme.surface.withValues(alpha: 0.7),
-                    child: IconButton(icon: const Icon(Icons.arrow_back), color: colorScheme.onSurface, tooltip: 'Back', onPressed: () => context.pop()),
-                  ),
-                ),
-                title: Text(item.name, style: const TextStyle(color: Colors.transparent)),
-                flexibleSpace: FlexibleSpaceBar(
-                  background: item.imageUrl == null
-                      ? Container(
-                          color: colorScheme.surfaceContainerHighest,
-                          child: Icon(Icons.fastfood, size: 60, color: colorScheme.onSurfaceVariant),
-                        )
-                      : Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            // 1. BLURRED BACKGROUND
-                            CachedNetworkImage(imageUrl: item.imageUrl!, fit: BoxFit.cover),
-                            BackdropFilter(
-                              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                              child: Container(color: Colors.black.withValues(alpha: 0.3)),
-                            ),
-
-                            // 2. MAIN IMAGE (Safe Area Applied Universally)
-                            // Now applies to both Mobile and Web
-                            SafeArea(
-                              top: true,
-                              bottom: false,
-                              child: CachedNetworkImage(
-                                imageUrl: item.imageUrl!,
-                                fit: BoxFit.contain,
-                                placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
-                                errorWidget: (context, url, error) => const Icon(Icons.error),
-                              ),
-                            ),
-
-                            // 3. BOTTOM SHADOW
-                            const Positioned(
-                              bottom: 0,
-                              left: 0,
-                              right: 0,
-                              height: 80,
-                              child: DecoratedBox(
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.transparent, Colors.black45]),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                ),
+          child: ListView(
+            physics: const BouncingScrollPhysics(),
+            children: [
+              // Fill but align to top to preserve top area
+              // Full-visible image (no cropping)
+              AspectRatio(
+                aspectRatio: 1.2,
+                child: item.imageUrl == null
+                    ? Container(
+                        color: cs.surfaceContainerHighest,
+                        child: Icon(Icons.fastfood, size: 60, color: cs.onSurfaceVariant),
+                      )
+                    : CachedNetworkImage(
+                        imageUrl: item.imageUrl!,
+                        fit: BoxFit.contain, // <- no cropping, whole image visible
+                        alignment: Alignment.center,
+                        placeholder: (_, _) => const Center(child: CircularProgressIndicator()),
+                        errorWidget: (_, _, _) => const Icon(Icons.error),
+                      ),
               ),
 
-              // CONTENT
-              SliverToBoxAdapter(
-                child: Container(
-                  transform: Matrix4.translationValues(0, -20, 0),
-                  decoration: BoxDecoration(
-                    color: colorScheme.surface,
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
+              // -----------------------------------------------
+              // CARD CONTENT
+              // -----------------------------------------------
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: cs.surface,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Title + Price
+                    Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Center(
-                          child: Container(
-                            width: 40,
-                            height: 4,
-                            margin: const EdgeInsets.only(bottom: 20),
-                            decoration: BoxDecoration(color: colorScheme.onSurfaceVariant.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(2)),
+                        Expanded(
+                          child: Text(
+                            item.name,
+                            style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800, color: cs.onSurface),
                           ),
                         ),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                item.name,
-                                style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800, color: colorScheme.onSurface),
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Text(
-                              priceFormat.format(item.price),
-                              style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: colorScheme.primary),
-                            ),
-                          ],
+                        const SizedBox(width: 16),
+                        Text(
+                          priceFormat.format(item.price),
+                          style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: cs.primary),
                         ),
-                        const SizedBox(height: 16),
-                        Wrap(
-                          spacing: 8,
-                          children: [
-                            if (item.categoryName != null) _buildTag(context, item.categoryName!, Icons.category_outlined),
-                            if (item.isAvailable) _buildTag(context, "Available", Icons.check_circle_outline, color: Colors.green) else _buildTag(context, "Sold Out", Icons.cancel_outlined, color: colorScheme.error),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-                        const Divider(),
-                        const SizedBox(height: 16),
-                        Text("Description", style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 8),
-                        Text(item.description != null && item.description!.isNotEmpty ? item.description! : "No description available.", style: theme.textTheme.bodyLarge?.copyWith(color: colorScheme.onSurfaceVariant, height: 1.5)),
-                        const SizedBox(height: 50),
                       ],
                     ),
-                  ),
+
+                    const SizedBox(height: 16),
+
+                    // Tags
+                    Wrap(
+                      spacing: 8,
+                      children: [
+                        if (item.categoryName != null) _buildTag(context, item.categoryName!, Icons.category_outlined),
+                        item.isAvailable ? _buildTag(context, "Available", Icons.check_circle_outline, color: Colors.green) : _buildTag(context, "Sold Out", Icons.cancel_outlined, color: cs.error),
+                      ],
+                    ),
+
+                    const SizedBox(height: 24),
+                    const Divider(),
+                    const SizedBox(height: 16),
+
+                    Text("Description", style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    Text((item.description?.isNotEmpty ?? false) ? item.description! : "No description available.", style: theme.textTheme.bodyLarge?.copyWith(color: cs.onSurfaceVariant, height: 1.5)),
+
+                    const SizedBox(height: 30),
+                  ],
                 ),
               ),
             ],
@@ -146,8 +110,8 @@ class MenuDetailScreen extends StatelessWidget {
 
   Widget _buildTag(BuildContext context, String label, IconData icon, {Color? color}) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final finalColor = color ?? colorScheme.primary;
+    final cs = theme.colorScheme;
+    final finalColor = color ?? cs.primary;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),

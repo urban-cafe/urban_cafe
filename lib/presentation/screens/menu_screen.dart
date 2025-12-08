@@ -57,7 +57,6 @@ class _MenuScreenState extends State<MenuScreen> {
   MenuItemEntity get _dummyItem => MenuItemEntity(id: 'dummy', name: 'Loading Item ...', description: 'Loading description ...', price: 0, categoryId: null, categoryName: 'Category', imagePath: null, imageUrl: null, isAvailable: true, createdAt: DateTime.now(), updatedAt: DateTime.now());
 
   void _showCategorySelector(BuildContext context) {
-    // We need to access the provider here to read categories
     final provider = context.read<MenuProvider>();
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -206,7 +205,7 @@ class _MenuScreenState extends State<MenuScreen> {
                             textAlignVertical: TextAlignVertical.center,
                             decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Search', border: InputBorder.none, contentPadding: EdgeInsets.symmetric(horizontal: 16), isDense: true),
                             // Using read() ensures typing doesn't rebuild this widget itself
-                            onChanged: (v) => context.read<MenuProvider>().setSearch(v),
+                            onChanged: (v) => menuProvider.setSearch(v),
                             onSubmitted: (v) => FocusScope.of(context).unfocus(),
                           ),
                         ),

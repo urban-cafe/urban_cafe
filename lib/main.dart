@@ -47,7 +47,6 @@ class _UrbanCafeAppState extends State<UrbanCafeApp> {
 
   @override
   Widget build(BuildContext context) {
-    // ... Router definition ...
     final router = GoRouter(
       routes: [
         GoRoute(path: '/', builder: (context, state) => const MainMenuScreen()),
