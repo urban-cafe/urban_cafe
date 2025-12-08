@@ -166,6 +166,8 @@
   <script>
     // Logic to handle Flutter loading and clean removal of splash screen
     window.addEventListener('load', function (ev) {
+      // REVERTED: Using loadEntrypoint because it is more stable for your current setup.
+      // The deprecation warning in the console is safe to ignore for now.
       _flutter.loader.loadEntrypoint({
         serviceWorker: {
           serviceWorkerVersion: {{ flutter_service_worker_version }},
@@ -181,7 +183,7 @@
               loader.classList.add('fade-out');
               setTimeout(() => loader.remove(), 500); // Wait for fade out
             }
-          }, 200); // Slight delay for smoother transition
+          }, 200);
         });
       }
       });
