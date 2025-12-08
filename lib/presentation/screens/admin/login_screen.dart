@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:urban_cafe/core/validators.dart';
 import 'package:urban_cafe/presentation/providers/auth_provider.dart';
 
 class AdminLoginScreen extends StatefulWidget {
@@ -67,17 +68,19 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                       ),
                     ),
 
-                  TextField(
+                  TextFormField(
                     controller: _emailCtrl,
                     decoration: const InputDecoration(labelText: 'Email', border: OutlineInputBorder(), prefixIcon: Icon(Icons.email_outlined)),
                     keyboardType: TextInputType.emailAddress,
+                    validator: AppValidators.email, // Global Email Validator
                   ),
                   const SizedBox(height: 16),
 
-                  TextField(
+                  TextFormField(
                     controller: _passCtrl,
                     decoration: const InputDecoration(labelText: 'Password', border: OutlineInputBorder(), prefixIcon: Icon(Icons.lock_outline)),
                     obscureText: true,
+                    validator: (v) => AppValidators.required(v, 'Password'), // Global Required Validator
                   ),
                   const SizedBox(height: 24),
 

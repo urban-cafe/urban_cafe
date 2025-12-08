@@ -174,7 +174,7 @@ class _AdminCategoryManagerScreenState extends State<AdminCategoryManagerScreen>
                             onPressed: () => _showRenameDialog(main['id'], main['name']),
                           ),
                           IconButton(
-                            icon: Icon(Icons.delete_outline, size: 20, color: colorScheme.error),
+                            icon: Icon(Icons.delete, size: 20, color: colorScheme.error),
                             tooltip: "Delete Main Category",
                             onPressed: () => _confirmDelete(main['id'], main['name']),
                           ),

@@ -3,6 +3,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:urban_cafe/core/validators.dart'; // Import Global Validators
 import 'package:urban_cafe/data/repositories/menu_repository_impl.dart';
 import 'package:urban_cafe/domain/entities/menu_item.dart';
 import 'package:urban_cafe/presentation/providers/admin_provider.dart';
@@ -18,7 +19,9 @@ class AdminEditScreen extends StatefulWidget {
 }
 
 class _AdminEditScreenState extends State<AdminEditScreen> {
+  final _formKey = GlobalKey<FormState>(); // Key for Form validation
   final _repo = MenuRepositoryImpl();
+
   final _nameCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
   final _priceCtrl = TextEditingController();
@@ -35,6 +38,14 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
   void initState() {
     super.initState();
     _loadInitialData();
+  }
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _descCtrl.dispose();
+    _priceCtrl.dispose();
+    super.dispose();
   }
 
   Future<void> _loadInitialData() async {
@@ -84,7 +95,6 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
     }
   }
 
-  // UPDATED: Now uses the global dialog and handles the result
   Future<void> _triggerAddCategory({String? parentId}) async {
     // 1. Show global dialog
     final newId = await showAddCategoryDialog(context, parentId: parentId);
@@ -122,119 +132,140 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 600),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: InkWell(
-                    onTap: () async {
-                      final f = await admin.pickImage();
-                      if (f != null) setState(() => _imageFile = f);
-                    },
-                    child: Container(
-                      width: 150,
-                      height: 150,
-                      decoration: BoxDecoration(color: Colors.grey.shade200, borderRadius: BorderRadius.circular(12)),
-                      clipBehavior: Clip.antiAlias,
-                      child: _imageFile != null ? Image.memory(_imageFile!.bytes!, fit: BoxFit.cover) : (widget.item?.imageUrl != null ? CachedNetworkImage(imageUrl: widget.item!.imageUrl!, fit: BoxFit.cover) : const Icon(Icons.add_a_photo, size: 40, color: Colors.grey)),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                TextField(
-                  controller: _nameCtrl,
-                  decoration: const InputDecoration(labelText: 'Item Name', border: OutlineInputBorder()),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _priceCtrl,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Price', border: OutlineInputBorder()),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _descCtrl,
-                  maxLines: 3,
-                  decoration: const InputDecoration(labelText: 'Description', border: OutlineInputBorder()),
-                ),
-                const SizedBox(height: 24),
-
-                Text('Category', style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 8),
-
-                // Main Category Row
-                Row(
-                  children: [
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        initialValue: _selectedMainId,
-                        decoration: const InputDecoration(labelText: 'Main Category', border: OutlineInputBorder()),
-                        items: _mainCategories.map((c) => DropdownMenuItem(value: c['id'] as String, child: Text(c['name']))).toList(),
-                        onChanged: _onMainCategoryChanged,
+            child: Form(
+              // Wrap everything in a Form
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Image Picker
+                  Center(
+                    child: InkWell(
+                      onTap: () async {
+                        final f = await admin.pickImage();
+                        if (f != null) setState(() => _imageFile = f);
+                      },
+                      child: Container(
+                        width: 150,
+                        height: 150,
+                        decoration: BoxDecoration(color: Colors.grey.shade200, borderRadius: BorderRadius.circular(12)),
+                        clipBehavior: Clip.antiAlias,
+                        child: _imageFile != null ? Image.memory(_imageFile!.bytes!, fit: BoxFit.cover) : (widget.item?.imageUrl != null ? CachedNetworkImage(imageUrl: widget.item!.imageUrl!, fit: BoxFit.cover) : const Icon(Icons.add_a_photo, size: 40, color: Colors.grey)),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    IconButton.filledTonal(
-                      icon: const Icon(Icons.add),
-                      onPressed: () => _triggerAddCategory(), // Calls new helper
-                      tooltip: 'Add Main Category',
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
+                  ),
+                  const SizedBox(height: 24),
 
-                // Sub Category Row
-                Row(
-                  children: [
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        initialValue: _selectedSubId,
-                        decoration: const InputDecoration(labelText: 'Sub Category', border: OutlineInputBorder()),
-                        items: _subCategories.map((c) => DropdownMenuItem(value: c['id'] as String, child: Text(c['name']))).toList(),
-                        onChanged: (v) => setState(() => _selectedSubId = v),
+                  // Name Field (Validated)
+                  TextFormField(
+                    controller: _nameCtrl,
+                    decoration: const InputDecoration(labelText: 'Item Name', border: OutlineInputBorder()),
+                    validator: (v) => AppValidators.required(v, 'Item Name'),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Price Field (Validated)
+                  TextFormField(
+                    controller: _priceCtrl,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(labelText: 'Price', border: OutlineInputBorder()),
+                    validator: (v) => AppValidators.number(v, 'Price'),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Description Field (Optional)
+                  TextFormField(
+                    controller: _descCtrl,
+                    maxLines: 3,
+                    decoration: const InputDecoration(labelText: 'Description', border: OutlineInputBorder()),
+                  ),
+                  const SizedBox(height: 24),
+
+                  Text('Category', style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: 8),
+
+                  // Main Category Row
+                  Row(
+                    children: [
+                      Expanded(
+                        child: DropdownButtonFormField<String>(
+                          initialValue: _selectedMainId,
+                          decoration: const InputDecoration(labelText: 'Main Category', border: OutlineInputBorder()),
+                          items: _mainCategories.map((c) => DropdownMenuItem(value: c['id'] as String, child: Text(c['name']))).toList(),
+                          onChanged: _onMainCategoryChanged,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    IconButton.filledTonal(
-                      icon: const Icon(Icons.add),
-                      onPressed: _selectedMainId == null ? null : () => _triggerAddCategory(parentId: _selectedMainId), // Calls new helper
-                      tooltip: 'Add Sub Category',
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 24),
-                SwitchListTile(title: const Text('Available for sale'), value: _available, onChanged: (v) => setState(() => _available = v), contentPadding: EdgeInsets.zero),
-
-                const SizedBox(height: 32),
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: FilledButton(
-                    onPressed: admin.loading
-                        ? null
-                        : () async {
-                            final price = double.tryParse(_priceCtrl.text) ?? 0.0;
-                            bool success;
-
-                            if (widget.item == null) {
-                              success = await admin.create(name: _nameCtrl.text, description: _descCtrl.text, price: price, categoryId: _selectedSubId, isAvailable: _available, imageFile: _imageFile);
-                            } else {
-                              success = await admin.update(id: widget.item!.id, name: _nameCtrl.text, description: _descCtrl.text, price: price, categoryId: _selectedSubId, isAvailable: _available, imageFile: _imageFile);
-                            }
-
-                            if (context.mounted && success) Navigator.pop(context);
-                          },
-                    child: admin.loading ? const CircularProgressIndicator() : const Text('Save Item'),
+                      const SizedBox(width: 8),
+                      IconButton.filledTonal(
+                        icon: const Icon(Icons.add),
+                        onPressed: () => _triggerAddCategory(), // Calls new helper
+                        tooltip: 'Add Main Category',
+                      ),
+                    ],
                   ),
-                ),
-                if (admin.error != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 16),
-                    child: Text(admin.error!, style: const TextStyle(color: Colors.red)),
+                  const SizedBox(height: 16),
+
+                  // Sub Category Row
+                  Row(
+                    children: [
+                      Expanded(
+                        child: DropdownButtonFormField<String>(
+                          initialValue: _selectedSubId,
+                          decoration: const InputDecoration(labelText: 'Sub Category', border: OutlineInputBorder()),
+                          items: _subCategories.map((c) => DropdownMenuItem(value: c['id'] as String, child: Text(c['name']))).toList(),
+                          onChanged: (v) => setState(() => _selectedSubId = v),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton.filledTonal(
+                        icon: const Icon(Icons.add),
+                        onPressed: _selectedMainId == null ? null : () => _triggerAddCategory(parentId: _selectedMainId), // Calls new helper
+                        tooltip: 'Add Sub Category',
+                      ),
+                    ],
                   ),
-              ],
+
+                  const SizedBox(height: 24),
+                  SwitchListTile(title: const Text('Available for sale'), value: _available, onChanged: (v) => setState(() => _available = v), contentPadding: EdgeInsets.zero),
+
+                  const SizedBox(height: 32),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: FilledButton(
+                      onPressed: admin.loading
+                          ? null
+                          : () async {
+                              // 1. TRIGGER VALIDATION
+                              if (!_formKey.currentState!.validate()) return;
+
+                              // 2. Validate Category manually (optional but recommended)
+                              if (_selectedSubId == null && _selectedMainId == null) {
+                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please select a category")));
+                                return;
+                              }
+
+                              final price = double.tryParse(_priceCtrl.text) ?? 0.0;
+                              bool success;
+
+                              if (widget.item == null) {
+                                success = await admin.create(name: _nameCtrl.text, description: _descCtrl.text, price: price, categoryId: _selectedSubId, isAvailable: _available, imageFile: _imageFile);
+                              } else {
+                                success = await admin.update(id: widget.item!.id, name: _nameCtrl.text, description: _descCtrl.text, price: price, categoryId: _selectedSubId, isAvailable: _available, imageFile: _imageFile);
+                              }
+
+                              if (context.mounted && success) Navigator.pop(context);
+                            },
+                      child: admin.loading ? const CircularProgressIndicator() : const Text('Save Item'),
+                    ),
+                  ),
+                  if (admin.error != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16),
+                      child: Text(admin.error!, style: const TextStyle(color: Colors.red)),
+                    ),
+                ],
+              ),
             ),
           ),
         ),
