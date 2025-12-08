@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:urban_cafe/core/utils.dart';
+import 'package:urban_cafe/core/validators.dart'; // Import Global Validators
 import 'package:urban_cafe/data/repositories/menu_repository_impl.dart';
 import 'package:urban_cafe/presentation/providers/admin_provider.dart';
-import 'package:urban_cafe/presentation/widgets/add_category_dialog.dart'; // Import global dialog
+import 'package:urban_cafe/presentation/widgets/add_category_dialog.dart';
 
 class AdminCategoryManagerScreen extends StatefulWidget {
   const AdminCategoryManagerScreen({super.key});
@@ -42,56 +43,86 @@ class _AdminCategoryManagerScreenState extends State<AdminCategoryManagerScreen>
     }
   }
 
-  // UPDATED: Now creates categories using the global dialog
   Future<void> _triggerCreate({String? parentId}) async {
-    // Call the global dialog
     final newId = await showAddCategoryDialog(context, parentId: parentId);
 
-    // If successful (ID returned), reload the tree and show success message
     if (newId != null && mounted) {
       showAppSnackBar(context, "Category Created Successfully");
       _loadTree();
     }
   }
 
-  // Renaming is specific to this screen (editing existing data), so we keep a simple dialog here
+  // UPDATED: Now uses ModalBottomSheet for Rename (Fixes iOS PWA issue)
   Future<void> _showRenameDialog(String id, String currentName) async {
     final ctrl = TextEditingController(text: currentName);
+    final formKey = GlobalKey<FormState>();
 
-    await showDialog(
+    await showModalBottomSheet(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('Rename Category', style: Theme.of(context).textTheme.titleLarge),
-        content: SingleChildScrollView(
-          child: TextField(
-            controller: ctrl,
-            autofocus: true,
-            scrollPadding: const EdgeInsets.only(bottom: 200),
-            decoration: const InputDecoration(labelText: 'Category Name', border: OutlineInputBorder()),
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          FilledButton(
-            onPressed: () async {
-              if (ctrl.text.trim().isEmpty) return;
-              Navigator.pop(ctx);
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) {
+        final keyboardPadding = MediaQuery.of(ctx).viewInsets.bottom;
 
-              final success = await context.read<AdminProvider>().renameCategory(id, ctrl.text.trim());
+        return Padding(
+          padding: EdgeInsets.only(bottom: keyboardPadding + 24, left: 16, right: 16, top: 24),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Rename Category',
+                  style: Theme.of(ctx).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
 
-              if (mounted) {
-                if (success) {
-                  showAppSnackBar(context, "Category Renamed Successfully");
-                  _loadTree();
-                } else {
-                  showAppSnackBar(context, "Failed to Rename", isError: true);
-                }
-              }
-            },
-            child: const Text('Save'),
+                Form(
+                  key: formKey,
+                  child: TextFormField(
+                    controller: ctrl,
+                    autofocus: true,
+                    textCapitalization: TextCapitalization.words,
+                    decoration: const InputDecoration(labelText: 'Category Name', border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16)),
+                    validator: (value) => AppValidators.required(value, 'Name'),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+                    const SizedBox(width: 16),
+                    FilledButton(
+                      onPressed: () async {
+                        if (!formKey.currentState!.validate()) return;
+
+                        Navigator.pop(ctx);
+                        final success = await context.read<AdminProvider>().renameCategory(id, ctrl.text.trim());
+
+                        if (mounted) {
+                          if (success) {
+                            showAppSnackBar(context, "Category Renamed Successfully");
+                            _loadTree();
+                          } else {
+                            showAppSnackBar(context, "Failed to Rename", isError: true);
+                          }
+                        }
+                      },
+                      child: const Text('Save'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -132,12 +163,7 @@ class _AdminCategoryManagerScreenState extends State<AdminCategoryManagerScreen>
 
     return Scaffold(
       appBar: AppBar(title: const Text('Manage Categories')),
-      floatingActionButton: FloatingActionButton.extended(
-        // UPDATED: Use new trigger
-        onPressed: () => _triggerCreate(parentId: null),
-        label: const Text("Add Main"),
-        icon: const Icon(Icons.add),
-      ),
+      floatingActionButton: FloatingActionButton.extended(onPressed: () => _triggerCreate(parentId: null), label: const Text("Add Main"), icon: const Icon(Icons.add)),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _tree.isEmpty
@@ -167,12 +193,7 @@ class _AdminCategoryManagerScreenState extends State<AdminCategoryManagerScreen>
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          IconButton(
-                            icon: const Icon(Icons.edit, size: 20),
-                            tooltip: "Rename Main Category",
-                            // UPDATED: Use rename dialog
-                            onPressed: () => _showRenameDialog(main['id'], main['name']),
-                          ),
+                          IconButton(icon: const Icon(Icons.edit, size: 20), tooltip: "Rename Main Category", onPressed: () => _showRenameDialog(main['id'], main['name'])),
                           IconButton(
                             icon: Icon(Icons.delete, size: 20, color: colorScheme.error),
                             tooltip: "Delete Main Category",
@@ -194,7 +215,6 @@ class _AdminCategoryManagerScreenState extends State<AdminCategoryManagerScreen>
                               "Add Sub-Category",
                               style: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.w600),
                             ),
-                            // UPDATED: Use new trigger with parentId
                             onTap: () => _triggerCreate(parentId: main['id']),
                           ),
                         ),
@@ -218,11 +238,7 @@ class _AdminCategoryManagerScreenState extends State<AdminCategoryManagerScreen>
                                 trailing: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.edit, size: 18),
-                                      // UPDATED: Use rename dialog
-                                      onPressed: () => _showRenameDialog(sub['id'], sub['name']),
-                                    ),
+                                    IconButton(icon: const Icon(Icons.edit, size: 18), onPressed: () => _showRenameDialog(sub['id'], sub['name'])),
                                     IconButton(
                                       icon: Icon(Icons.delete_outline, size: 18, color: colorScheme.error),
                                       onPressed: () => _confirmDelete(sub['id'], sub['name']),

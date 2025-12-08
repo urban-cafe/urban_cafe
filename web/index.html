@@ -1,65 +1,75 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <base href="$FLUTTER_BASE_HREF">
+  <base href="$FLUTTER_BASE_HREF">
 
-    <meta charset="UTF-8">
-    <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-    <meta name="description" content="Urban Cafe">
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
 
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="urban_cafe">
-    <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-    <link rel="icon" type="image/png" href="favicon.png" />
+  <meta name="description" content="Urban Cafe">
 
-    <meta name="theme-color" content="#8B5E3C">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="urban_cafe">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
-    <title>Urban Cafe</title>
-    <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="favicon.png" />
+
+  <meta name="theme-color" content="#8B5E3C">
+
+  <title>Urban Cafe</title>
+  <link rel="manifest" href="manifest.json">
 </head>
 
 <body>
-<div id="loading_indicator" style="position: fixed; width: 100%; height: 100%; background: #F7F7F7; display: flex; justify-content: center; align-items: center; flex-direction: column; z-index: 9999;">
-    <img src="icons/Icon-192.png" alt="Loading..." style="width: 100px; height: 100px; margin-bottom: 20px;">
+  <div id="loading_indicator" style="position: fixed; width: 100%; height: 100%; background: #F7F7F7; display: flex; justify-content: center; align-items: center; flex-direction: column; z-index: 9999;">
+    <img src="icons/Icon-192.png" alt="Loading..." style="width: 150px; height: 150px; margin-bottom: 30px;">
     <div class="loader"></div>
     <style>
-        .loader {
-          border: 4px solid #E0E0E0;
-          border-top: 4px solid #8B5E3C; /* Your Primary Brown Color */
-          border-radius: 50%;
-          width: 40px;
-          height: 40px;
-          animation: spin 1s linear infinite;
+      .loader {
+        border: 5px solid #E0E0E0;
+        /* Thicker border */
+        border-top: 5px solid #8B5E3C;
+        border-radius: 50%;
+        width: 50px;
+        /* Bigger loader */
+        height: 50px;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
         }
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
+
+        100% {
+          transform: rotate(360deg);
         }
+      }
     </style>
-</div>
+  </div>
 
-<script src="flutter_bootstrap.js" async></script>
+  <script src="flutter_bootstrap.js" async></script>
 
-<script>
-    // This script removes the HTML loading screen once Flutter is ready
-    window.addEventListener('load', function(ev) {
-      // Download main.dart.js
+  <script>
+    window.addEventListener('load', function (ev) {
       _flutter.loader.loadEntrypoint({
         serviceWorker: {
-          serviceWorkerVersion: {{flutter_service_worker_version}},
+          serviceWorkerVersion: {{ flutter_service_worker_version }},
         },
-        onEntrypointLoaded: function(engineInitializer) {
-          engineInitializer.initializeEngine().then(function(appRunner) {
-            appRunner.runApp();
-            // Remove the loading div
-            var loader = document.querySelector('#loading_indicator');
-            if (loader) loader.remove();
-          });
-        }
+      onEntrypointLoaded: function (engineInitializer) {
+        engineInitializer.initializeEngine().then(function (appRunner) {
+          appRunner.runApp();
+          var loader = document.querySelector('#loading_indicator');
+          if (loader) loader.remove();
+        });
+      }
       });
     });
-</script>
+  </script>
 </body>
+
 </html>
