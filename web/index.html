@@ -1,194 +1,197 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-  <base href="$FLUTTER_BASE_HREF">
+    <base href="$FLUTTER_BASE_HREF">
 
-  <meta charset="UTF-8">
-  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+    <meta charset="UTF-8">
+    <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Urban Cafe">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Urban Cafe">
+    <link rel="apple-touch-icon" href="icons/Icon-192.png">
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <meta name="theme-color" content="#8B5E3C">
+    <title>Urban Cafe</title>
+    <link rel="manifest" href="manifest.json">
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Lato:wght@400&display=swap" rel="stylesheet">
 
-  <meta name="description" content="Urban Cafe">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Urban Cafe">
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
-  <link rel="icon" type="image/png" href="favicon.png" />
-  <meta name="theme-color" content="#8B5E3C">
-
-  <title>Urban Cafe</title>
-  <link rel="manifest" href="manifest.json">
-
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Lato:wght@400&display=swap" rel="stylesheet">
-
-  <style>
-    :root {
-      /* Urban Cafe Palette */
-      --bg: #FAF7F5;
-      /* Soft Cream */
-      --surface: #FFFFFF;
-      --primary: #8B5E3C;
-      /* Coffee Brown */
-      --text-main: #4E3B2F;
-      /* Dark Brown Text */
-      --text-sub: #8D7B6F;
-      --card-radius: 24px;
-    }
-
-    html,
-    body {
-      height: 100%;
-      margin: 0;
-      background: var(--bg);
-      font-family: 'Lato', sans-serif;
-      overflow: hidden;
-      /* Prevent scroll during load */
-    }
-
-    #loading_container {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-      background: var(--bg);
-      padding: 24px;
-    }
-
-    /* Logo Animation */
-    .logo-container {
-      width: 120px;
-      height: 120px;
-      margin-bottom: 32px;
-      animation: float 3s ease-in-out infinite;
-    }
-
-    .logo-container img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      filter: drop-shadow(0 10px 15px rgba(139, 94, 60, 0.2));
-    }
-
-    @keyframes float {
-
-      0%,
-      100% {
-        transform: translateY(0);
-      }
-
-      50% {
-        transform: translateY(-10px);
-      }
-    }
-
-    .title {
-      font-family: 'Playfair Display', serif;
-      font-size: 28px;
-      color: var(--text-main);
-      margin-bottom: 8px;
-      letter-spacing: 0.5px;
-    }
-
-    .subtitle {
-      font-size: 14px;
-      color: var(--text-sub);
-      margin-bottom: 32px;
-      font-weight: 500;
-    }
-
-    /* Elegant Thin Progress Bar */
-    .progress-track {
-      width: 200px;
-      height: 4px;
-      background: rgba(139, 94, 60, 0.15);
-      border-radius: 4px;
-      overflow: hidden;
-      position: relative;
-    }
-
-    .progress-bar {
-      position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      width: 30%;
-      background: var(--primary);
-      border-radius: 4px;
-      animation: loading 1.5s infinite ease-in-out;
-    }
-
-    @keyframes loading {
-      0% {
-        left: -30%;
-        width: 30%;
-      }
-
-      50% {
-        width: 60%;
-      }
-
-      100% {
-        left: 100%;
-        width: 30%;
-      }
-    }
-
-    /* Fade out transition */
-    .fade-out {
-      opacity: 0;
-      transition: opacity 0.5s ease-out;
-      pointer-events: none;
-    }
-  </style>
+    <style>
+        :root { --bg:#FAF7F5; --primary:#8B5E3C; --text-main:#4E3B2F; --text-sub:#8D7B6F; }
+        html,body{height:100%;margin:0;background:var(--bg);font-family:'Lato',sans-serif;overflow:hidden}
+        #loading_container{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;background:var(--bg);padding:24px}
+        .logo-container{width:120px;height:120px;margin-bottom:32px;animation:float 3s ease-in-out infinite}
+        .logo-container img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 10px 15px rgba(139,94,60,0.2))}
+        @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+        .title{font-family:'Playfair Display',serif;font-size:28px;color:var(--text-main);margin-bottom:8px;letter-spacing:0.5px}
+        .subtitle{font-size:14px;color:var(--text-sub);margin-bottom:32px;font-weight:500}
+        .progress-track{width:200px;height:4px;background:rgba(139,94,60,0.15);border-radius:4px;overflow:hidden;position:relative}
+        .progress-bar{position:absolute;left:0;top:0;bottom:0;width:30%;background:var(--primary);border-radius:4px;animation:loading 1.5s infinite ease-in-out}
+        @keyframes loading{0%{left:-30%;width:30%}50%{width:60%}100%{left:100%;width:30%}}
+        .fade-out{opacity:0;transition:opacity .45s ease, transform .35s ease;pointer-events:none;transform:translateY(-6px)}
+    </style>
 </head>
 
 <body>
-
-  <div id="loading_container">
-    <div class="logo-container">
-      <img src="icons/Icon-192.png" alt="Urban Cafe Logo">
-    </div>
-
+<div id="loading_container" aria-live="polite" role="status">
+    <div class="logo-container"><img src="icons/Icon-192.png" alt="Urban Cafe Logo"></div>
     <div class="title">Urban Cafe</div>
-    <div class="subtitle">Brewing your experience...</div>
+    <div class="subtitle">Loading your menu...</div>
+    <div class="progress-track" aria-hidden="true"><div id="progress_bar" class="progress-bar"></div></div>
+</div>
 
-    <div class="progress-track">
-      <div class="progress-bar"></div>
-    </div>
-  </div>
+<script src="flutter_bootstrap.js" async></script>
 
-  <script src="flutter_bootstrap.js" async></script>
+<script>
+    (function () {
+      const loaderEl = document.getElementById('loading_container');
 
-  <script>
-    // Logic to handle Flutter loading and clean removal of splash screen
-    window.addEventListener('load', function (ev) {
-      // REVERTED: Using loadEntrypoint because it is more stable for your current setup.
-      // The deprecation warning in the console is safe to ignore for now.
-      _flutter.loader.loadEntrypoint({
-        serviceWorker: {
-          serviceWorkerVersion: {{ flutter_service_worker_version }},
-        },
-      onEntrypointLoaded: function (engineInitializer) {
-        engineInitializer.initializeEngine().then(function (appRunner) {
-          appRunner.runApp();
-
-          // Remove loader when app starts
-          setTimeout(function () {
-            var loader = document.getElementById('loading_container');
-            if (loader) {
-              loader.classList.add('fade-out');
-              setTimeout(() => loader.remove(), 500); // Wait for fade out
-            }
-          }, 200);
-        });
+      function removeLoader() {
+        if (!loaderEl) return;
+        loaderEl.classList.add('fade-out');
+        setTimeout(() => loaderEl.remove(), 450);
       }
-      });
-    });
-  </script>
-</body>
 
+      // Exposed so Dart can manually trigger splash removal
+      window.flutterAppReady = removeLoader;
+
+      // Progress animation (optional)
+      let pct = 10;
+      const bar = document.querySelector('.progress-bar');
+      const interval = setInterval(() => {
+        pct += Math.random() * 6;
+        if (pct > 90) pct = 90;
+        if (bar) bar.style.width = pct + "%";
+      }, 420);
+
+      function safeRemove() {
+        clearInterval(interval);
+        removeLoader();
+      }
+
+      window.addEventListener('load', () => {
+        if (!window._flutter || !window._flutter.loader) {
+          console.warn("Flutter loader not found — removing splash in fallback.");
+          setTimeout(safeRemove, 1500);
+          return;
+        }
+
+        // NEW API — correct for Flutter 3.27+ (including 3.38)
+        window._flutter.loader.load({
+          serviceWorker: {
+            serviceWorkerVersion: {{flutter_service_worker_version}},
+          },
+          onEntrypointLoaded: async function (engineInitializer) {
+            try {
+              const appRunner = await engineInitializer.initializeEngine();
+              await appRunner.runApp();
+
+              // remove after first frame
+              setTimeout(safeRemove, 240);
+            } catch (e) {
+              console.error("Flutter engine failed:", e);
+              setTimeout(safeRemove, 800);
+            }
+          }
+        });
+      });
+
+      // Final protection — ensure splash never stays forever
+      setTimeout(() => {
+        console.warn("FINAL FALLBACK: removing stuck loader.");
+        safeRemove();
+      }, 10000);
+
+    })();
+</script>
+>
+    (function () {
+      const progress = document.getElementById('progress_bar');
+      let pct = 10;
+      const tick = () => {
+        pct += Math.random() * 6 + 1;
+        if (pct > 90) pct = 90;
+        if (progress) progress.style.width = pct + '%';
+      };
+      const intv = setInterval(tick, 420);
+
+      function removeLoader() {
+        clearInterval(intv);
+        const loader = document.getElementById('loading_container');
+        if (!loader) return;
+        loader.classList.add('fade-out');
+        setTimeout(() => {
+          try { loader.remove(); } catch (e) { console.warn('remove loader failed', e); }
+        }, 480);
+      }
+
+      // Expose hook for Dart to call once app is ready
+      window.flutterAppReady = function () {
+        try { removeLoader(); } catch (e) { console.warn(e); }
+      };
+      // mark started flag if invoked by Dart
+      window.flutterAppStarted = false;
+
+      // Defensive bootstrap loader
+      function bootstrapFlutter() {
+        try {
+          if (window._flutter && _flutter.loader && typeof _flutter.loader.loadEntrypoint === 'function') {
+            _flutter.loader.loadEntrypoint({
+              serviceWorker: {
+                serviceWorkerVersion: {{flutter_service_worker_version}},
+              },
+              onEntrypointLoaded: function (engineInitializer) {
+                engineInitializer.initializeEngine().then(function (appRunner) {
+                  appRunner.runApp();
+                  // give Flutter a small moment to render first frame, then remove loader
+                  setTimeout(removeLoader, 240);
+                }).catch(function (e) {
+                  console.error('Flutter engine init error', e);
+                  // still remove loader after short delay to avoid sticking UX
+                  setTimeout(removeLoader, 700);
+                });
+              }
+            });
+          } else {
+            console.warn('_flutter.loader not available - skipping bootstrap call');
+            // If bootstrap isn't present, remove loader after reasonable delay
+            setTimeout(removeLoader, 2000);
+          }
+        } catch (err) {
+          console.error('bootstrap error', err);
+          setTimeout(removeLoader, 2500);
+        }
+      }
+
+      window.addEventListener('load', bootstrapFlutter);
+
+      // final fallback: ensure loader never sticks for more than 10s
+      setTimeout(function () {
+        const loader = document.getElementById('loading_container');
+        if (loader) {
+          console.warn('Final fallback: removing loader after timeout');
+          removeLoader();
+        }
+      }, 10000);
+    })();
+</script>
+
+<!-- forward visualViewport changes to window.resize (helps mobile PWA keyboard) -->
+<script>
+    (function () {
+      function forwardResize() { setTimeout(() => window.dispatchEvent(new Event('resize')), 50); }
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', forwardResize);
+        window.visualViewport.addEventListener('scroll', forwardResize);
+      } else {
+        window.addEventListener('resize', forwardResize);
+      }
+      function setVh() { document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px'); }
+      window.addEventListener('resize', setVh);
+      setVh();
+    })();
+</script>
+</body>
 </html>
