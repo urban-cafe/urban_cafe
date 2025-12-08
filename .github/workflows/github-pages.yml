@@ -33,7 +33,7 @@ jobs:
       - name: Build Flutter Web
         run: |
           flutter build web --release \
-            --web-renderer html \
+            --renderer=html \
             --dart-define=SUPABASE_URL=${SUPABASE_URL} \
             --dart-define=SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY} \
             --base-href "/urban_cafe/" 
