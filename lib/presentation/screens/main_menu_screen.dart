@@ -42,50 +42,68 @@ class MainMenuScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 500),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Spacer(flex: 1),
-                Hero(
-                  tag: 'app_logo',
-                  child: Image.asset(
-                    'assets/logos/urbancafelogo.png',
-                    height: 220,
-                    fit: BoxFit.contain,
-                    color: isDark ? colorScheme.onSecondaryContainer : null,
-                    errorBuilder: (_, _, _) => Icon(Icons.local_cafe, size: 100, color: colorScheme.primary),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            // FIX: Allow scrolling if content overflows
+            child: ConstrainedBox(
+              // FIX: Ensure content fills at least the screen height to keep centering working
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 500),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // REPLACED Spacer with SizedBox to prevent scroll errors
+                        const SizedBox(height: 24),
+
+                        Hero(
+                          tag: 'app_logo',
+                          child: Image.asset(
+                            'assets/logos/urbancafelogo.png',
+                            height: 220,
+                            fit: BoxFit.contain,
+                            color: isDark ? colorScheme.onSecondaryContainer : null,
+                            errorBuilder: (_, __, ___) => Icon(Icons.local_cafe, size: 100, color: colorScheme.primary),
+                          ),
+                        ),
+
+                        const SizedBox(height: 48),
+
+                        const _MenuButton(label: 'HOT DRINKS', icon: Icons.local_cafe_rounded, route: '/menu?initialMainCategory=HOT%20DRINKS'),
+                        const _MenuButton(label: 'COLD DRINKS', icon: Icons.local_drink_rounded, route: '/menu?initialMainCategory=COLD%20DRINKS'),
+                        const _MenuButton(label: 'FOOD', icon: Icons.restaurant_menu_rounded, route: '/menu?initialMainCategory=FOOD'),
+
+                        // REPLACED Spacer with fixed spacing
+                        const SizedBox(height: 48),
+
+                        Text(
+                          "Follow Us",
+                          style: theme.textTheme.labelLarge?.copyWith(color: colorScheme.onSurfaceVariant, fontWeight: FontWeight.bold, letterSpacing: 1.5),
+                        ),
+                        const SizedBox(height: 16),
+                        const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SocialLinkButton(icon: FontAwesomeIcons.tiktok, url: 'https://www.tiktok.com/@urbantea.mm?_r=1&_t=ZS-9206DYuBDJQ'),
+                            SizedBox(width: 16),
+                            SocialLinkButton(icon: FontAwesomeIcons.facebookF, url: 'https://www.facebook.com/urbantea915?mibextid=wwXIfr'),
+                            SizedBox(width: 16),
+                            SocialLinkButton(icon: FontAwesomeIcons.instagram, url: 'https://www.instagram.com/urbantea.mm?igsh=MTJjeHpjMXhnODduag=='),
+                          ],
+                        ),
+                        const SizedBox(height: 32),
+                      ],
+                    ),
                   ),
                 ),
-                const SizedBox(height: 48),
-                const _MenuButton(label: 'HOT DRINKS', icon: Icons.local_cafe_rounded, route: '/menu?initialMainCategory=HOT%20DRINKS'),
-                const _MenuButton(label: 'COLD DRINKS', icon: Icons.local_drink_rounded, route: '/menu?initialMainCategory=COLD%20DRINKS'),
-                const _MenuButton(label: 'FOOD', icon: Icons.restaurant_menu_rounded, route: '/menu?initialMainCategory=FOOD'),
-                const Spacer(flex: 2),
-                Text(
-                  "Follow Us",
-                  style: theme.textTheme.labelLarge?.copyWith(color: colorScheme.onSurfaceVariant, fontWeight: FontWeight.bold, letterSpacing: 1.5),
-                ),
-                const SizedBox(height: 16),
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SocialLinkButton(icon: FontAwesomeIcons.tiktok, url: 'https://www.tiktok.com/@urbantea.mm?_r=1&_t=ZS-9206DYuBDJQ'),
-                    SizedBox(width: 16),
-                    SocialLinkButton(icon: FontAwesomeIcons.facebookF, url: 'https://www.facebook.com/urbantea915?mibextid=wwXIfr'),
-                    SizedBox(width: 16),
-                    SocialLinkButton(icon: FontAwesomeIcons.instagram, url: 'https://www.instagram.com/urbantea.mm?igsh=MTJjeHpjMXhnODduag=='),
-                  ],
-                ),
-                const SizedBox(height: 32),
-              ],
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
