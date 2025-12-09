@@ -6,7 +6,6 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="description" content="Urban Cafe">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -16,7 +15,6 @@
   <meta name="theme-color" content="#8B5E3C">
   <title>Urban Cafe</title>
   <link rel="manifest" href="manifest.json">
-
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Lato:wght@400&display=swap" rel="stylesheet">
 
   <style>
@@ -33,7 +31,6 @@
       margin: 0;
       background: var(--bg);
       font-family: 'Lato', sans-serif;
-      overflow: hidden
     }
 
     #loading_container {
@@ -49,8 +46,8 @@
     }
 
     .logo-container {
-      width: 120px;
-      height: 120px;
+      width: 160px;
+      height: 160px;
       margin-bottom: 32px;
       animation: float 3s ease-in-out infinite
     }
@@ -90,7 +87,7 @@
     }
 
     .progress-track {
-      width: 200px;
+      width: 160px;
       height: 4px;
       background: rgba(139, 94, 60, 0.15);
       border-radius: 4px;
@@ -136,13 +133,14 @@
 
 <body>
   <div id="loading_container" aria-live="polite" role="status">
-    <div class="logo-container"><img src="icons/Icon-192.png" alt="Urban Cafe Logo"></div>
-    <div class="title">Urban Cafe</div>
+    <div class="logo-container"><img src="icons/urbancafelogo.png" alt="Urban Cafe Logo"></div>
     <div class="subtitle">Loading ...</div>
     <div class="progress-track" aria-hidden="true">
       <div id="progress_bar" class="progress-bar"></div>
     </div>
   </div>
+
+  <link rel="preload" href="main.dart.js" as="script">
 
   <script src="flutter_bootstrap.js" async></script>
 

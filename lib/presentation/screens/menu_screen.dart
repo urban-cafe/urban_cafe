@@ -139,6 +139,7 @@ class _MenuScreenState extends State<MenuScreen> {
     final textTheme = Theme.of(context).textTheme;
 
     return PopScope(
+      canPop: true,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) FocusScope.of(context).unfocus();
       },
