@@ -3,6 +3,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:urban_cafe/core/utils.dart';
 import 'package:urban_cafe/core/validators.dart'; // Import Global Validators
 import 'package:urban_cafe/data/repositories/menu_repository_impl.dart';
 import 'package:urban_cafe/domain/entities/menu_item.dart';
@@ -124,9 +125,15 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
   @override
   Widget build(BuildContext context) {
     final admin = context.watch<AdminProvider>();
+    final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.item == null ? 'New Item' : 'Edit Item')),
+      appBar: AppBar(
+        title: Text(
+          widget.item == null ? 'New Item' : 'Edit Item',
+          style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.0, color: theme.colorScheme.onSurface),
+        ),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Center(
@@ -231,17 +238,15 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
                   const SizedBox(height: 32),
                   SizedBox(
                     width: double.infinity,
-                    height: 50,
+                    height: 48, // Standard Material 3 button height
                     child: FilledButton(
                       onPressed: admin.loading
                           ? null
                           : () async {
-                              // 1. TRIGGER VALIDATION
                               if (!_formKey.currentState!.validate()) return;
 
-                              // 2. Validate Category manually (optional but recommended)
                               if (_selectedSubId == null && _selectedMainId == null) {
-                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please select a category")));
+                                showAppSnackBar(context, "Please select a category", isError: true);
                                 return;
                               }
 
@@ -254,15 +259,22 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
                                 success = await admin.update(id: widget.item!.id, name: _nameCtrl.text, description: _descCtrl.text, price: price, categoryId: _selectedSubId, isAvailable: _available, imageFile: _imageFile);
                               }
 
-                              if (context.mounted && success) Navigator.pop(context);
+                              if (!context.mounted) return;
+
+                              if (success) {
+                                showAppSnackBar(context, widget.item == null ? "Created Successfully" : "Updated Successfully");
+                                Navigator.pop(context);
+                              }
                             },
-                      child: admin.loading ? const CircularProgressIndicator() : const Text('Save Item'),
+
+                      child: admin.loading ? SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: theme.colorScheme.onPrimary, strokeWidth: 2.5)) : const Text('Save Item'),
                     ),
                   ),
+
                   if (admin.error != null)
                     Padding(
                       padding: const EdgeInsets.only(top: 16),
-                      child: Text(admin.error!, style: const TextStyle(color: Colors.red)),
+                      child: Text(admin.error!, style: TextStyle(color: theme.colorScheme.error)),
                     ),
                 ],
               ),

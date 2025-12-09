@@ -49,7 +49,11 @@ class _UrbanCafeAppState extends State<UrbanCafeApp> {
   Widget build(BuildContext context) {
     final router = GoRouter(
       routes: [
-        GoRoute(path: '/', builder: (context, state) => const MainMenuScreen()),
+        // Keep the main menu alive and avoid rebuilds on back navigation.
+        GoRoute(
+          path: '/',
+          pageBuilder: (context, state) => CustomTransitionPage(key: state.pageKey, child: const MainMenuScreen(), transitionDuration: const Duration(milliseconds: 0), reverseTransitionDuration: const Duration(milliseconds: 0), transitionsBuilder: (context, animation, secondaryAnimation, child) => child, maintainState: true),
+        ),
         GoRoute(
           path: '/menu',
           builder: (context, state) => MenuScreen(initialMainCategory: state.uri.queryParameters['initialMainCategory']),

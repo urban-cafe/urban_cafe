@@ -92,6 +92,7 @@ class AdminProvider extends ChangeNotifier {
       error = e.toString();
       return false;
     } finally {
+      await Future.delayed(const Duration(milliseconds: 800));
       loading = false;
       notifyListeners();
     }
@@ -116,6 +117,7 @@ class AdminProvider extends ChangeNotifier {
       error = e.toString();
       return false;
     } finally {
+      await Future.delayed(const Duration(milliseconds: 800));
       loading = false;
       notifyListeners();
     }

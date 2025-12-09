@@ -139,9 +139,13 @@ class _MenuScreenState extends State<MenuScreen> {
     final textTheme = Theme.of(context).textTheme;
 
     return PopScope(
-      canPop: true,
+      canPop: false, // 1. PREVENT the default system pop
       onPopInvokedWithResult: (didPop, result) {
-        if (didPop) FocusScope.of(context).unfocus();
+        if (didPop) return; // Safety check (should be false now)
+
+        // 2. Perform your custom actions
+        FocusScope.of(context).unfocus(); // Close keyboard first
+        context.go('/'); // Navigate to Main Menu
       },
       child: Scaffold(
         appBar: AppBar(

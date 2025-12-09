@@ -19,23 +19,25 @@ class AdminListScreen extends StatefulWidget {
 class _AdminListScreenState extends State<AdminListScreen> {
   final _searchCtrl = TextEditingController();
   final ScrollController _scrollCtrl = ScrollController();
+  late MenuProvider menuProvider;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      menuProvider = Provider.of<MenuProvider>(context, listen: false);
       final auth = context.read<AuthProvider>();
       if (!auth.isConfigured || !auth.isLoggedIn) {
         context.go('/admin/login');
         return;
       }
 
-      context.read<MenuProvider>().fetchAdminList();
+      menuProvider.fetchAdminList();
     });
 
     _scrollCtrl.addListener(() {
       if (_scrollCtrl.position.pixels >= _scrollCtrl.position.maxScrollExtent - 200) {
-        context.read<MenuProvider>().loadMore();
+        menuProvider.loadMore();
       }
     });
   }
@@ -56,14 +58,28 @@ class _AdminListScreenState extends State<AdminListScreen> {
   // -------------------------------
 
   Future<void> _handleLogout() async {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
+        // M3: Title uses Headline Small automatically
         title: const Text('Log out'),
+        // M3: Content uses Body Medium automatically
         content: const Text('Are you sure you want to log out?'),
         actions: [
+          // Secondary Action: Standard TextButton
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Log out')),
+
+          // Primary Action: TextButton with Error Color (Standard M3 for destructive dialogs)
+          TextButton(
+            style: TextButton.styleFrom(
+              foregroundColor: colorScheme.error, // Red text for "Log out"
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Log out'),
+          ),
         ],
       ),
     );
@@ -97,12 +113,17 @@ class _AdminListScreenState extends State<AdminListScreen> {
             style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.0, color: colorScheme.onSurface),
           ),
           actions: [
+            // 1. Updated App Bar Actions
             IconButton(
-              icon: const Icon(Icons.category),
+              icon: const Icon(Icons.category_outlined), // M3 prefers outlined icons
               tooltip: 'Manage Categories',
               onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminCategoryManagerScreen())),
             ),
-            IconButton(icon: const Icon(Icons.logout), tooltip: 'Log out', onPressed: _handleLogout),
+            IconButton(
+              icon: const Icon(Icons.logout_outlined), // M3 prefers outlined icons
+              tooltip: 'Log out',
+              onPressed: _handleLogout,
+            ),
           ],
         ),
         floatingActionButton: FloatingActionButton.extended(
@@ -123,18 +144,20 @@ class _AdminListScreenState extends State<AdminListScreen> {
               child: Row(
                 children: [
                   Expanded(
-                    child: TextField(
-                      controller: _searchCtrl,
-                      decoration: InputDecoration(
-                        prefixIcon: const Icon(Icons.search),
-                        hintText: 'Search items...',
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        filled: true,
-                        fillColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                    child: Container(
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: colorScheme.surface,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: colorScheme.outlineVariant),
                       ),
-                      // OPTIMIZATION: Use read() to trigger search without rebuilding this widget
-                      onChanged: (v) => context.read<MenuProvider>().setSearch(v),
+                      child: TextField(
+                        controller: _searchCtrl,
+                        textAlignVertical: TextAlignVertical.center,
+                        decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Search', border: InputBorder.none, contentPadding: EdgeInsets.symmetric(horizontal: 16), isDense: true),
+                        onChanged: (v) => menuProvider.setSearch(v),
+                        onSubmitted: (v) => FocusScope.of(context).unfocus(),
+                      ),
                     ),
                   ),
                 ],
