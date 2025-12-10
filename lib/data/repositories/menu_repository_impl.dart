@@ -30,7 +30,7 @@ class MenuRepositoryImpl implements MenuRepository {
         query = query.eq('category_id', categoryId);
       }
 
-      final data = await query.order('created_at', ascending: false).range((page - 1) * pageSize, page * pageSize - 1);
+      final data = await query.order('name', ascending: true).range((page - 1) * pageSize, page * pageSize - 1);
 
       return (data as List<dynamic>).map((e) => MenuItemDto.fromMap(e as Map<String, dynamic>).toEntity()).toList();
     } catch (e) {
@@ -42,14 +42,14 @@ class MenuRepositoryImpl implements MenuRepository {
   @override
   Future<List<Map<String, dynamic>>> getMainCategories() async {
     if (!Env.isConfigured) return [];
-    final data = await _client.from(catTable).select('id, name').isFilter('parent_id', null).order('name');
+    final data = await _client.from(catTable).select('id, name').isFilter('parent_id', null).order('name', ascending: true);
     return List<Map<String, dynamic>>.from(data);
   }
 
   @override
   Future<List<Map<String, dynamic>>> getSubCategories(String parentId) async {
     if (!Env.isConfigured) return [];
-    final data = await _client.from(catTable).select('id, name').eq('parent_id', parentId).order('name');
+    final data = await _client.from(catTable).select('id, name').eq('parent_id', parentId).order('name', ascending: true);
     return List<Map<String, dynamic>>.from(data);
   }
 
@@ -57,7 +57,7 @@ class MenuRepositoryImpl implements MenuRepository {
   Future<List<Map<String, dynamic>>> getAllCategories() async {
     if (!Env.isConfigured) return [];
     // Fetch all categories (Main and Sub) to show in the filter list
-    final data = await _client.from(catTable).select('id, name').order('name');
+    final data = await _client.from(catTable).select('id, name').order('name', ascending: true);
     return List<Map<String, dynamic>>.from(data);
   }
 

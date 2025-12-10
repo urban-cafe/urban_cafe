@@ -45,6 +45,7 @@ class _AdminListScreenState extends State<AdminListScreen> {
   void dispose() {
     _searchCtrl.dispose();
     _scrollCtrl.dispose();
+    menuProvider.resetSearch("");
     super.dispose();
   }
 
@@ -137,12 +138,12 @@ class _AdminListScreenState extends State<AdminListScreen> {
           children: [
             // DASHBOARD HEADER (Search)
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
               child: Row(
                 children: [
                   Expanded(
                     child: Container(
-                      height: 48,
+                      height: 40,
                       decoration: BoxDecoration(
                         color: colorScheme.surface,
                         borderRadius: BorderRadius.circular(24),
