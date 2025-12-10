@@ -6,7 +6,6 @@ import 'package:urban_cafe/domain/entities/menu_item.dart';
 import 'package:urban_cafe/presentation/providers/admin_provider.dart';
 import 'package:urban_cafe/presentation/providers/auth_provider.dart';
 import 'package:urban_cafe/presentation/providers/menu_provider.dart';
-import 'package:urban_cafe/presentation/screens/admin/category_manager_screen.dart';
 import 'package:urban_cafe/presentation/widgets/admin_item_tile.dart';
 
 class AdminListScreen extends StatefulWidget {
@@ -94,8 +93,6 @@ class _AdminListScreenState extends State<AdminListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // OPTIMIZATION: Removed context.watch here.
-    // The scaffold won't rebuild when provider changes, saving resources.
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -117,7 +114,7 @@ class _AdminListScreenState extends State<AdminListScreen> {
             IconButton(
               icon: const Icon(Icons.category_outlined), // M3 prefers outlined icons
               tooltip: 'Manage Categories',
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminCategoryManagerScreen())),
+              onPressed: () => context.push('/admin/categories'),
             ),
             IconButton(
               icon: const Icon(Icons.logout_outlined), // M3 prefers outlined icons

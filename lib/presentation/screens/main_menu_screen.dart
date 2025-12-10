@@ -32,11 +32,11 @@ class MainMenuScreen extends StatelessWidget {
             onPressed: () {
               final auth = context.read<AuthProvider>();
               if (!auth.isConfigured) {
-                context.go('/admin/login');
+                context.push('/admin/login');
               } else if (auth.isLoggedIn) {
-                context.go('/admin');
+                context.push('/admin');
               } else {
-                context.go('/admin/login');
+                context.push('/admin/login');
               }
             },
           ),
@@ -47,19 +47,15 @@ class MainMenuScreen extends StatelessWidget {
           return SingleChildScrollView(
             // FIX: Allow scrolling if content overflows
             child: ConstrainedBox(
-              // FIX: Ensure content fills at least the screen height to keep centering working
               constraints: BoxConstraints(minHeight: constraints.maxHeight),
               child: Center(
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 500),
+                  constraints: const BoxConstraints(maxWidth: 600),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 6),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // REPLACED Spacer with SizedBox to prevent scroll errors
-                        const SizedBox(height: 24),
-
                         Hero(
                           tag: 'app_logo',
                           child: Image.asset(
@@ -71,14 +67,13 @@ class MainMenuScreen extends StatelessWidget {
                           ),
                         ),
 
-                        const SizedBox(height: 48),
+                        const SizedBox(height: 16),
 
                         const _MenuButton(label: 'HOT DRINKS', icon: Icons.local_cafe_rounded, route: '/menu?initialMainCategory=HOT%20DRINKS'),
                         const _MenuButton(label: 'COLD DRINKS', icon: Icons.local_drink_rounded, route: '/menu?initialMainCategory=COLD%20DRINKS'),
                         const _MenuButton(label: 'FOOD', icon: Icons.restaurant_menu_rounded, route: '/menu?initialMainCategory=FOOD'),
 
-                        // REPLACED Spacer with fixed spacing
-                        const SizedBox(height: 48),
+                        const SizedBox(height: 16),
 
                         Text(
                           "Follow Us",

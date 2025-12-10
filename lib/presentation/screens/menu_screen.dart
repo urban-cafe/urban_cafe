@@ -145,7 +145,7 @@ class _MenuScreenState extends State<MenuScreen> {
 
         // 2. Perform your custom actions
         FocusScope.of(context).unfocus(); // Close keyboard first
-        context.go('/'); // Navigate to Main Menu
+        context.pop(); // Navigate to Main Menu
       },
       child: Scaffold(
         appBar: AppBar(

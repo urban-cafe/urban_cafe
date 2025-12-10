@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:urban_cafe/core/utils.dart';
@@ -175,107 +176,116 @@ class _AdminCategoryManagerScreenState extends State<AdminCategoryManagerScreen>
 
     final displayList = _isLoading ? _loadingTree : _tree;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Manage Categories',
-          style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.0, color: theme.colorScheme.onSurface),
+    return PopScope(
+      canPop: false, // 1. PREVENT the default system pop
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return; // Safety check (should be false now)
+        // 2. Perform your custom actions
+        FocusScope.of(context).unfocus(); // Close keyboard first
+        context.pop(); // Navigate to Main Menu
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            'Manage Categories',
+            style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.0, color: theme.colorScheme.onSurface),
+          ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(onPressed: () => _triggerCreate(parentId: null), label: const Text("Add Main"), icon: const Icon(Icons.add)),
+        floatingActionButton: FloatingActionButton.extended(onPressed: () => _triggerCreate(parentId: null), label: const Text("Add Main"), icon: const Icon(Icons.add)),
 
-      body: Skeletonizer(
-        enabled: _isLoading,
-        effect: ShimmerEffect(baseColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5), highlightColor: colorScheme.surface),
-        child: displayList.isEmpty && !_isLoading
-            ? Center(child: Text("No categories yet", style: theme.textTheme.titleMedium))
-            : ListView.builder(
-                padding: const EdgeInsets.only(bottom: 80),
-                itemCount: displayList.length,
-                itemBuilder: (context, index) {
-                  final node = displayList[index];
-                  final main = node['data'] as Map<String, dynamic>;
-                  final subs = node['subs'] as List<Map<String, dynamic>>;
+        body: Skeletonizer(
+          enabled: _isLoading,
+          effect: ShimmerEffect(baseColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5), highlightColor: colorScheme.surface),
+          child: displayList.isEmpty && !_isLoading
+              ? Center(child: Text("No categories yet", style: theme.textTheme.titleMedium))
+              : ListView.builder(
+                  padding: const EdgeInsets.only(bottom: 80),
+                  itemCount: displayList.length,
+                  itemBuilder: (context, index) {
+                    final node = displayList[index];
+                    final main = node['data'] as Map<String, dynamic>;
+                    final subs = node['subs'] as List<Map<String, dynamic>>;
 
-                  return Card(
-                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    elevation: 2,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    child: Theme(
-                      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-                      child: ExpansionTile(
-                        tilePadding: const EdgeInsets.only(left: 16, right: 8),
-                        leading: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(color: colorScheme.primaryContainer, borderRadius: BorderRadius.circular(8)),
-                          child: Icon(Icons.category, color: colorScheme.onPrimaryContainer),
-                        ),
-                        title: Text(main['name'], style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
+                    return Card(
+                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      child: Theme(
+                        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                        child: ExpansionTile(
+                          tilePadding: const EdgeInsets.only(left: 16, right: 8),
+                          leading: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(color: colorScheme.primaryContainer, borderRadius: BorderRadius.circular(8)),
+                            child: Icon(Icons.category, color: colorScheme.onPrimaryContainer),
+                          ),
+                          title: Text(main['name'], style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(icon: const Icon(Icons.edit, size: 20), onPressed: _isLoading ? null : () => _showRenameDialog(main['id'], main['name'])),
+                              IconButton(
+                                icon: Icon(Icons.delete, size: 20, color: colorScheme.error),
+                                onPressed: _isLoading ? null : () => _confirmDelete(main['id'], main['name']),
+                              ),
+                              const Icon(Icons.keyboard_arrow_down),
+                            ],
+                          ),
                           children: [
-                            IconButton(icon: const Icon(Icons.edit, size: 20), onPressed: _isLoading ? null : () => _showRenameDialog(main['id'], main['name'])),
-                            IconButton(
-                              icon: Icon(Icons.delete, size: 20, color: colorScheme.error),
-                              onPressed: _isLoading ? null : () => _confirmDelete(main['id'], main['name']),
+                            Container(
+                              decoration: BoxDecoration(
+                                color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                                border: Border(left: BorderSide(color: colorScheme.primary.withValues(alpha: 0.5), width: 4)),
+                              ),
+                              child: ListTile(
+                                contentPadding: const EdgeInsets.only(left: 48, right: 16),
+                                leading: Icon(Icons.add_circle_outline, color: colorScheme.primary, size: 20),
+                                title: Text(
+                                  "Add Sub-Category",
+                                  style: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.w600),
+                                ),
+                                onTap: _isLoading ? null : () => _triggerCreate(parentId: main['id']),
+                              ),
                             ),
-                            const Icon(Icons.keyboard_arrow_down),
+
+                            if (subs.isEmpty)
+                              Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Center(
+                                  child: Text("No sub-categories", style: TextStyle(color: colorScheme.outline)),
+                                ),
+                              ),
+
+                            ...subs.map(
+                              (sub) => Column(
+                                children: [
+                                  const Divider(height: 1, indent: 16, endIndent: 16),
+                                  ListTile(
+                                    contentPadding: const EdgeInsets.only(left: 32, right: 16),
+                                    title: Text(sub['name']),
+                                    leading: const Icon(Icons.subdirectory_arrow_right, size: 18, color: Colors.grey),
+                                    trailing: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        IconButton(icon: const Icon(Icons.edit, size: 18), onPressed: _isLoading ? null : () => _showRenameDialog(sub['id'], sub['name'])),
+                                        IconButton(
+                                          icon: Icon(Icons.delete_outline, size: 18, color: colorScheme.error),
+                                          onPressed: _isLoading ? null : () => _confirmDelete(sub['id'], sub['name']),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 8),
                           ],
                         ),
-                        children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                              border: Border(left: BorderSide(color: colorScheme.primary.withValues(alpha: 0.5), width: 4)),
-                            ),
-                            child: ListTile(
-                              contentPadding: const EdgeInsets.only(left: 48, right: 16),
-                              leading: Icon(Icons.add_circle_outline, color: colorScheme.primary, size: 20),
-                              title: Text(
-                                "Add Sub-Category",
-                                style: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.w600),
-                              ),
-                              onTap: _isLoading ? null : () => _triggerCreate(parentId: main['id']),
-                            ),
-                          ),
-
-                          if (subs.isEmpty)
-                            Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Center(
-                                child: Text("No sub-categories", style: TextStyle(color: colorScheme.outline)),
-                              ),
-                            ),
-
-                          ...subs.map(
-                            (sub) => Column(
-                              children: [
-                                const Divider(height: 1, indent: 16, endIndent: 16),
-                                ListTile(
-                                  contentPadding: const EdgeInsets.only(left: 32, right: 16),
-                                  title: Text(sub['name']),
-                                  leading: const Icon(Icons.subdirectory_arrow_right, size: 18, color: Colors.grey),
-                                  trailing: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      IconButton(icon: const Icon(Icons.edit, size: 18), onPressed: _isLoading ? null : () => _showRenameDialog(sub['id'], sub['name'])),
-                                      IconButton(
-                                        icon: Icon(Icons.delete_outline, size: 18, color: colorScheme.error),
-                                        onPressed: _isLoading ? null : () => _confirmDelete(sub['id'], sub['name']),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                        ],
                       ),
-                    ),
-                  );
-                },
-              ),
+                    );
+                  },
+                ),
+        ),
       ),
     );
   }
