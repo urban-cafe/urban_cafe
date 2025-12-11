@@ -2,119 +2,179 @@
 <html>
 
 <head>
-    <base href="$FLUTTER_BASE_HREF">
+  <base href="$FLUTTER_BASE_HREF">
 
-    <meta charset="UTF-8">
-    <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="Urban Cafe">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="Urban Cafe">
-    <link rel="apple-touch-icon" href="icons/Icon-192.png">
-    <link rel="icon" type="image/png" href="favicon.png" />
-    <meta name="theme-color" content="#8B5E3C">
-    <title>Urban Cafe</title>
-    <link rel="manifest" href="manifest.json">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Lato:wght@400&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="Urban Cafe">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Urban Cafe">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <meta name="theme-color" content="#8B5E3C">
+  <title>Urban Cafe</title>
+  <link rel="manifest" href="manifest.json">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Lato:wght@400&display=swap" rel="stylesheet">
 
-    <style>
-        :root {
-          --bg: #FAF7F5;
-          --primary: #8B5E3C;
-          --text-main: #4E3B2F;
-          --text-sub: #8D7B6F;
-        }
+  <style>
+    :root {
+      --bg: #FAF7F5;
+      --primary: #8B5E3C;
+      --text-main: #4E3B2F;
+      --text-sub: #8D7B6F;
+    }
 
-        html,
-        body {
-          height: 100%;
-          margin: 0;
-          background: var(--bg);
-          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-          overflow: hidden;
-        }
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      background: var(--bg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      overflow: hidden;
+    }
 
-        #loading_container {
-          position: fixed;
-          inset: 0;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          z-index: 9999;
-          background: var(--bg);
-          padding: 24px;
-          transition: opacity 0.5s ease;
-        }
+    #loading_container {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      background: var(--bg);
+      padding: 24px;
+      transition: opacity 0.5s ease;
+    }
 
-        .subtitle {
-          font-size: 16px;
-          color: var(--text-main);
-          margin-top: 24px;
-          font-family: 'Playfair Display', serif;
-          font-weight: 600;
-          letter-spacing: 0.5px;
-        }
+    .subtitle {
+      font-size: 16px;
+      color: var(--text-main);
+      margin-top: 24px;
+      font-family: 'Playfair Display', serif;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
 
-        /* --- Cupertino Spinner Styles --- */
-        .cupertino-spinner {
-          position: relative;
-          width: 32px;
-          height: 32px;
-          color: var(--primary);
-        }
+    /* --- Cupertino Spinner Styles --- */
+    .cupertino-spinner {
+      position: relative;
+      width: 32px;
+      height: 32px;
+      color: var(--primary);
+    }
 
-        .cupertino-spinner .blade {
-          position: absolute;
-          left: 44.5%;
-          top: 37%;
-          width: 10%;
-          height: 25%;
-          border-radius: 50%/20%;
-          background-color: currentColor;
-          animation: cupertino-fade 1s linear infinite;
-        }
+    .cupertino-spinner .blade {
+      position: absolute;
+      left: 44.5%;
+      top: 37%;
+      width: 10%;
+      height: 25%;
+      border-radius: 50%/20%;
+      background-color: currentColor;
+      animation: cupertino-fade 1s linear infinite;
+    }
 
-        @keyframes cupertino-fade {
-          from { opacity: 1; }
-          to { opacity: 0.25; }
-        }
+    @keyframes cupertino-fade {
+      from {
+        opacity: 1;
+      }
 
-        .blade:nth-child(1) { transform: rotate(0deg) translate(0, -140%); animation-delay: -1.0000s; }
-        .blade:nth-child(2) { transform: rotate(30deg) translate(0, -140%); animation-delay: -0.9167s; }
-        .blade:nth-child(3) { transform: rotate(60deg) translate(0, -140%); animation-delay: -0.8333s; }
-        .blade:nth-child(4) { transform: rotate(90deg) translate(0, -140%); animation-delay: -0.7500s; }
-        .blade:nth-child(5) { transform: rotate(120deg) translate(0, -140%); animation-delay: -0.6667s; }
-        .blade:nth-child(6) { transform: rotate(150deg) translate(0, -140%); animation-delay: -0.5833s; }
-        .blade:nth-child(7) { transform: rotate(180deg) translate(0, -140%); animation-delay: -0.5000s; }
-        .blade:nth-child(8) { transform: rotate(210deg) translate(0, -140%); animation-delay: -0.4167s; }
-        .blade:nth-child(9) { transform: rotate(240deg) translate(0, -140%); animation-delay: -0.3333s; }
-        .blade:nth-child(10) { transform: rotate(270deg) translate(0, -140%); animation-delay: -0.2500s; }
-        .blade:nth-child(11) { transform: rotate(300deg) translate(0, -140%); animation-delay: -0.1667s; }
-        .blade:nth-child(12) { transform: rotate(330deg) translate(0, -140%); animation-delay: -0.0833s; }
+      to {
+        opacity: 0.25;
+      }
+    }
 
-        .fade-out {
-          opacity: 0;
-          pointer-events: none;
-        }
-    </style>
+    .blade:nth-child(1) {
+      transform: rotate(0deg) translate(0, -140%);
+      animation-delay: -1.0000s;
+    }
+
+    .blade:nth-child(2) {
+      transform: rotate(30deg) translate(0, -140%);
+      animation-delay: -0.9167s;
+    }
+
+    .blade:nth-child(3) {
+      transform: rotate(60deg) translate(0, -140%);
+      animation-delay: -0.8333s;
+    }
+
+    .blade:nth-child(4) {
+      transform: rotate(90deg) translate(0, -140%);
+      animation-delay: -0.7500s;
+    }
+
+    .blade:nth-child(5) {
+      transform: rotate(120deg) translate(0, -140%);
+      animation-delay: -0.6667s;
+    }
+
+    .blade:nth-child(6) {
+      transform: rotate(150deg) translate(0, -140%);
+      animation-delay: -0.5833s;
+    }
+
+    .blade:nth-child(7) {
+      transform: rotate(180deg) translate(0, -140%);
+      animation-delay: -0.5000s;
+    }
+
+    .blade:nth-child(8) {
+      transform: rotate(210deg) translate(0, -140%);
+      animation-delay: -0.4167s;
+    }
+
+    .blade:nth-child(9) {
+      transform: rotate(240deg) translate(0, -140%);
+      animation-delay: -0.3333s;
+    }
+
+    .blade:nth-child(10) {
+      transform: rotate(270deg) translate(0, -140%);
+      animation-delay: -0.2500s;
+    }
+
+    .blade:nth-child(11) {
+      transform: rotate(300deg) translate(0, -140%);
+      animation-delay: -0.1667s;
+    }
+
+    .blade:nth-child(12) {
+      transform: rotate(330deg) translate(0, -140%);
+      animation-delay: -0.0833s;
+    }
+
+    .fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+  </style>
 </head>
 
 <body>
-<div id="loading_container" aria-live="polite" role="status">
+  <div id="loading_container" aria-live="polite" role="status">
     <div class="cupertino-spinner" aria-hidden="true">
-        <div class="blade"></div><div class="blade"></div><div class="blade"></div>
-        <div class="blade"></div><div class="blade"></div><div class="blade"></div>
-        <div class="blade"></div><div class="blade"></div><div class="blade"></div>
-        <div class="blade"></div><div class="blade"></div><div class="blade"></div>
+      <div class="blade"></div>
+      <div class="blade"></div>
+      <div class="blade"></div>
+      <div class="blade"></div>
+      <div class="blade"></div>
+      <div class="blade"></div>
+      <div class="blade"></div>
+      <div class="blade"></div>
+      <div class="blade"></div>
+      <div class="blade"></div>
+      <div class="blade"></div>
+      <div class="blade"></div>
     </div>
     <div class="subtitle">Loading...</div>
-</div>
+  </div>
 
-<script src="flutter_bootstrap.js" async></script>
+  <script src="flutter_bootstrap.js" async></script>
 
-<script>
+  <script>
     // 1. Helper to remove the loader visual
     function removeLoader() {
       var loader = document.getElementById('loading_container');
@@ -122,37 +182,38 @@
         console.log("Removing splash screen...");
         loader.classList.add('fade-out');
         setTimeout(() => {
-          if(loader) loader.remove();
+          if (loader) loader.remove();
         }, 500);
       }
     }
 
     // 2. Listen for the window load event
-    window.addEventListener('load', function(ev) {
+    window.addEventListener('load', function (ev) {
       // FIX: pass configuration object INSIDE the load function
       // Do NOT set window.flutterConfiguration global variable
       _flutter.loader.load({
         serviceWorker: {
-          serviceWorkerVersion: {{flutter_service_worker_version}},
+          serviceWorkerVersion: {{ flutter_service_worker_version }},
         },
-        onEntrypointLoaded: function(engineInitializer) {
-          engineInitializer.initializeEngine().then(function(appRunner) {
-            appRunner.runApp();
-            // Remove loader shortly after app starts
-            setTimeout(removeLoader, 200);
-          });
-        }
+      onEntrypointLoaded: function (engineInitializer) {
+        engineInitializer.initializeEngine().then(function (appRunner) {
+          appRunner.runApp();
+          // Remove loader shortly after app starts
+          setTimeout(removeLoader, 200);
+        });
+      }
       });
     });
 
     // 3. Safety Timer (Fallback)
     // If Flutter fails to load or takes too long (>8s), remove the spinner
-    setTimeout(function() {
+    setTimeout(function () {
       if (document.getElementById('loading_container')) {
         console.warn("Safety timer triggered: Removing splash screen.");
         removeLoader();
       }
     }, 10000);
-</script>
+  </script>
 </body>
+
 </html>

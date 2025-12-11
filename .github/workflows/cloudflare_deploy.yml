@@ -1,0 +1,51 @@
+name: Deploy to Cloudflare Pages
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Build Web App (Wasm)
+        env:
+          # Load secrets from GitHub Actions Secrets
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          flutter pub get
+          
+          # 1. Build with Secrets & Wasm
+          # Note: Removed --base-href because Cloudflare hosts at root
+          flutter build web --release --wasm \
+            --dart-define=SUPABASE_URL=${SUPABASE_URL} \
+            --dart-define=SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+
+          # 2. Create _headers file for Wasm support
+          # This tells Cloudflare to send the correct headers for high-performance mode
+          echo "/*" > build/web/_headers
+          echo "  Cross-Origin-Embedder-Policy: credentialless" >> build/web/_headers
+          echo "  Cross-Origin-Opener-Policy: same-origin" >> build/web/_headers
+
+      - name: Publish to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: 'urbancafe' # Ensure this matches your Cloudflare project name
+          directory: 'build/web'
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
