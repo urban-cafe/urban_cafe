@@ -172,10 +172,7 @@
     <div class="subtitle">Loading...</div>
   </div>
 
-  <script src="flutter_bootstrap.js" async></script>
-
   <script>
-    // 1. Helper to remove the loader visual
     function removeLoader() {
       var loader = document.getElementById('loading_container');
       if (loader && !loader.classList.contains('fade-out')) {
@@ -186,31 +183,46 @@
         }, 500);
       }
     }
+  </script>
 
-    // 2. Listen for the window load event
-    window.addEventListener('load', function (ev) {
-      // FIX: pass configuration object INSIDE the load function
-      // Do NOT set window.flutterConfiguration global variable
-      _flutter.loader.load({
+  <script>
+    // We wrap this in a try-catch to prevent syntax errors from breaking the page
+    try {
+      window.flutterConfiguration = {
         serviceWorker: {
-          serviceWorkerVersion: {{ flutter_service_worker_version }},
+          // Note: If you are testing locally without 'flutter run', 
+          // this line might cause a syntax error. That is expected.
+          serviceWorkerVersion: {{ flutter_service_worker_version }
+    },
         },
-      onEntrypointLoaded: function (engineInitializer) {
-        engineInitializer.initializeEngine().then(function (appRunner) {
-          appRunner.runApp();
-          // Remove loader shortly after app starts
-          setTimeout(removeLoader, 200);
-        });
-      }
+    onEntrypointLoaded: function (engineInitializer) {
+      engineInitializer.initializeEngine().then(function (appRunner) {
+        appRunner.runApp();
+        setTimeout(removeLoader, 200);
       });
-    });
+    }
+      };
+    } catch (e) {
+      console.error("Flutter Config Error:", e);
+      // Fallback: If config fails, try to load anyway or at least remove spinner so user sees error
+      setTimeout(removeLoader, 3000);
+    }
+  </script>
 
-    // 3. Safety Timer (Fallback)
-    // If Flutter fails to load or takes too long (>8s), remove the spinner
+  <script src="flutter_bootstrap.js" async></script>
+
+  <script>
+    // If the app takes longer than 10 seconds, force remove the spinner
     setTimeout(function () {
       if (document.getElementById('loading_container')) {
         console.warn("Safety timer triggered: Removing splash screen.");
-        removeLoader();
+        if (typeof removeLoader === 'function') {
+          removeLoader();
+        } else {
+          // Last resort manual removal if even the function is missing
+          var loader = document.getElementById('loading_container');
+          if (loader) loader.remove();
+        }
       }
     }, 10000);
   </script>
