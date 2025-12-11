@@ -31,7 +31,7 @@ jobs:
           
           # 1. Build with Secrets & Wasm
           # Note: Removed --base-href because Cloudflare hosts at root
-          flutter build web --release --wasm \
+          flutter build web --release \
             --dart-define=SUPABASE_URL=${SUPABASE_URL} \
             --dart-define=SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
 
