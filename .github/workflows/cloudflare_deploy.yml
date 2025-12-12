@@ -31,15 +31,21 @@ jobs:
           
           # 1. Build with Secrets & Wasm
           # Note: Removed --base-href because Cloudflare hosts at root
-          flutter build web --release \
+          flutter build web --release --wasm \
             --dart-define=SUPABASE_URL=${SUPABASE_URL} \
             --dart-define=SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
 
           # 2. Create _headers file for Wasm support
           # This tells Cloudflare to send the correct headers for high-performance mode
-          echo "/*" > build/web/_headers
-          echo "  Cross-Origin-Embedder-Policy: credentialless" >> build/web/_headers
-          echo "  Cross-Origin-Opener-Policy: same-origin" >> build/web/_headers
+          cat > build/web/_headers << 'EOF'
+          /*
+            Cross-Origin-Embedder-Policy: credentialless
+            Cross-Origin-Opener-Policy: same-origin
+            Cache-Control: public, max-age=31536000, immutable
+
+          /index.html
+            Cache-Control: no-cache
+          EOF
 
       - name: Publish to Cloudflare Pages
         uses: cloudflare/pages-action@v1

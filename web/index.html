@@ -31,7 +31,6 @@
       height: 100%;
       margin: 0;
       background: var(--bg);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       overflow: hidden;
     }
 
@@ -173,59 +172,40 @@
   </div>
 
   <script>
+    // Robust splash removal – works even if something goes wrong
     function removeLoader() {
-      var loader = document.getElementById('loading_container');
+      const loader = document.getElementById('loading_container');
       if (loader && !loader.classList.contains('fade-out')) {
-        console.log("Removing splash screen...");
+        console.log('Removing custom splash screen...');
         loader.classList.add('fade-out');
-        setTimeout(() => {
-          if (loader) loader.remove();
-        }, 500);
+        // Remove from DOM after fade
+        setTimeout(() => loader.remove(), 600);
       }
     }
-  </script>
 
-  <script>
-    // We wrap this in a try-catch to prevent syntax errors from breaking the page
-    try {
-      window.flutterConfiguration = {
-        serviceWorker: {
-          // Note: If you are testing locally without 'flutter run', 
-          // this line might cause a syntax error. That is expected.
-          serviceWorkerVersion: {{ flutter_service_worker_version }
-    },
-        },
-    onEntrypointLoaded: function (engineInitializer) {
-      engineInitializer.initializeEngine().then(function (appRunner) {
-        appRunner.runApp();
-        setTimeout(removeLoader, 200);
-      });
-    }
-      };
-    } catch (e) {
-      console.error("Flutter Config Error:", e);
-      // Fallback: If config fails, try to load anyway or at least remove spinner so user sees error
-      setTimeout(removeLoader, 3000);
-    }
+    // Safety fallback – remove after 8 seconds max
+    const safetyTimer = setTimeout(() => {
+      console.warn('Safety timer: Forcing splash removal after 8s');
+      removeLoader();
+    }, 8000);
+
+    // This is the correct way to hook into Flutter Web startup
+    window.addEventListener('flutter-first-frame', () => {
+      console.log('FlutterFirstFrame received – removing splash');
+      clearTimeout(safetyTimer);
+      removeLoader();
+    });
+
+    // Also try the legacy method (in case you're on older Flutter)
+    window.addEventListener('flutter-app-loaded', () => {
+      console.log('flutter-app-loaded (legacy) – removing splash');
+      clearTimeout(safetyTimer);
+      removeLoader();
+    });
   </script>
 
   <script src="flutter_bootstrap.js" async></script>
 
-  <script>
-    // If the app takes longer than 10 seconds, force remove the spinner
-    setTimeout(function () {
-      if (document.getElementById('loading_container')) {
-        console.warn("Safety timer triggered: Removing splash screen.");
-        if (typeof removeLoader === 'function') {
-          removeLoader();
-        } else {
-          // Last resort manual removal if even the function is missing
-          var loader = document.getElementById('loading_container');
-          if (loader) loader.remove();
-        }
-      }
-    }, 10000);
-  </script>
 </body>
 
 </html>
