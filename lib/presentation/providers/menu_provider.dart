@@ -27,7 +27,7 @@ class MenuProvider extends ChangeNotifier {
   String _searchQuery = '';
 
   int _page = 1;
-  final int _pageSize = 20;
+  final int _pageSize = 10;
   bool hasMore = true;
 
   // Optimized Initializer

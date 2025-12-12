@@ -27,6 +27,6 @@ void main() {
     expect(result, items);
 
     // Fix: Verify with new parameters
-    verify(() => repo.getMenuItems(page: 1, pageSize: 20, search: null, categoryId: null, categoryIds: null)).called(1);
+    verify(() => repo.getMenuItems(page: 1, pageSize: 10, search: null, categoryId: null, categoryIds: null)).called(1);
   });
 }

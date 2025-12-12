@@ -1,3 +1,4 @@
+// presentation/widgets/menu_card.dart
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -6,6 +7,7 @@ import 'package:urban_cafe/domain/entities/menu_item.dart';
 class MenuCard extends StatelessWidget {
   final MenuItemEntity item;
   final VoidCallback? onTap;
+
   const MenuCard({super.key, required this.item, this.onTap});
 
   @override
@@ -16,79 +18,82 @@ class MenuCard extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Image on the Left
-            Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: SizedBox(
-                    width: 100,
-                    height: 100,
-                    child: item.imageUrl != null
-                        ? CachedNetworkImage(
-                            imageUrl: item.imageUrl!,
-                            fit: BoxFit.cover,
-                            placeholder: (context, url) => Container(color: colorScheme.surfaceContainerHighest),
-                            errorWidget: (context, url, error) => Container(
-                              color: colorScheme.surfaceContainerHighest,
-                              child: Icon(Icons.fastfood, color: colorScheme.onSurfaceVariant),
-                            ),
-                          )
-                        : Container(
-                            color: colorScheme.surfaceContainerHighest,
-                            child: Icon(Icons.fastfood, color: colorScheme.onSurfaceVariant),
-                          ),
-                  ),
+            // BIGGER & SHARPER IMAGE
+            Hero(
+              tag: 'menu-${item.id}',
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  width: 110,
+                  height: 110,
+                  color: colorScheme.surfaceContainerHighest,
+                  child: item.imageUrl != null
+                      ? CachedNetworkImage(
+                          imageUrl: item.imageUrl!,
+                          fit: BoxFit.cover,
+                          memCacheWidth: 400, // Sharp on high-DPI screens
+                          placeholder: (_, _) => Container(color: colorScheme.surfaceContainerHighest),
+                          errorWidget: (_, _, _) => Icon(Icons.fastfood, size: 40, color: colorScheme.onSurfaceVariant),
+                        )
+                      : Icon(Icons.fastfood, size: 40, color: colorScheme.onSurfaceVariant),
                 ),
-                // "Sold Out" Overlay on Image (if needed)
-                if (!item.isAvailable)
-                  Positioned.fill(
-                    child: Container(
-                      decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(12)),
-                      alignment: Alignment.center,
-                      child: Text(
-                        'SOLD OUT',
-                        style: theme.textTheme.labelSmall?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-              ],
+              ),
             ),
 
             const SizedBox(width: 16),
 
-            // 2. Details on the Right
+            // CONTENT
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 4), // Visual alignment with image top
+                  const SizedBox(height: 4),
+
                   Text(
                     item.name,
-                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, fontSize: 16),
+                    style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, fontSize: 17),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
+
+                  const SizedBox(height: 6),
+
                   if (item.categoryName != null)
                     Text(
                       item.categoryName!,
-                      style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.primary, fontWeight: FontWeight.w500),
+                      style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.primary, fontWeight: FontWeight.w600),
                     ),
-                  const SizedBox(height: 8),
-                  Text(priceFormat.format(item.price), style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800, fontSize: 17)),
+
+                  const SizedBox(height: 10),
+
+                  Row(
+                    children: [
+                      Text(
+                        priceFormat.format(item.price),
+                        style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900, fontSize: 19, color: colorScheme.primary),
+                      ),
+                      const Spacer(),
+                      // SOLD OUT BADGE (if needed)
+                      if (!item.isAvailable)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(color: colorScheme.errorContainer, borderRadius: BorderRadius.circular(20)),
+                          child: Text(
+                            'Unavailable',
+                            style: TextStyle(color: colorScheme.onErrorContainer, fontWeight: FontWeight.bold, fontSize: 12),
+                          ),
+                        ),
+                    ],
+                  ),
                 ],
               ),
             ),
-
-            // Optional: Add Icon button or arrow here if you want
-            // const Icon(Icons.add_circle, color: Colors.green, size: 28),
           ],
         ),
       ),

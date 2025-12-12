@@ -1,5 +1,6 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:urban_cafe/core/env.dart';
 import 'package:urban_cafe/data/datasources/supabase_client.dart';
@@ -18,12 +19,35 @@ class AdminProvider extends ChangeNotifier {
   }
 
   Future<(String path, String url)?> uploadImage(PlatformFile file) async {
-    // ... (Keep existing upload logic) ...
     if (!Env.isConfigured) return null;
     final client = SupabaseClientProvider.client;
-    final ext = (file.extension ?? 'jpg').toLowerCase();
+
+    // Compress to WebP (smaller, modern format supported by 98%+ browsers)
+    Uint8List compressedBytes;
+    String ext = 'webp';
+    try {
+      compressedBytes = await FlutterImageCompress.compressWithList(
+        file.bytes!,
+        minWidth: 1200, // Max width for full image
+        minHeight: 1200,
+        quality: 85, // Balance quality/size
+        format: CompressFormat.webp,
+      );
+    } catch (e) {
+      // Fallback if compression fails (rare)
+      compressedBytes = file.bytes!;
+      ext = (file.extension ?? 'jpg').toLowerCase();
+    }
+
+    // Optional: If compressed is larger (unlikely), use original
+    if (compressedBytes.length > file.bytes!.length) {
+      compressedBytes = file.bytes!;
+      ext = (file.extension ?? 'jpg').toLowerCase();
+    }
+
     final path = '${DateTime.now().millisecondsSinceEpoch}.$ext';
-    await client.storage.from(Env.storageBucket).uploadBinary(path, file.bytes!, fileOptions: FileOptions(contentType: 'image/$ext', upsert: true));
+    await client.storage.from(Env.storageBucket).uploadBinary(path, compressedBytes, fileOptions: FileOptions(contentType: 'image/$ext', upsert: true));
+
     final url = client.storage.from(Env.storageBucket).getPublicUrl(path);
     return (path, url);
   }

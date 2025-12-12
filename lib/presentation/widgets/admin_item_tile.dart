@@ -1,3 +1,5 @@
+// presentation/widgets/admin_item_tile.dart
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:urban_cafe/domain/entities/menu_item.dart';
 
@@ -14,47 +16,75 @@ class AdminItemTile extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return ListTile(
-      // Keep original circular avatar
-      leading: CircleAvatar(backgroundImage: item.imageUrl != null ? NetworkImage(item.imageUrl!) : null, child: item.imageUrl == null ? const Icon(Icons.fastfood) : null),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
 
-      // 1. BETTER TYPOGRAPHY: Bolder title for better readability
+      // PERFECT SQUARE IMAGE (80×80, sharp & clear)
+      leading: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: AspectRatio(
+          aspectRatio: 1.0, // Forces square shape
+          child: Container(
+            width: 80,
+            height: 80,
+            color: colorScheme.surfaceContainerHighest,
+            child: item.imageUrl != null
+                ? CachedNetworkImage(
+                    imageUrl: item.imageUrl!,
+                    fit: BoxFit.cover,
+                    memCacheWidth: 300, // Sharp on high-DPI screens
+                    placeholder: (_, _) => const SizedBox(),
+                    errorWidget: (_, _, _) => const Icon(Icons.fastfood, size: 32),
+                  )
+                : const Icon(Icons.fastfood, size: 32, color: Colors.white70),
+          ),
+        ),
+      ),
+
       title: Text(
         item.name,
-        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: colorScheme.onSurface),
+        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, fontSize: 16),
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
       ),
 
-      // 2. STATUS INDICATOR: Added next to category
-      subtitle: Row(
-        mainAxisSize: MainAxisSize.min,
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Category Name
-          Text(item.categoryName ?? 'Uncategorized', style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant)),
-
-          // Show "Sold Out" tag if item is unavailable
-          if (!item.isAvailable) ...[
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(color: colorScheme.errorContainer, borderRadius: BorderRadius.circular(4)),
-              child: Text(
-                "Unavailable",
-                style: theme.textTheme.labelSmall?.copyWith(color: colorScheme.onErrorContainer, fontWeight: FontWeight.bold),
-              ),
+          if (item.categoryName != null)
+            Text(
+              item.categoryName!,
+              style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.primary, fontWeight: FontWeight.w600),
             ),
-          ],
-        ],
-      ),
-
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          IconButton(icon: const Icon(Icons.edit), onPressed: onEdit),
-          IconButton(
-            icon: Icon(Icons.delete, color: colorScheme.error),
-            onPressed: onDelete,
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Text(
+                item.price.toStringAsFixed(0),
+                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: colorScheme.primary, fontSize: 17),
+              ),
+              const SizedBox(width: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(color: item.isAvailable ? colorScheme.primaryContainer : colorScheme.errorContainer, borderRadius: BorderRadius.circular(20)),
+                child: Text(
+                  item.isAvailable ? 'Available' : 'Unavailable',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: item.isAvailable ? colorScheme.onPrimaryContainer : colorScheme.onErrorContainer),
+                ),
+              ),
+            ],
           ),
         ],
       ),
+
+      // Only Delete button
+      trailing: IconButton(
+        icon: Icon(Icons.delete_outline, color: colorScheme.error, size: 26),
+        onPressed: onDelete,
+        tooltip: 'Delete',
+      ),
+
+      // Tap anywhere to edit
+      onTap: onEdit,
     );
   }
 }

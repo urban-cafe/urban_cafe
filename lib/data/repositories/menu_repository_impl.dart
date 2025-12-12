@@ -12,7 +12,7 @@ class MenuRepositoryImpl implements MenuRepository {
   SupabaseClient get _client => SupabaseClientProvider.client;
 
   @override
-  Future<List<MenuItemEntity>> getMenuItems({int page = 1, int pageSize = 20, String? search, String? categoryId, List<String>? categoryIds}) async {
+  Future<List<MenuItemEntity>> getMenuItems({int page = 1, int pageSize = 10, String? search, String? categoryId, List<String>? categoryIds}) async {
     if (!Env.isConfigured) return [];
 
     try {

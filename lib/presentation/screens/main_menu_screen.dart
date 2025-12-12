@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:urban_cafe/core/common_constants.dart';
 import 'package:urban_cafe/presentation/providers/auth_provider.dart';
+import 'package:urban_cafe/presentation/widgets/contact_info_sheet.dart';
 import 'package:urban_cafe/presentation/widgets/social_link_button.dart';
 import 'package:urban_cafe/presentation/widgets/theme_selection_button.dart';
 
@@ -47,9 +49,9 @@ class MainMenuScreen extends StatelessWidget {
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 600),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 2),
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         Hero(
                           tag: 'app_logo',
@@ -69,23 +71,24 @@ class MainMenuScreen extends StatelessWidget {
                         const _MenuButton(label: 'FOOD', icon: Icons.restaurant_menu_rounded, route: '/menu?initialMainCategory=FOOD'),
 
                         const SizedBox(height: 16),
-
-                        Text(
-                          "Follow Us",
-                          style: theme.textTheme.labelLarge?.copyWith(color: colorScheme.onSurfaceVariant, fontWeight: FontWeight.bold, letterSpacing: 1.5),
-                        ),
-                        const SizedBox(height: 16),
+                        //const SizedBox(height: 16),
                         const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            SocialLinkButton(icon: FontAwesomeIcons.tiktok, url: 'https://www.tiktok.com/@urbantea.mm?_r=1&_t=ZS-9206DYuBDJQ'),
+                            SocialLinkButton(icon: FontAwesomeIcons.tiktok, url: CommonConstants.tiktokUrl),
                             SizedBox(width: 16),
-                            SocialLinkButton(icon: FontAwesomeIcons.facebookF, url: 'https://www.facebook.com/urbantea915?mibextid=wwXIfr'),
+                            SocialLinkButton(icon: FontAwesomeIcons.facebookF, url: CommonConstants.facebookUrl),
                             SizedBox(width: 16),
-                            SocialLinkButton(icon: FontAwesomeIcons.instagram, url: 'https://www.instagram.com/urbantea.mm?igsh=MTJjeHpjMXhnODduag=='),
+                            SocialLinkButton(icon: FontAwesomeIcons.instagram, url: CommonConstants.instagramUrl),
                           ],
                         ),
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 16),
+                        // Contact Button to open contact sheet
+                        TextButton.icon(
+                          onPressed: () => _showContactSheet(context),
+                          label: const Text('Contact Us'),
+                          style: TextButton.styleFrom(foregroundColor: colorScheme.primary),
+                        ),
                       ],
                     ),
                   ),
@@ -97,6 +100,16 @@ class MainMenuScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+void _showContactSheet(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: Theme.of(context).colorScheme.surface,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+    builder: (_) => const ContactInfoSheet(),
+  );
 }
 
 // Extracted private widget for cleaner code and caching
