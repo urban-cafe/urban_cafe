@@ -17,7 +17,7 @@ class ThemeSelectionButton extends StatelessWidget {
       data: theme.copyWith(
         popupMenuTheme: PopupMenuThemeData(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          color: colorScheme.surfaceContainerHighest,
+          color: colorScheme.surfaceContainerLow,
         ),
       ),
       child: PopupMenuButton<ThemeMode>(

@@ -35,6 +35,7 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
   List<Map<String, dynamic>> _subCategories = [];
   String? _selectedMainId;
   String? _selectedSubId;
+  bool isLoading = false;
 
   @override
   void initState() {
@@ -52,6 +53,9 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
 
   Future<void> _loadInitialData() async {
     try {
+      setState(() {
+        isLoading = true;
+      });
       final mains = await _repo.getMainCategories();
       if (!mounted) return;
       setState(() => _mainCategories = mains);
@@ -75,6 +79,7 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
                 _selectedMainId = parentId;
                 _subCategories = subs;
                 _selectedSubId = item.categoryId;
+                isLoading = false;
               });
             }
           }
@@ -82,6 +87,7 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
       }
     } catch (e) {
       debugPrint('Error loading initial data: $e');
+      isLoading = false;
     }
   }
 
