@@ -3,13 +3,14 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:urban_cafe/core/utils.dart';
-import 'package:urban_cafe/core/validators.dart'; // Import Global Validators
+import 'package:urban_cafe/core/validators.dart';
 import 'package:urban_cafe/data/repositories/menu_repository_impl.dart';
 import 'package:urban_cafe/domain/entities/menu_item.dart';
 import 'package:urban_cafe/presentation/providers/admin_provider.dart';
-import 'package:urban_cafe/presentation/widgets/add_category_dialog.dart'; // Import the new widget
+import 'package:urban_cafe/presentation/widgets/add_category_dialog.dart';
 
 class AdminEditScreen extends StatefulWidget {
   final String? id;
@@ -21,7 +22,7 @@ class AdminEditScreen extends StatefulWidget {
 }
 
 class _AdminEditScreenState extends State<AdminEditScreen> {
-  final _formKey = GlobalKey<FormState>(); // Key for Form validation
+  final _formKey = GlobalKey<FormState>();
   final _repo = MenuRepositoryImpl();
 
   final _nameCtrl = TextEditingController();
@@ -35,7 +36,7 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
   List<Map<String, dynamic>> _subCategories = [];
   String? _selectedMainId;
   String? _selectedSubId;
-  bool isLoading = false;
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -53,9 +54,8 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
 
   Future<void> _loadInitialData() async {
     try {
-      setState(() {
-        isLoading = true;
-      });
+      await Future.delayed(const Duration(milliseconds: 400));
+
       final mains = await _repo.getMainCategories();
       if (!mounted) return;
       setState(() => _mainCategories = mains);
@@ -79,7 +79,6 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
                 _selectedMainId = parentId;
                 _subCategories = subs;
                 _selectedSubId = item.categoryId;
-                isLoading = false;
               });
             }
           }
@@ -87,7 +86,8 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
       }
     } catch (e) {
       debugPrint('Error loading initial data: $e');
-      isLoading = false;
+    } finally {
+      if (mounted) setState(() => isLoading = false);
     }
   }
 
@@ -104,26 +104,22 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
   }
 
   Future<void> _triggerAddCategory({String? parentId}) async {
-    // 1. Show global dialog
     final newId = await showAddCategoryDialog(context, parentId: parentId);
 
-    // 2. If user created something, refresh the specific list
     if (newId != null && mounted) {
       if (parentId == null) {
-        // Main Category Created
         final mains = await _repo.getMainCategories();
         setState(() {
           _mainCategories = mains;
-          _selectedMainId = newId; // Auto-select new category
+          _selectedMainId = newId;
           _subCategories = [];
           _selectedSubId = null;
         });
       } else {
-        // Sub Category Created
         final subs = await _repo.getSubCategories(parentId);
         setState(() {
           _subCategories = subs;
-          _selectedSubId = newId; // Auto-select new sub-category
+          _selectedSubId = newId;
         });
       }
     }
@@ -147,149 +143,145 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
             style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.0, color: theme.colorScheme.onSurface),
           ),
         ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 600),
-              child: Form(
-                // Wrap everything in a Form
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Image Picker
-                    Center(
-                      child: InkWell(
-                        onTap: () async {
-                          final f = await admin.pickImage();
-                          if (f != null) setState(() => _imageFile = f);
-                        },
-                        child: Container(
-                          width: 150,
-                          height: 150,
-                          decoration: BoxDecoration(color: Colors.grey.shade200, borderRadius: BorderRadius.circular(12)),
-                          clipBehavior: Clip.antiAlias,
-                          child: _imageFile != null ? Image.memory(_imageFile!.bytes!, fit: BoxFit.cover) : (widget.item?.imageUrl != null ? CachedNetworkImage(imageUrl: widget.item!.imageUrl!, fit: BoxFit.cover) : const Icon(Icons.add_a_photo, size: 40, color: Colors.grey)),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Name Field (Validated)
-                    TextFormField(
-                      controller: _nameCtrl,
-                      decoration: const InputDecoration(labelText: 'Item Name', border: OutlineInputBorder()),
-                      validator: (v) => AppValidators.required(v, 'Item Name'),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Price Field (Validated)
-                    TextFormField(
-                      controller: _priceCtrl,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(labelText: 'Price', border: OutlineInputBorder()),
-                      validator: (v) => AppValidators.number(v, 'Price'),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Description Field (Optional)
-                    TextFormField(
-                      controller: _descCtrl,
-                      maxLines: 3,
-                      decoration: const InputDecoration(labelText: 'Description', border: OutlineInputBorder()),
-                    ),
-                    const SizedBox(height: 24),
-
-                    Text('Category', style: Theme.of(context).textTheme.titleMedium),
-                    const SizedBox(height: 8),
-
-                    // Main Category Row
-                    Row(
-                      children: [
-                        Expanded(
-                          child: DropdownButtonFormField<String>(
-                            initialValue: _selectedMainId,
-                            decoration: const InputDecoration(labelText: 'Main Category', border: OutlineInputBorder()),
-                            items: _mainCategories.map((c) => DropdownMenuItem(value: c['id'] as String, child: Text(c['name']))).toList(),
-                            onChanged: _onMainCategoryChanged,
+        body: Skeletonizer(
+          enabled: isLoading,
+          // Fixed: Replaced withOpacity with withValues
+          effect: ShimmerEffect(baseColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3), highlightColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.1)),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Image Picker
+                      Center(
+                        child: InkWell(
+                          onTap: isLoading
+                              ? null
+                              : () async {
+                                  final f = await admin.pickImage();
+                                  if (f != null) setState(() => _imageFile = f);
+                                },
+                          child: Container(
+                            width: 150,
+                            height: 150,
+                            decoration: BoxDecoration(color: Colors.grey.shade200, borderRadius: BorderRadius.circular(12)),
+                            clipBehavior: Clip.antiAlias,
+                            child: _imageFile != null ? Image.memory(_imageFile!.bytes!, fit: BoxFit.cover) : (widget.item?.imageUrl != null ? CachedNetworkImage(imageUrl: widget.item!.imageUrl!, fit: BoxFit.cover) : const Icon(Icons.add_a_photo, size: 40, color: Colors.grey)),
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        IconButton.filledTonal(
-                          icon: const Icon(Icons.add),
-                          onPressed: () => _triggerAddCategory(), // Calls new helper
-                          tooltip: 'Add Main Category',
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
+                      ),
+                      const SizedBox(height: 24),
 
-                    // Sub Category Row
-                    Row(
-                      children: [
-                        Expanded(
-                          child: DropdownButtonFormField<String>(
-                            initialValue: _selectedSubId,
-                            decoration: const InputDecoration(labelText: 'Sub Category', border: OutlineInputBorder()),
-                            items: _subCategories.map((c) => DropdownMenuItem(value: c['id'] as String, child: Text(c['name']))).toList(),
-                            onChanged: (v) => setState(() => _selectedSubId = v),
+                      // Name Field
+                      TextFormField(
+                        controller: _nameCtrl,
+                        decoration: const InputDecoration(labelText: 'Item Name', border: OutlineInputBorder()),
+                        validator: (v) => AppValidators.required(v, 'Item Name'),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Price Field
+                      TextFormField(
+                        controller: _priceCtrl,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(labelText: 'Price', border: OutlineInputBorder()),
+                        validator: (v) => AppValidators.number(v, 'Price'),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Description Field
+                      TextFormField(
+                        controller: _descCtrl,
+                        maxLines: 3,
+                        decoration: const InputDecoration(labelText: 'Description', border: OutlineInputBorder()),
+                      ),
+                      const SizedBox(height: 24),
+
+                      Text('Category', style: theme.textTheme.titleMedium),
+                      const SizedBox(height: 8),
+
+                      // Main Category Row
+                      Row(
+                        children: [
+                          Expanded(
+                            child: DropdownButtonFormField<String>(
+                              initialValue: _selectedMainId,
+                              decoration: const InputDecoration(labelText: 'Main Category', border: OutlineInputBorder()),
+                              items: isLoading ? [const DropdownMenuItem(value: 'loading', child: Text('Loading Category...'))] : _mainCategories.map((c) => DropdownMenuItem(value: c['id'] as String, child: Text(c['name']))).toList(),
+                              onChanged: isLoading ? null : _onMainCategoryChanged,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        IconButton.filledTonal(
-                          icon: const Icon(Icons.add),
-                          onPressed: _selectedMainId == null ? null : () => _triggerAddCategory(parentId: _selectedMainId), // Calls new helper
-                          tooltip: 'Add Sub Category',
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 24),
-                    SwitchListTile(title: const Text('Available for sale'), value: _available, onChanged: (v) => setState(() => _available = v), contentPadding: EdgeInsets.zero),
-
-                    const SizedBox(height: 32),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 48, // Standard Material 3 button height
-                      child: FilledButton(
-                        onPressed: admin.loading
-                            ? null
-                            : () async {
-                                if (!_formKey.currentState!.validate()) return;
-
-                                if (_selectedSubId == null && _selectedMainId == null) {
-                                  showAppSnackBar(context, "Please select a category", isError: true);
-                                  return;
-                                }
-
-                                final price = double.tryParse(_priceCtrl.text) ?? 0.0;
-                                bool success;
-
-                                if (widget.item == null) {
-                                  success = await admin.create(name: _nameCtrl.text, description: _descCtrl.text, price: price, categoryId: _selectedSubId, isAvailable: _available, imageFile: _imageFile);
-                                } else {
-                                  success = await admin.update(id: widget.item!.id, name: _nameCtrl.text, description: _descCtrl.text, price: price, categoryId: _selectedSubId, isAvailable: _available, imageFile: _imageFile);
-                                }
-
-                                if (!context.mounted) return;
-
-                                if (success) {
-                                  showAppSnackBar(context, widget.item == null ? "Created Successfully" : "Updated Successfully");
-                                  context.pop();
-                                }
-                              },
-
-                        child: admin.loading ? SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: theme.colorScheme.onPrimary, strokeWidth: 2.5)) : const Text('Save Item'),
+                          const SizedBox(width: 8),
+                          IconButton.filledTonal(icon: const Icon(Icons.add), onPressed: () => _triggerAddCategory(), tooltip: 'Add Main Category'),
+                        ],
                       ),
-                    ),
+                      const SizedBox(height: 16),
 
-                    if (admin.error != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 16),
-                        child: Text(admin.error!, style: TextStyle(color: theme.colorScheme.error)),
+                      // Sub Category Row
+                      Row(
+                        children: [
+                          Expanded(
+                            child: DropdownButtonFormField<String>(
+                              initialValue: _selectedSubId,
+                              decoration: const InputDecoration(labelText: 'Sub Category', border: OutlineInputBorder()),
+                              items: isLoading ? [const DropdownMenuItem(value: 'loading', child: Text('Loading Subcategory...'))] : _subCategories.map((c) => DropdownMenuItem(value: c['id'] as String, child: Text(c['name']))).toList(),
+                              onChanged: isLoading ? null : (v) => setState(() => _selectedSubId = v),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          IconButton.filledTonal(
+                            icon: const Icon(Icons.add),
+                            onPressed: _selectedMainId == null ? null : () => _triggerAddCategory(parentId: _selectedMainId),
+                            tooltip: 'Add Sub Category',
+                          ),
+                        ],
                       ),
-                  ],
+
+                      const SizedBox(height: 24),
+                      SwitchListTile(title: const Text('Available for sale'), value: _available, onChanged: (v) => setState(() => _available = v), contentPadding: EdgeInsets.zero),
+
+                      const SizedBox(height: 32),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: FilledButton(
+                          onPressed: admin.loading
+                              ? null
+                              : () async {
+                                  if (!_formKey.currentState!.validate()) return;
+                                  if (_selectedSubId == null && _selectedMainId == null) {
+                                    showAppSnackBar(context, "Please select a category", isError: true);
+                                    return;
+                                  }
+                                  final price = double.tryParse(_priceCtrl.text) ?? 0.0;
+                                  bool success;
+                                  if (widget.item == null) {
+                                    success = await admin.create(name: _nameCtrl.text, description: _descCtrl.text, price: price, categoryId: _selectedSubId, isAvailable: _available, imageFile: _imageFile);
+                                  } else {
+                                    success = await admin.update(id: widget.item!.id, name: _nameCtrl.text, description: _descCtrl.text, price: price, categoryId: _selectedSubId, isAvailable: _available, imageFile: _imageFile);
+                                  }
+                                  if (!context.mounted) return;
+                                  if (success) {
+                                    showAppSnackBar(context, widget.item == null ? "Created Successfully" : "Updated Successfully");
+                                    context.pop();
+                                  }
+                                },
+                          child: admin.loading ? SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: theme.colorScheme.onPrimary, strokeWidth: 2.5)) : const Text('Save Item'),
+                        ),
+                      ),
+
+                      if (admin.error != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 16),
+                          child: Text(admin.error!, style: TextStyle(color: theme.colorScheme.error)),
+                        ),
+                    ],
+                  ),
                 ),
               ),
             ),
