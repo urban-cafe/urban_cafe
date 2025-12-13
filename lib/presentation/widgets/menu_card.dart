@@ -18,80 +18,97 @@ class MenuCard extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(12),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        // Reduced vertical padding to fit more items
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start, // Keep aligned to top
           children: [
-            // BIGGER & SHARPER IMAGE
+            // COMPACT IMAGE (80x80)
             Hero(
               tag: 'menu-${item.id}',
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(12), // Slightly smaller radius
                 child: Container(
-                  width: 110,
-                  height: 110,
+                  width: 80,
+                  height: 80,
                   color: colorScheme.surfaceContainerHighest,
                   child: item.imageUrl != null
                       ? CachedNetworkImage(
                           imageUrl: item.imageUrl!,
                           fit: BoxFit.cover,
-                          memCacheWidth: 400, // Sharp on high-DPI screens
+                          memCacheWidth: 250, // Reduced cache size for optimization
                           placeholder: (_, _) => Container(color: colorScheme.surfaceContainerHighest),
-                          errorWidget: (_, _, _) => Icon(Icons.fastfood, size: 40, color: colorScheme.onSurfaceVariant),
+                          errorWidget: (_, _, _) => Icon(Icons.fastfood, size: 24, color: colorScheme.onSurfaceVariant),
                         )
-                      : Icon(Icons.fastfood, size: 40, color: colorScheme.onSurfaceVariant),
+                      : Icon(Icons.fastfood, size: 24, color: colorScheme.onSurfaceVariant),
                 ),
               ),
             ),
 
-            const SizedBox(width: 16),
-
+            const SizedBox(width: 12), // Reduced gap
             // CONTENT
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 4),
-
-                  Text(
-                    item.name,
-                    style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, fontSize: 17),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-
-                  const SizedBox(height: 6),
-
-                  if (item.categoryName != null)
-                    Text(
-                      item.categoryName!,
-                      style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.primary, fontWeight: FontWeight.w600),
+              child: SizedBox(
+                height: 80, // Force height to match image for better vertical alignment
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween, // Space out name/price
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          item.name,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16, // Reduced from 17
+                            height: 1.1,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (item.categoryName != null) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            item.categoryName!,
+                            style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.primary, fontWeight: FontWeight.w600, fontSize: 12),
+                          ),
+                        ],
+                      ],
                     ),
 
-                  const SizedBox(height: 10),
-
-                  Row(
-                    children: [
-                      Text(
-                        priceFormat.format(item.price),
-                        style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900, fontSize: 19, color: colorScheme.primary),
-                      ),
-                      const Spacer(),
-                      // SOLD OUT BADGE (if needed)
-                      if (!item.isAvailable)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(color: colorScheme.errorContainer, borderRadius: BorderRadius.circular(20)),
-                          child: Text(
-                            'Unavailable',
-                            style: TextStyle(color: colorScheme.onErrorContainer, fontWeight: FontWeight.bold, fontSize: 12),
+                    // PRICE ROW
+                    Row(
+                      children: [
+                        Text(
+                          priceFormat.format(item.price),
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 16, // Reduced from 19
+                            color: colorScheme.primary,
                           ),
                         ),
-                    ],
-                  ),
-                ],
+                        const Spacer(),
+                        // COMPACT BADGE
+                        if (!item.isAvailable)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(color: colorScheme.errorContainer, borderRadius: BorderRadius.circular(8)),
+                            child: Text(
+                              'Unavailable',
+                              style: TextStyle(
+                                color: colorScheme.onErrorContainer,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10, // Reduced from 12
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
