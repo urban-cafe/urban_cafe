@@ -26,7 +26,7 @@ class ThemeSelectionButton extends StatelessWidget {
         offset: const Offset(0, 45),
         constraints: const BoxConstraints.tightFor(width: 150),
         onSelected: (mode) => context.read<ThemeProvider>().setThemeMode(mode),
-        itemBuilder: (BuildContext context) => <PopupMenuEntry<ThemeMode>>[_buildCompactItem(context, Icons.light_mode_outlined, "Light", ThemeMode.light), _buildCompactItem(context, Icons.dark_mode_outlined, "Dark", ThemeMode.dark), _buildCompactItem(context, Icons.brightness_auto_outlined, "Auto", ThemeMode.system)],
+        itemBuilder: (BuildContext context) => <PopupMenuEntry<ThemeMode>>[_buildCompactItem(context, Icons.light_mode_outlined, "Light", ThemeMode.light), _buildCompactItem(context, Icons.dark_mode_outlined, "Dark", ThemeMode.dark), _buildCompactItem(context, Icons.settings_outlined, "System", ThemeMode.system)],
       ),
     );
   }

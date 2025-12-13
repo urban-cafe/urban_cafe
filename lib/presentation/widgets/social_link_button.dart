@@ -16,7 +16,7 @@ class SocialLinkButton extends StatelessWidget {
       onPressed: () async {
         final uri = Uri.parse(url);
         if (await canLaunchUrl(uri)) {
-          await launchUrl(uri, mode: LaunchMode.platformDefault);
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
         }
       },
       icon: FaIcon(icon, size: 22),

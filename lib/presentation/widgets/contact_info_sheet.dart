@@ -7,7 +7,9 @@ class ContactInfoSheet extends StatelessWidget {
   const ContactInfoSheet({super.key});
 
   Future<void> _callPhone(String phone) async {
-    final uri = Uri(scheme: 'tel', path: phone);
+    // Fix: Remove spaces to ensure the dialer works on all devices
+    final cleanNumber = phone.replaceAll(RegExp(r'\s+'), '');
+    final uri = Uri(scheme: 'tel', path: cleanNumber);
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
     }
@@ -34,19 +36,39 @@ class ContactInfoSheet extends StatelessWidget {
 
           Text(
             'Contact Us',
-            style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: colorScheme.onSurface),
+            style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w600, color: colorScheme.onSurface),
           ),
 
           const SizedBox(height: 28),
 
           // Address
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(Icons.location_on_rounded, color: colorScheme.primary, size: 28),
-              const SizedBox(width: 16),
-              Expanded(child: Text(CommonConstants.address, style: theme.textTheme.bodyLarge)),
-            ],
+          InkWell(
+            onTap: () async {
+              final String googleMapsUrl = CommonConstants.googleMapURl;
+              final Uri uri = Uri.parse(googleMapsUrl);
+              if (await canLaunchUrl(uri)) {
+                await launchUrl(uri, mode: LaunchMode.externalApplication);
+              }
+            },
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              // CHANGE 1: Added horizontal: 16 to match the Phone Tile padding
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // CHANGE 2: Changed size to 24 to match Phone icon (was 28)
+                  Icon(Icons.location_on_rounded, color: colorScheme.primary, size: 24),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [Text(CommonConstants.address, style: theme.textTheme.bodyLarge?.copyWith(color: colorScheme.onSurface, height: 1.4))],
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
 
           const SizedBox(height: 28),
@@ -61,15 +83,19 @@ class ContactInfoSheet extends StatelessWidget {
           const SizedBox(height: 28),
 
           // Opening Hours
-          Row(
-            children: [
-              Icon(Icons.access_time_filled, color: colorScheme.primary, size: 28),
-              const SizedBox(width: 16),
-              Text(
-                CommonConstants.openTime,
-                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600, color: colorScheme.primary),
-              ),
-            ],
+          Padding(
+            // CHANGE 3: Added padding here too so "Opening Hours" aligns as well
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                Icon(Icons.access_time_filled, color: colorScheme.primary, size: 24), // Size 24
+                const SizedBox(width: 16),
+                Text(
+                  CommonConstants.openTime,
+                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600, color: colorScheme.onSurface),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -79,14 +105,31 @@ class ContactInfoSheet extends StatelessWidget {
   Widget _buildPhoneTile(BuildContext context, String phone) {
     final colorScheme = Theme.of(context).colorScheme;
     final theme = Theme.of(context);
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: Icon(Icons.phone_rounded, color: colorScheme.primary, size: 26),
-      title: Text(
-        phone,
-        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600, color: colorScheme.primary),
+
+    return Container(
+      decoration: BoxDecoration(color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(12)),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () => _callPhone(phone),
+          child: Padding(
+            // This padding (16) determines the alignment.
+            // We matched the Address section to this.
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Icon(Icons.phone_rounded, color: colorScheme.primary, size: 24),
+                const SizedBox(width: 16),
+                Text(
+                  phone,
+                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600, color: colorScheme.onSurface, letterSpacing: 0.5),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
-      onTap: () => _callPhone(phone),
     );
   }
 }
