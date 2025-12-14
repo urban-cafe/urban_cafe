@@ -39,7 +39,6 @@ class UrbanCafeApp extends StatefulWidget {
 }
 
 class _UrbanCafeAppState extends State<UrbanCafeApp> {
-  // Precache the image when the app starts
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
