@@ -1,59 +1,42 @@
-name: Build & Deploy Flutter Web to Vercel
+name: Deploy to Vercel
 
 on:
   push:
-    branches: [ "main", "master" ]
-  workflow_dispatch:
-
-permissions:
-  contents: read
-
-concurrency:
-  group: "vercel-deploy"
-  cancel-in-progress: true
+    branches: [ main ]  # Or your default branch
+  workflow_dispatch:    # Manual trigger
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
-    env:
-      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-
     steps:
-      - name: Checkout repo
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
+          cache: true
 
-      - name: Enable web & install deps
-        run: |
-          flutter config --enable-web
-          flutter pub get
+      - name: Install dependencies
+        run: flutter pub get
 
-      - name: Build Flutter Web (release)
+      - name: Build Flutter Web (Wasm)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
-          flutter build web --release --wasm \
+          flutter build web \
+            --release \
+            --wasm \
             --dart-define=SUPABASE_URL=${SUPABASE_URL} \
             --dart-define=SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
 
-      - name: Install Vercel CLI
-        run: npm install -g vercel
-
-      - name: Pull Vercel project settings
-        run: |
-          vercel pull --yes --environment=production --token=${VERCEL_TOKEN}
-
-      - name: Build (Vercel)
-        run: |
-          vercel build --prod --token=${VERCEL_TOKEN}
-
-      - name: Deploy to Vercel (Production)
-        run: |
-          vercel deploy --prebuilt --prod --token=${VERCEL_TOKEN}
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v20
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: ./build/web
