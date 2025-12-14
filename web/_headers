@@ -1,13 +1,11 @@
-/*
-  Cross-Origin-Embedder-Policy: credentialless
-  Cross-Origin-Opener-Policy: same-origin
+# Cache static assets safely
+/assets/*
   Cache-Control: public, max-age=31536000, immutable
 
-/assets/(.*)
-  Cache-Control: public, max-age=31536000, immutable
-
-/(.*)\.wasm
+# WASM support
+/*.wasm
   Content-Type: application/wasm
 
+# index.html must never be cached
 /index.html
   Cache-Control: no-cache, no-store, must-revalidate
