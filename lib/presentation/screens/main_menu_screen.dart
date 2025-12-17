@@ -10,14 +10,34 @@ import 'package:urban_cafe/presentation/widgets/contact_info_sheet.dart';
 import 'package:urban_cafe/presentation/widgets/social_link_button.dart';
 import 'package:urban_cafe/presentation/widgets/theme_selection_button.dart';
 
-class MainMenuScreen extends StatelessWidget {
+// 1. Change to StatefulWidget
+class MainMenuScreen extends StatefulWidget {
   const MainMenuScreen({super.key});
+
+  @override
+  State<MainMenuScreen> createState() => _MainMenuScreenState();
+}
+
+class _MainMenuScreenState extends State<MainMenuScreen> {
+  // 2. Define a variable to hold the Future
+  late Future<List<CategoryObj>> _categoriesFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    // 3. Initialize the Future only ONCE.
+    // Use read() here, not watch(), because we only need to fetch the reference once.
+    _categoriesFuture = context.read<MenuProvider>().getMainCategories();
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
+
+    // Note: If you need to listen to other changes in MenuProvider, keep this watch.
+    // But for the categories list specifically, we rely on _categoriesFuture.
     final menuProvider = context.watch<MenuProvider>();
 
     return Scaffold(
@@ -66,27 +86,20 @@ class MainMenuScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 16),
 
-                        // Dynamic main category buttons from MenuProvider
+                        // 4. Use the cached _categoriesFuture
                         FutureBuilder<List<CategoryObj>>(
-                          future: menuProvider.getMainCategories(),
+                          future: _categoriesFuture,
                           builder: (context, snapshot) {
                             final isLoading = snapshot.connectionState == ConnectionState.waiting;
 
                             // 1. LOADING STATE: Show Skeleton
-                            // We create a "Fake" UI that looks exactly like the real one
                             if (isLoading) {
                               return Skeletonizer(
                                 enabled: true,
-                                // Match the shimmer effect to your AdminEditScreen for consistency
                                 effect: ShimmerEffect(baseColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3), highlightColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.1)),
                                 child: Column(
-                                  // Generate 4 dummy buttons to mimic the layout
                                   children: List.generate(4, (index) {
-                                    return const _MenuButton(
-                                      label: 'Delicious Category', // This text length determines the bone width
-                                      icon: Icons.local_cafe_rounded,
-                                      route: '',
-                                    );
+                                    return const _MenuButton(label: 'Delicious Category', icon: Icons.local_cafe_rounded, route: '');
                                   }),
                                 ),
                               );
@@ -109,6 +122,7 @@ class MainMenuScreen extends StatelessWidget {
                             return Column(
                               children: categories.map((cat) {
                                 final encodedName = Uri.encodeComponent(cat.name);
+                                // Note: Ensure menuProvider has this method or pass logic appropriately
                                 final icon = menuProvider.getIconForCategory(cat.name);
                                 return _MenuButton(label: cat.name, icon: icon, route: '/menu?initialMainCategory=$encodedName');
                               }).toList(),
@@ -146,6 +160,7 @@ class MainMenuScreen extends StatelessWidget {
   }
 }
 
+// ... Keep existing _showContactSheet and _MenuButton code ...
 void _showContactSheet(BuildContext context) {
   showModalBottomSheet(
     context: context,
