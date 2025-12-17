@@ -7,14 +7,14 @@ import 'package:urban_cafe/core/env.dart';
 import 'package:urban_cafe/core/theme.dart';
 import 'package:urban_cafe/data/datasources/supabase_client.dart';
 import 'package:urban_cafe/domain/entities/menu_item.dart';
-import 'package:urban_cafe/presentation/providers/admin_provider.dart';
-import 'package:urban_cafe/presentation/providers/auth_provider.dart';
 import 'package:urban_cafe/presentation/providers/menu_provider.dart';
 import 'package:urban_cafe/presentation/providers/theme_provider.dart';
-import 'package:urban_cafe/presentation/screens/admin/category_manager_screen.dart';
-import 'package:urban_cafe/presentation/screens/admin/edit_screen.dart';
-import 'package:urban_cafe/presentation/screens/admin/list_screen.dart';
-import 'package:urban_cafe/presentation/screens/admin/login_screen.dart';
+//import 'package:urban_cafe/presentation/screens/admin/category_manager_screen.dart';
+// import 'package:urban_cafe/presentation/providers/admin_provider.dart';
+// import 'package:urban_cafe/presentation/providers/auth_provider.dart';
+// import 'package:urban_cafe/presentation/screens/admin/edit_screen.dart';
+// import 'package:urban_cafe/presentation/screens/admin/list_screen.dart';
+// import 'package:urban_cafe/presentation/screens/admin/login_screen.dart';
 import 'package:urban_cafe/presentation/screens/main_menu_screen.dart';
 import 'package:urban_cafe/presentation/screens/menu_detail_screen.dart';
 import 'package:urban_cafe/presentation/screens/menu_screen.dart';
@@ -58,21 +58,21 @@ class _UrbanCafeAppState extends State<UrbanCafeApp> {
           path: '/menu',
           builder: (context, state) => MenuScreen(initialMainCategory: state.uri.queryParameters['initialMainCategory']),
         ),
-        GoRoute(path: '/admin/login', builder: (context, state) => const AdminLoginScreen()),
-        GoRoute(path: '/admin', builder: (context, state) => const AdminListScreen()),
-        GoRoute(
-          path: '/admin/edit',
-          builder: (context, state) {
-            // FIX: Allow null here because 'item' is optional for creating new items
-            final item = state.extra as MenuItemEntity?;
+        // GoRoute(path: '/admin/login', builder: (context, state) => const AdminLoginScreen()),
+        // GoRoute(path: '/admin', builder: (context, state) => const AdminListScreen()),
+        // GoRoute(
+        //   path: '/admin/edit',
+        //   builder: (context, state) {
+        //     // FIX: Allow null here because 'item' is optional for creating new items
+        //     final item = state.extra as MenuItemEntity?;
 
-            return AdminEditScreen(
-              id: state.uri.queryParameters['id'],
-              item: item, // Pass the nullable item
-            );
-          },
-        ),
-        GoRoute(path: '/admin/categories', builder: (context, state) => const AdminCategoryManagerScreen()),
+        //     return AdminEditScreen(
+        //       id: state.uri.queryParameters['id'],
+        //       item: item, // Pass the nullable item
+        //     );
+        //   },
+        // ),
+        //GoRoute(path: '/admin/categories', builder: (context, state) => const AdminCategoryManagerScreen()),
         GoRoute(
           path: '/detail',
           builder: (context, state) {
@@ -93,9 +93,9 @@ class _UrbanCafeAppState extends State<UrbanCafeApp> {
 
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        //ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => MenuProvider()),
-        ChangeNotifierProvider(create: (_) => AdminProvider()),
+        //ChangeNotifierProvider(create: (_) => AdminProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
       ],
       child: Consumer<ThemeProvider>(
