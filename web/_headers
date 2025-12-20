@@ -19,6 +19,16 @@
 /assets/FontManifest.json
   Cache-Control: public, max-age=0, must-revalidate
 
+# Don't cache font files
+/*.otf
+  Cache-Control: public, max-age=0, must-revalidate
+/*.ttf
+  Cache-Control: public, max-age=0, must-revalidate
+/*.woff
+  Cache-Control: public, max-age=0, must-revalidate
+/*.woff2
+  Cache-Control: public, max-age=0, must-revalidate
+
 /main.dart.js
   Cache-Control: public, max-age=0, must-revalidate
 

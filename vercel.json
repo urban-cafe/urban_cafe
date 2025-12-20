@@ -35,7 +35,16 @@
       ]
     },
     {
-      "source": "/(index\\.html|flutter_service_worker\\.js|main\\.dart\\.js|.*\\.json|.*\\.otf|.*\\.ttf|.*\\.woff|.*\\.woff2)",
+      "source": "/(.*)\\.(otf|ttf|woff|woff2)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/(index\\.html|flutter_service_worker\\.js|main\\.dart\\.js|.*\\.json)",
       "headers": [
         {
           "key": "Cache-Control",
