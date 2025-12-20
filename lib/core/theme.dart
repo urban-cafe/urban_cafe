@@ -25,7 +25,14 @@ class AppTheme {
   static ThemeData get theme => ThemeData(
     useMaterial3: true,
     colorScheme: ColorScheme.fromSeed(seedColor: primary, brightness: Brightness.light, primary: primary, onPrimary: Colors.white, secondary: accent, onSecondary: Colors.white, surface: neutralBg),
-    textTheme: GoogleFonts.loraTextTheme(ThemeData.light().textTheme).apply(displayColor: const Color(0xFF4E3B2F), bodyColor: const Color(0xFF4E3B2F)),
+    textTheme: GoogleFonts.loraTextTheme(ThemeData.light().textTheme)
+        .copyWith(
+          // Add fallback for Myanmar text
+          bodyMedium: GoogleFonts.lora(textStyle: ThemeData.light().textTheme.bodyMedium).copyWith(fontFamilyFallback: ['Noto Sans Myanmar']),
+          bodySmall: GoogleFonts.lora(textStyle: ThemeData.light().textTheme.bodySmall).copyWith(fontFamilyFallback: ['Noto Sans Myanmar']),
+          titleMedium: GoogleFonts.lora(textStyle: ThemeData.light().textTheme.titleMedium).copyWith(fontFamilyFallback: ['Noto Sans Myanmar']),
+        )
+        .apply(displayColor: const Color(0xFF4E3B2F), bodyColor: const Color(0xFF4E3B2F)),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
         backgroundColor: primary,
