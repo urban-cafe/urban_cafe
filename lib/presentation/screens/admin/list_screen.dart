@@ -212,6 +212,7 @@ class _AdminListScreenState extends State<AdminListScreen> {
                             )
                           : ListView.builder(
                               controller: _scrollCtrl,
+                              cacheExtent: 2000, // Keep more items in memory to prevent smooth scrolling issues and image reloading
                               padding: const EdgeInsets.only(bottom: 80, top: 4), // Space for FAB
                               itemCount: displayItems.length + (menu.loadingMore ? 1 : 0),
                               physics: const AlwaysScrollableScrollPhysics(), // Allow pull-to-refresh even when empty

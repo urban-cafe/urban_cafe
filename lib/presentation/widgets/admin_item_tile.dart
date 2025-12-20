@@ -60,6 +60,7 @@ class AdminItemTile extends StatelessWidget {
                               imageUrl: item.imageUrl!,
                               fit: BoxFit.cover,
                               memCacheWidth: 300,
+                              fadeInDuration: Duration.zero, // Prevent flickering when scrolling back up
                               placeholder: (_, _) => Container(color: colorScheme.surfaceContainerHighest),
                               errorWidget: (_, _, _) => Icon(Icons.fastfood, color: colorScheme.onSurfaceVariant),
                             )

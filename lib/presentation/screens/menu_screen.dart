@@ -188,6 +188,7 @@ class _MenuScreenState extends State<MenuScreen> {
                           )
                         : ListView.separated(
                             controller: _scrollCtrl,
+                            cacheExtent: 2000, // Keep more items in memory to prevent smooth scrolling issues
                             padding: const EdgeInsets.only(top: 8, bottom: 32),
                             itemCount: displayItems.length + (provider.loadingMore ? 1 : 0),
                             separatorBuilder: (_, _) => Divider(height: 1, indent: 16, endIndent: 16, color: colorScheme.outlineVariant.withValues(alpha: 0.3)),

@@ -40,6 +40,7 @@ class MenuCard extends StatelessWidget {
                           imageUrl: item.imageUrl!,
                           fit: BoxFit.cover,
                           memCacheWidth: 250, // Reduced cache size for optimization
+                          fadeInDuration: Duration.zero, // Prevent flickering
                           placeholder: (_, _) => Container(color: colorScheme.surfaceContainerHighest),
                           errorWidget: (_, _, _) => Icon(Icons.fastfood, size: 24, color: colorScheme.onSurfaceVariant),
                         )

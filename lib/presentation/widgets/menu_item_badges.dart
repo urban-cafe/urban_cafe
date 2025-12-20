@@ -15,7 +15,7 @@ class MenuItemBadges extends StatelessWidget {
       runSpacing: 4,
       children: [
         if (isMostPopular) _Badge(text: 'Most Popular', backgroundColor: Colors.amber.shade100, textColor: Colors.brown.shade800, icon: Icons.star_rounded, iconColor: Colors.brown.shade800),
-        if (isWeekendSpecial) _Badge(text: 'Weekend Specials', backgroundColor: Colors.brown.shade100, textColor: Colors.brown.shade900, icon: Icons.local_offer_rounded, iconColor: Colors.brown.shade700),
+        if (isWeekendSpecial) _Badge(text: 'Weekend Special', backgroundColor: Colors.brown.shade100, textColor: Colors.brown.shade900, icon: Icons.local_offer_rounded, iconColor: Colors.brown.shade700),
       ],
     );
   }
