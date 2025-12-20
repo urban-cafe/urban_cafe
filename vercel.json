@@ -1,7 +1,5 @@
 {
   "version": 2,
-  "buildCommand": "flutter build web --release --wasm",
-  "outputDirectory": "build/web",
   "cleanUrls": true,
   "trailingSlash": false,
   "headers": [
