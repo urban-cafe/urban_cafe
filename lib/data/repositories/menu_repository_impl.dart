@@ -81,19 +81,29 @@ class MenuRepositoryImpl implements MenuRepository {
   }
 
   @override
-  Future<MenuItemEntity> createMenuItem({required String name, String? description, required double price, String? categoryId, bool isAvailable = true, String? imagePath, String? imageUrl}) async {
+  Future<MenuItemEntity> createMenuItem({required String name, String? description, required double price, String? categoryId, bool isAvailable = true, bool isMostPopular = false, bool isWeekendSpecial = false, String? imagePath, String? imageUrl}) async {
     if (!Env.isConfigured) throw Exception('No Config');
 
-    final inserted = await _client.from(table).insert({'name': name, 'description': description, 'price': price, 'category_id': categoryId, 'image_path': imagePath, 'image_url': imageUrl, 'is_available': isAvailable}).select('*, categories(name)').single();
+    final inserted = await _client.from(table).insert({'name': name, 'description': description, 'price': price, 'category_id': categoryId, 'image_path': imagePath, 'image_url': imageUrl, 'is_available': isAvailable, 'is_most_popular': isMostPopular, 'is_weekend_special': isWeekendSpecial}).select('*, categories(name)').single();
 
     return MenuItemDto.fromMap(inserted).toEntity();
   }
 
   @override
-  Future<MenuItemEntity> updateMenuItem({required String id, String? name, String? description, double? price, String? categoryId, bool? isAvailable, String? imagePath, String? imageUrl}) async {
+  Future<MenuItemEntity> updateMenuItem({required String id, String? name, String? description, double? price, String? categoryId, bool? isAvailable, bool? isMostPopular, bool? isWeekendSpecial, String? imagePath, String? imageUrl}) async {
     if (!Env.isConfigured) throw Exception('No Config');
 
-    final updated = await _client.from(table).update({if (name != null) 'name': name, if (description != null) 'description': description, if (price != null) 'price': price, if (categoryId != null) 'category_id': categoryId, if (isAvailable != null) 'is_available': isAvailable, if (imagePath != null) 'image_path': imagePath, if (imageUrl != null) 'image_url': imageUrl}).eq('id', id).select('*, categories(name)').single();
+    final updated = await _client.from(table).update({
+      if (name != null) 'name': name,
+      if (description != null) 'description': description,
+      if (price != null) 'price': price,
+      if (categoryId != null) 'category_id': categoryId,
+      if (isAvailable != null) 'is_available': isAvailable,
+      if (isMostPopular != null) 'is_most_popular': isMostPopular,
+      if (isWeekendSpecial != null) 'is_weekend_special': isWeekendSpecial,
+      if (imagePath != null) 'image_path': imagePath,
+      if (imageUrl != null) 'image_url': imageUrl
+    }).eq('id', id).select('*, categories(name)').single();
 
     return MenuItemDto.fromMap(updated).toEntity();
   }

@@ -11,8 +11,10 @@ class MenuItemEntity {
   final String? imagePath;
   final String? imageUrl;
   final bool isAvailable;
+  final bool isMostPopular;
+  final bool isWeekendSpecial;
   final DateTime createdAt;
   final DateTime updatedAt;
 
-  const MenuItemEntity({required this.id, required this.name, required this.description, required this.price, this.categoryId, this.categoryName, required this.imagePath, required this.imageUrl, required this.isAvailable, required this.createdAt, required this.updatedAt});
+  const MenuItemEntity({required this.id, required this.name, required this.description, required this.price, this.categoryId, this.categoryName, required this.imagePath, required this.imageUrl, required this.isAvailable, this.isMostPopular = false, this.isWeekendSpecial = false, required this.createdAt, required this.updatedAt});
 }

@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:urban_cafe/core/common_constants.dart';
-//import 'package:urban_cafe/presentation/providers/auth_provider.dart';
+import 'package:urban_cafe/presentation/providers/auth_provider.dart';
 import 'package:urban_cafe/presentation/providers/menu_provider.dart';
 import 'package:urban_cafe/presentation/widgets/contact_info_sheet.dart';
 import 'package:urban_cafe/presentation/widgets/social_link_button.dart';
@@ -45,20 +45,20 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        // leading: IconButton(
-        //   icon: Icon(Icons.admin_panel_settings_outlined, color: colorScheme.primary),
-        //   tooltip: 'Admin Area',
-        //   onPressed: () {
-        //     final auth = context.read<AuthProvider>();
-        //     if (!auth.isConfigured) {
-        //       context.push('/admin/login');
-        //     } else if (auth.isLoggedIn) {
-        //       context.push('/admin');
-        //     } else {
-        //       context.push('/admin/login');
-        //     }
-        //   },
-        // ),
+        leading: IconButton(
+          icon: Icon(Icons.admin_panel_settings_outlined, color: colorScheme.primary),
+          tooltip: 'Admin Area',
+          onPressed: () {
+            final auth = context.read<AuthProvider>();
+            if (!auth.isConfigured) {
+              context.push('/admin/login');
+            } else if (auth.isLoggedIn) {
+              context.push('/admin');
+            } else {
+              context.push('/admin/login');
+            }
+          },
+        ),
         actions: const [ThemeSelectionButton()],
       ),
       body: LayoutBuilder(

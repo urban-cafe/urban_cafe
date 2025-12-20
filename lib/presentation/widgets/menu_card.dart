@@ -3,6 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:urban_cafe/domain/entities/menu_item.dart';
+import 'package:urban_cafe/presentation/widgets/menu_item_badges.dart';
 
 class MenuCard extends StatelessWidget {
   final MenuItemEntity item;
@@ -50,8 +51,8 @@ class MenuCard extends StatelessWidget {
             const SizedBox(width: 12), // Reduced gap
             // CONTENT
             Expanded(
-              child: SizedBox(
-                height: 80, // Force height to match image for better vertical alignment
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 80),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween, // Space out name/price
@@ -76,6 +77,8 @@ class MenuCard extends StatelessWidget {
                             style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.primary, fontWeight: FontWeight.w600, fontSize: 12),
                           ),
                         ],
+                        const SizedBox(height: 4),
+                        MenuItemBadges(isMostPopular: item.isMostPopular, isWeekendSpecial: item.isWeekendSpecial),
                       ],
                     ),
 

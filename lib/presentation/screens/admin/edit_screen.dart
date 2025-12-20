@@ -30,6 +30,8 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
   final _priceCtrl = TextEditingController();
 
   bool _available = true;
+  bool _isMostPopular = false;
+  bool _isWeekendSpecial = false;
   PlatformFile? _imageFile;
 
   List<Map<String, dynamic>> _mainCategories = [];
@@ -66,6 +68,8 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
         _descCtrl.text = item.description ?? '';
         _priceCtrl.text = item.price.toString();
         _available = item.isAvailable;
+        _isMostPopular = item.isMostPopular;
+        _isWeekendSpecial = item.isWeekendSpecial;
 
         if (item.categoryId != null) {
           final client = Supabase.instance.client;
@@ -244,6 +248,8 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
 
                       const SizedBox(height: 24),
                       SwitchListTile(title: const Text('Available for sale'), value: _available, onChanged: (v) => setState(() => _available = v), contentPadding: EdgeInsets.zero),
+                      SwitchListTile(title: const Text('Most Popular'), value: _isMostPopular, onChanged: (v) => setState(() => _isMostPopular = v), contentPadding: EdgeInsets.zero),
+                      SwitchListTile(title: const Text('Weekend Special'), value: _isWeekendSpecial, onChanged: (v) => setState(() => _isWeekendSpecial = v), contentPadding: EdgeInsets.zero),
 
                       const SizedBox(height: 32),
                       SizedBox(
@@ -261,14 +267,14 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
                                   final price = double.tryParse(_priceCtrl.text) ?? 0.0;
                                   bool success;
                                   if (widget.item == null) {
-                                    success = await admin.create(name: _nameCtrl.text, description: _descCtrl.text, price: price, categoryId: _selectedSubId, isAvailable: _available, imageFile: _imageFile);
+                                    success = await admin.create(name: _nameCtrl.text, description: _descCtrl.text, price: price, categoryId: _selectedSubId, isAvailable: _available, isMostPopular: _isMostPopular, isWeekendSpecial: _isWeekendSpecial, imageFile: _imageFile);
                                   } else {
-                                    success = await admin.update(id: widget.item!.id, name: _nameCtrl.text, description: _descCtrl.text, price: price, categoryId: _selectedSubId, isAvailable: _available, imageFile: _imageFile);
+                                    success = await admin.update(id: widget.item!.id, name: _nameCtrl.text, description: _descCtrl.text, price: price, categoryId: _selectedSubId, isAvailable: _available, isMostPopular: _isMostPopular, isWeekendSpecial: _isWeekendSpecial, imageFile: _imageFile);
                                   }
                                   if (!context.mounted) return;
                                   if (success) {
                                     showAppSnackBar(context, widget.item == null ? "Created Successfully" : "Updated Successfully");
-                                    context.pop();
+                                    context.pop(true); // Return true to indicate change
                                   }
                                 },
                           child: admin.loading ? SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: theme.colorScheme.onPrimary, strokeWidth: 2.5)) : const Text('Save Item'),

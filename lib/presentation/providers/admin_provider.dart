@@ -97,7 +97,7 @@ class AdminProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> create({required String name, String? description, required double price, String? categoryId, bool isAvailable = true, PlatformFile? imageFile}) async {
+  Future<bool> create({required String name, String? description, required double price, String? categoryId, bool isAvailable = true, bool isMostPopular = false, bool isWeekendSpecial = false, PlatformFile? imageFile}) async {
     loading = true;
     error = null;
     notifyListeners();
@@ -110,7 +110,7 @@ class AdminProvider extends ChangeNotifier {
           imageUrl = up.$2;
         }
       }
-      await _repo.createMenuItem(name: name, description: description, price: price, categoryId: categoryId, isAvailable: isAvailable, imagePath: imagePath, imageUrl: imageUrl);
+      await _repo.createMenuItem(name: name, description: description, price: price, categoryId: categoryId, isAvailable: isAvailable, isMostPopular: isMostPopular, isWeekendSpecial: isWeekendSpecial, imagePath: imagePath, imageUrl: imageUrl);
       return true;
     } catch (e) {
       error = e.toString();
@@ -122,7 +122,7 @@ class AdminProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> update({required String id, String? name, String? description, double? price, String? categoryId, bool? isAvailable, PlatformFile? imageFile}) async {
+  Future<bool> update({required String id, String? name, String? description, double? price, String? categoryId, bool? isAvailable, bool? isMostPopular, bool? isWeekendSpecial, PlatformFile? imageFile}) async {
     loading = true;
     error = null;
     notifyListeners();
@@ -135,7 +135,7 @@ class AdminProvider extends ChangeNotifier {
           imageUrl = up.$2;
         }
       }
-      await _repo.updateMenuItem(id: id, name: name, description: description, price: price, categoryId: categoryId, isAvailable: isAvailable, imagePath: imagePath, imageUrl: imageUrl);
+      await _repo.updateMenuItem(id: id, name: name, description: description, price: price, categoryId: categoryId, isAvailable: isAvailable, isMostPopular: isMostPopular, isWeekendSpecial: isWeekendSpecial, imagePath: imagePath, imageUrl: imageUrl);
       return true;
     } catch (e) {
       error = e.toString();

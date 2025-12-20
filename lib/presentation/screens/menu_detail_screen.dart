@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:urban_cafe/domain/entities/menu_item.dart';
+import 'package:urban_cafe/presentation/widgets/menu_item_badges.dart';
 
 class MenuDetailScreen extends StatelessWidget {
   final MenuItemEntity item;
@@ -79,6 +80,10 @@ class MenuDetailScreen extends StatelessWidget {
                               ],
                             ),
 
+                            const SizedBox(height: 16),
+
+                            // Badges
+                            MenuItemBadges(isMostPopular: item.isMostPopular, isWeekendSpecial: item.isWeekendSpecial),
                             const SizedBox(height: 16),
 
                             // Tags
