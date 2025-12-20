@@ -35,16 +35,38 @@ jobs:
             --dart-define=SUPABASE_URL=${SUPABASE_URL} \
             --dart-define=SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
 
-          # 2. Create _headers file for Wasm support
-          # This tells Cloudflare to send the correct headers for high-performance mode
+          # 2. Create _headers file for Wasm support and Cache Busting
+          # This tells Cloudflare to send the correct headers
           cat > build/web/_headers << 'EOF'
           /*
             Cross-Origin-Embedder-Policy: credentialless
             Cross-Origin-Opener-Policy: same-origin
             Cache-Control: public, max-age=31536000, immutable
 
-          /index.html
-            Cache-Control: no-cache
+          # Prevent caching for entry points and mutable files
+          /*.html
+            Cache-Control: public, max-age=0, must-revalidate
+
+          /flutter_service_worker.js
+            Cache-Control: public, max-age=0, must-revalidate
+
+          /version.json
+            Cache-Control: public, max-age=0, must-revalidate
+
+          /assets/AssetManifest.json
+            Cache-Control: public, max-age=0, must-revalidate
+
+          /assets/FontManifest.json
+            Cache-Control: public, max-age=0, must-revalidate
+
+          /main.dart.js
+            Cache-Control: public, max-age=0, must-revalidate
+
+          /flutter.js
+            Cache-Control: public, max-age=0, must-revalidate
+            
+          /flutter_bootstrap.js
+            Cache-Control: public, max-age=0, must-revalidate
           EOF
 
       - name: Publish to Cloudflare Pages
