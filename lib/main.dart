@@ -18,6 +18,7 @@ import 'package:urban_cafe/presentation/screens/admin/login_screen.dart';
 import 'package:urban_cafe/presentation/screens/main_menu_screen.dart';
 import 'package:urban_cafe/presentation/screens/menu_detail_screen.dart';
 import 'package:urban_cafe/presentation/screens/menu_screen.dart';
+import 'package:urban_cafe/presentation/widgets/upgrade_listener.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,6 +40,8 @@ class UrbanCafeApp extends StatefulWidget {
 }
 
 class _UrbanCafeAppState extends State<UrbanCafeApp> {
+  final _rootNavigatorKey = GlobalKey<NavigatorState>();
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -48,6 +51,7 @@ class _UrbanCafeAppState extends State<UrbanCafeApp> {
   @override
   Widget build(BuildContext context) {
     final router = GoRouter(
+      navigatorKey: _rootNavigatorKey,
       routes: [
         // Keep the main menu alive and avoid rebuilds on back navigation.
         GoRoute(
@@ -100,7 +104,15 @@ class _UrbanCafeAppState extends State<UrbanCafeApp> {
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {
-          return MaterialApp.router(title: 'UrbanCafe', theme: AppTheme.theme, darkTheme: AppTheme.darkTheme, themeMode: themeProvider.themeMode, debugShowCheckedModeBanner: false, routerConfig: router);
+          return MaterialApp.router(
+            title: 'UrbanCafe',
+            theme: AppTheme.theme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: themeProvider.themeMode,
+            debugShowCheckedModeBanner: false,
+            routerConfig: router,
+            builder: (context, child) => UpgradeListener(navigatorKey: _rootNavigatorKey, child: child!),
+          );
         },
       ),
     );

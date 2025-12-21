@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 
 class VersionCheckService {
-  static const String _versionUrl = '/version.json';
+  static const String _versionUrl = '/app_version.json';
 
   Future<bool> checkUpdateAvailable() async {
     // Only meaningful on web where we can hot-reload/refresh
@@ -20,7 +20,9 @@ class VersionCheckService {
 
       // 2. Fetch remote version.json
       // Add timestamp to prevent caching of the version check itself
-      final response = await http.get(Uri.parse('$_versionUrl?t=${DateTime.now().millisecondsSinceEpoch}'));
+      final uri = Uri.parse('$_versionUrl?t=${DateTime.now().millisecondsSinceEpoch}');
+      debugPrint('Fetching version from: $uri');
+      final response = await http.get(uri);
 
       if (response.statusCode == 200) {
         debugPrint('Remote Config: ${response.body}');

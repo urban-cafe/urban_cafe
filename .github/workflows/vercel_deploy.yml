@@ -30,6 +30,13 @@ jobs:
           flutter build web --release --wasm \
             --dart-define=SUPABASE_URL=${SUPABASE_URL} \
             --dart-define=SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+
+      - name: Generate version.json
+        run: |
+          VERSION=$(grep 'version:' pubspec.yaml | head -n 1 | awk '{print $2}' | cut -d '+' -f 1)
+          BUILD_NUMBER=$(grep 'version:' pubspec.yaml | head -n 1 | awk '{print $2}' | cut -d '+' -f 2)
+          echo "{\"version\": \"$VERSION\", \"build_number\": \"$BUILD_NUMBER\"}" > build/web/app_version.json
+
       - name: Copy Vercel config into build output
         run: cp vercel.json build/web/vercel.json
 

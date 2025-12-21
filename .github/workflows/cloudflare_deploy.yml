@@ -35,6 +35,11 @@ jobs:
             --dart-define=SUPABASE_URL=${SUPABASE_URL} \
             --dart-define=SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
 
+          # 1.5 Generate version.json
+          VERSION=$(grep 'version:' pubspec.yaml | head -n 1 | awk '{print $2}' | cut -d '+' -f 1)
+          BUILD_NUMBER=$(grep 'version:' pubspec.yaml | head -n 1 | awk '{print $2}' | cut -d '+' -f 2)
+          echo "{\"version\": \"$VERSION\", \"build_number\": \"$BUILD_NUMBER\"}" > build/web/app_version.json
+
           # 2. Create _headers file for Wasm support and Cache Busting
           # This tells Cloudflare to send the correct headers
           cat > build/web/_headers << 'EOF'
@@ -50,7 +55,7 @@ jobs:
           /flutter_service_worker.js
             Cache-Control: public, max-age=0, must-revalidate
 
-          /version.json
+          /app_version.json
             Cache-Control: public, max-age=0, must-revalidate
 
           /assets/AssetManifest.json
