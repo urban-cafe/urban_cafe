@@ -28,9 +28,9 @@ class AppTheme {
     textTheme: GoogleFonts.loraTextTheme(ThemeData.light().textTheme)
         .copyWith(
           // Add fallback for Myanmar text
-          bodyMedium: GoogleFonts.lora(textStyle: ThemeData.light().textTheme.bodyMedium).copyWith(fontFamilyFallback: ['Noto Sans Myanmar']),
-          bodySmall: GoogleFonts.lora(textStyle: ThemeData.light().textTheme.bodySmall).copyWith(fontFamilyFallback: ['Noto Sans Myanmar']),
-          titleMedium: GoogleFonts.lora(textStyle: ThemeData.light().textTheme.titleMedium).copyWith(fontFamilyFallback: ['Noto Sans Myanmar']),
+          bodyMedium: GoogleFonts.lora(textStyle: ThemeData.light().textTheme.bodyMedium).copyWith(fontFamilyFallback: ['Roboto']),
+          bodySmall: GoogleFonts.lora(textStyle: ThemeData.light().textTheme.bodySmall).copyWith(fontFamilyFallback: ['Roboto']),
+          titleMedium: GoogleFonts.lora(textStyle: ThemeData.light().textTheme.titleMedium).copyWith(fontFamilyFallback: ['Roboto']),
         )
         .apply(displayColor: const Color(0xFF4E3B2F), bodyColor: const Color(0xFF4E3B2F)),
     filledButtonTheme: FilledButtonThemeData(
@@ -68,7 +68,14 @@ class AppTheme {
   static ThemeData get darkTheme => ThemeData(
     useMaterial3: true,
     colorScheme: ColorScheme.fromSeed(seedColor: primary, brightness: Brightness.dark, primary: primary, onPrimary: Colors.white, secondary: accent, onSecondary: Colors.white, surface: const Color(0xFF1F1A17), onSurface: const Color(0xFFEDE3DD)),
-    textTheme: GoogleFonts.loraTextTheme(ThemeData.dark().textTheme).apply(displayColor: Colors.white, bodyColor: Colors.white),
+    textTheme: GoogleFonts.loraTextTheme(ThemeData.dark().textTheme)
+        .copyWith(
+          // Add fallback for Myanmar text
+          bodyMedium: GoogleFonts.lora(textStyle: ThemeData.dark().textTheme.bodyMedium).copyWith(fontFamilyFallback: ['Roboto']),
+          bodySmall: GoogleFonts.lora(textStyle: ThemeData.dark().textTheme.bodySmall).copyWith(fontFamilyFallback: ['Roboto']),
+          titleMedium: GoogleFonts.lora(textStyle: ThemeData.dark().textTheme.titleMedium).copyWith(fontFamilyFallback: ['Roboto']),
+        )
+        .apply(displayColor: Colors.white, bodyColor: Colors.white),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(backgroundColor: primary, foregroundColor: Colors.white),
     ),
