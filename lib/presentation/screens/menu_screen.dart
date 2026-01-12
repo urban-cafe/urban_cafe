@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:urban_cafe/domain/entities/menu_item.dart';
+import 'package:urban_cafe/presentation/providers/cart_provider.dart';
 import 'package:urban_cafe/presentation/providers/menu_provider.dart';
 import 'package:urban_cafe/presentation/widgets/menu_card.dart';
 
@@ -214,6 +215,12 @@ class _MenuScreenState extends State<MenuScreen> {
               ),
             ),
           ],
+        ),
+        floatingActionButton: Consumer<CartProvider>(
+          builder: (context, cart, child) {
+            if (cart.items.isEmpty) return const SizedBox.shrink();
+            return FloatingActionButton.extended(onPressed: () => context.push('/cart'), backgroundColor: colorScheme.primary, foregroundColor: colorScheme.onPrimary, icon: const Icon(Icons.shopping_cart), label: Text('${cart.itemCount} items'));
+          },
         ),
       ),
     );

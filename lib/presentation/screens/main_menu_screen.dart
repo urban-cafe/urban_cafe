@@ -4,7 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:urban_cafe/core/common_constants.dart';
-//import 'package:urban_cafe/presentation/providers/auth_provider.dart';
+import 'package:urban_cafe/presentation/providers/auth_provider.dart';
+import 'package:urban_cafe/presentation/providers/cart_provider.dart';
 import 'package:urban_cafe/presentation/providers/menu_provider.dart';
 import 'package:urban_cafe/presentation/widgets/contact_info_sheet.dart';
 import 'package:urban_cafe/presentation/widgets/social_link_button.dart';
@@ -45,20 +46,29 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        // leading: IconButton(
-        //   icon: Icon(Icons.admin_panel_settings_outlined, color: colorScheme.primary),
-        //   tooltip: 'Admin Area',
-        //   onPressed: () {
-        //     final auth = context.read<AuthProvider>();
-        //     if (!auth.isConfigured) {
-        //       context.push('/admin/login');
-        //     } else if (auth.isLoggedIn) {
-        //       context.push('/admin');
-        //     } else {
-        //       context.push('/admin/login');
-        //     }
-        //   },
-        // ),
+        leading: IconButton(
+          icon: Icon(Icons.logout, color: colorScheme.primary),
+          tooltip: 'Sign Out',
+          onPressed: () {
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Sign Out'),
+                content: const Text('Are you sure you want to sign out?'),
+                actions: [
+                  TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      context.read<AuthProvider>().signOut();
+                    },
+                    child: const Text('Sign Out'),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
         actions: const [ThemeSelectionButton()],
       ),
       body: LayoutBuilder(
@@ -154,6 +164,12 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
               ),
             ),
           );
+        },
+      ),
+      floatingActionButton: Consumer<CartProvider>(
+        builder: (context, cart, child) {
+          if (cart.items.isEmpty) return const SizedBox.shrink();
+          return FloatingActionButton.extended(onPressed: () => context.push('/cart'), backgroundColor: colorScheme.primary, foregroundColor: colorScheme.onPrimary, icon: const Icon(Icons.shopping_cart), label: Text('${cart.itemCount} items'));
         },
       ),
     );

@@ -521,3 +521,14 @@ education levels, and learning styles.
   labels for UI elements.
 * **Screen Reader Testing:** Regularly test your app with TalkBack (Android) and
   VoiceOver (iOS).
+
+## Common Mistakes to Avoid (CRITICAL)
+
+* Business logic in widgets
+* Providers calling APIs directly
+* notifyListeners() abuse
+* Overusing Consumer
+* Mutable models
+* Large build() methods
+* Async work in build()
+* Tight coupling between layers
