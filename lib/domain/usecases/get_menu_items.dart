@@ -8,7 +8,7 @@ class GetMenuItems {
   // Updated parameters to match the new Repository signature
   Future<List<MenuItemEntity>> call({
     int page = 1,
-    int pageSize = 20,
+    int pageSize = 10,
     String? search,
     String? categoryId, // Changed from 'category'
     List<String>? categoryIds, // Changed from 'categories'

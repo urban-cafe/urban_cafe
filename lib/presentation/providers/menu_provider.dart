@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:urban_cafe/data/repositories/menu_repository_impl.dart';
 import 'package:urban_cafe/domain/entities/menu_item.dart';
@@ -27,8 +27,33 @@ class MenuProvider extends ChangeNotifier {
   String _searchQuery = '';
 
   int _page = 1;
-  final int _pageSize = 20;
+  final int _pageSize = 10;
   bool hasMore = true;
+
+  // New method to fetch main categories
+  Future<List<CategoryObj>> getMainCategories() async {
+    try {
+      final mains = await _repo.getMainCategories();
+      // Populate cache if needed
+      for (var m in mains) {
+        _mainIdCache[m['name']] = m['id'];
+      }
+      return mains.map((m) => CategoryObj(m['id'], m['name'])).toList();
+    } catch (e) {
+      error = e.toString();
+      return [];
+    }
+  }
+
+  IconData getIconForCategory(String name) {
+    return switch (name.toUpperCase()) {
+      'COFFEE' => Icons.local_cafe_rounded,
+      'DRINKS' => Icons.local_drink_rounded,
+      'FOOD' => Icons.restaurant_menu_rounded,
+      'BREAD & CAKES' => Icons.bakery_dining_rounded,
+      _ => Icons.category_outlined, // Default fallback
+    };
+  }
 
   // Optimized Initializer
   Future<void> initForMainCategory(String mainCategoryName) async {

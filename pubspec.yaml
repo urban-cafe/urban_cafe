@@ -4,7 +4,7 @@ description: "Urban Cafe"
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 1.0.0+1
+version: 1.0.2+1
 
 environment:
   sdk: ^3.10.0
@@ -26,6 +26,10 @@ dependencies:
   skeletonizer: ^2.1.1
   font_awesome_flutter: ^10.12.0
   url_launcher: ^6.3.2
+  flutter_image_compress: ^2.4.0
+  package_info_plus: ^9.0.0
+  http: ^1.6.0
+  web: ^1.1.1
 
 dev_dependencies:
   flutter_test:

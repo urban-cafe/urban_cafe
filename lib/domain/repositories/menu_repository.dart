@@ -25,11 +25,13 @@ abstract class MenuRepository {
     required double price,
     String? categoryId, // UUID
     bool isAvailable = true,
+    bool isMostPopular = false,
+    bool isWeekendSpecial = false,
     String? imagePath,
     String? imageUrl,
   });
 
-  Future<MenuItemEntity> updateMenuItem({required String id, String? name, String? description, double? price, String? categoryId, bool? isAvailable, String? imagePath, String? imageUrl});
+  Future<MenuItemEntity> updateMenuItem({required String id, String? name, String? description, double? price, String? categoryId, bool? isAvailable, bool? isMostPopular, bool? isWeekendSpecial, String? imagePath, String? imageUrl});
 
   Future<void> deleteMenuItem(String id);
 }

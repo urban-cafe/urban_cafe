@@ -1,11 +1,14 @@
+// presentation/widgets/menu_card.dart
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:urban_cafe/domain/entities/menu_item.dart';
+import 'package:urban_cafe/presentation/widgets/menu_item_badges.dart';
 
 class MenuCard extends StatelessWidget {
   final MenuItemEntity item;
   final VoidCallback? onTap;
+
   const MenuCard({super.key, required this.item, this.onTap});
 
   @override
@@ -16,79 +19,102 @@ class MenuCard extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+        // Reduced vertical padding to fit more items
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start, // Keep aligned to top
           children: [
-            // 1. Image on the Left
-            Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: SizedBox(
-                    width: 100,
-                    height: 100,
-                    child: item.imageUrl != null
-                        ? CachedNetworkImage(
-                            imageUrl: item.imageUrl!,
-                            fit: BoxFit.cover,
-                            placeholder: (context, url) => Container(color: colorScheme.surfaceContainerHighest),
-                            errorWidget: (context, url, error) => Container(
-                              color: colorScheme.surfaceContainerHighest,
-                              child: Icon(Icons.fastfood, color: colorScheme.onSurfaceVariant),
-                            ),
-                          )
-                        : Container(
-                            color: colorScheme.surfaceContainerHighest,
-                            child: Icon(Icons.fastfood, color: colorScheme.onSurfaceVariant),
-                          ),
-                  ),
+            // COMPACT IMAGE (80x80)
+            Hero(
+              tag: 'menu-${item.id}',
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12), // Slightly smaller radius
+                child: Container(
+                  width: 80,
+                  height: 80,
+                  color: colorScheme.surfaceContainerHighest,
+                  child: item.imageUrl != null
+                      ? CachedNetworkImage(
+                          imageUrl: item.imageUrl!,
+                          fit: BoxFit.cover,
+                          memCacheWidth: 250, // Reduced cache size for optimization
+                          fadeInDuration: Duration.zero, // Prevent flickering
+                          placeholder: (_, _) => Container(color: colorScheme.surfaceContainerHighest),
+                          errorWidget: (_, _, _) => Icon(Icons.fastfood, size: 24, color: colorScheme.onSurfaceVariant),
+                        )
+                      : Icon(Icons.fastfood, size: 24, color: colorScheme.onSurfaceVariant),
                 ),
-                // "Sold Out" Overlay on Image (if needed)
-                if (!item.isAvailable)
-                  Positioned.fill(
-                    child: Container(
-                      decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(12)),
-                      alignment: Alignment.center,
-                      child: Text(
-                        'SOLD OUT',
-                        style: theme.textTheme.labelSmall?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-
-            const SizedBox(width: 16),
-
-            // 2. Details on the Right
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 4), // Visual alignment with image top
-                  Text(
-                    item.name,
-                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, fontSize: 16),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  if (item.categoryName != null)
-                    Text(
-                      item.categoryName!,
-                      style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.primary, fontWeight: FontWeight.w500),
-                    ),
-                  const SizedBox(height: 8),
-                  Text(priceFormat.format(item.price), style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800, fontSize: 17)),
-                ],
               ),
             ),
 
-            // Optional: Add Icon button or arrow here if you want
-            // const Icon(Icons.add_circle, color: Colors.green, size: 28),
+            const SizedBox(width: 12), // Reduced gap
+            // CONTENT
+            Expanded(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 80),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween, // Space out name/price
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          item.name,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16, // Reduced from 17
+                            height: 1.1,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (item.categoryName != null) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            item.categoryName!,
+                            style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.primary, fontWeight: FontWeight.w600, fontSize: 12),
+                          ),
+                        ],
+                        const SizedBox(height: 4),
+                        MenuItemBadges(isMostPopular: item.isMostPopular, isWeekendSpecial: item.isWeekendSpecial),
+                      ],
+                    ),
+
+                    // PRICE ROW
+                    Row(
+                      children: [
+                        Text(
+                          priceFormat.format(item.price),
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 16, // Reduced from 19
+                            color: colorScheme.primary,
+                          ),
+                        ),
+                        const Spacer(),
+                        // COMPACT BADGE
+                        if (!item.isAvailable)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(color: colorScheme.errorContainer, borderRadius: BorderRadius.circular(8)),
+                            child: Text(
+                              'Unavailable',
+                              style: TextStyle(
+                                color: colorScheme.onErrorContainer,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10, // Reduced from 12
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),
