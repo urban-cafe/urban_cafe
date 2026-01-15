@@ -1,8 +1,9 @@
-// presentation/widgets/menu_card.dart
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:urban_cafe/domain/entities/menu_item.dart';
+import 'package:urban_cafe/presentation/providers/menu_provider.dart';
 import 'package:urban_cafe/presentation/widgets/menu_item_badges.dart';
 
 class MenuCard extends StatelessWidget {
@@ -16,6 +17,8 @@ class MenuCard extends StatelessWidget {
     final priceFormat = NumberFormat.currency(symbol: '', decimalDigits: 0);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final menuProvider = context.watch<MenuProvider>();
+    final isFavorite = menuProvider.favoriteIds.contains(item.id);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -34,27 +37,43 @@ class MenuCard extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // LARGER IMAGE (100x100)
-                Hero(
-                  tag: 'menu-${item.id}',
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: Container(
-                      width: 100,
-                      height: 100,
-                      color: colorScheme.surfaceContainerHighest,
-                      child: item.imageUrl != null
-                          ? CachedNetworkImage(
-                              imageUrl: item.imageUrl!,
-                              fit: BoxFit.cover,
-                              memCacheWidth: 300,
-                              fadeInDuration: const Duration(milliseconds: 300),
-                              placeholder: (_, _) => Container(color: colorScheme.surfaceContainerHighest),
-                              errorWidget: (_, _, _) => Icon(Icons.fastfood, size: 32, color: colorScheme.onSurfaceVariant),
-                            )
-                          : Icon(Icons.fastfood, size: 32, color: colorScheme.onSurfaceVariant),
+                // LARGER IMAGE (100x100) WITH FAVORITE ICON
+                Stack(
+                  children: [
+                    Hero(
+                      tag: 'menu-${item.id}',
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Container(
+                          width: 100,
+                          height: 100,
+                          color: colorScheme.surfaceContainerHighest,
+                          child: item.imageUrl != null
+                              ? CachedNetworkImage(
+                                  imageUrl: item.imageUrl!,
+                                  fit: BoxFit.cover,
+                                  memCacheWidth: 300,
+                                  fadeInDuration: const Duration(milliseconds: 300),
+                                  placeholder: (_, _) => Container(color: colorScheme.surfaceContainerHighest),
+                                  errorWidget: (_, _, _) => Icon(Icons.fastfood, size: 32, color: colorScheme.onSurfaceVariant),
+                                )
+                              : Icon(Icons.fastfood, size: 32, color: colorScheme.onSurfaceVariant),
+                        ),
+                      ),
                     ),
-                  ),
+                    Positioned(
+                      top: 4,
+                      left: 4,
+                      child: GestureDetector(
+                        onTap: () => menuProvider.toggleFavorite(item.id),
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.3), shape: BoxShape.circle),
+                          child: Icon(isFavorite ? Icons.favorite : Icons.favorite_border, color: isFavorite ? Colors.red : Colors.white, size: 16),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
 
                 const SizedBox(width: 16),

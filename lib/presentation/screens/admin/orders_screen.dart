@@ -27,6 +27,7 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final orderProvider = context.watch<OrderProvider>();
 
     return Scaffold(
       appBar: AppBar(
@@ -69,9 +70,10 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
           ),
 
           Expanded(
-            child: Consumer<OrderProvider>(
-              builder: (context, provider, child) {
-                if (provider.isLoading && provider.orders.isEmpty) {
+            child: StreamBuilder<List<OrderEntity>>(
+              stream: orderProvider.getOrdersStream(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting && orderProvider.orders.isEmpty) {
                   return Skeletonizer(
                     enabled: true,
                     child: ListView.builder(
@@ -82,7 +84,21 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
                   );
                 }
 
-                if (provider.orders.isEmpty) {
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
+
+                var orders = snapshot.data ?? orderProvider.orders;
+
+                // Apply local filtering if stream returns all
+                // The stream currently returns ALL orders unless filtered by UserID.
+                // Admin needs to filter by status locally or via stream params (if implemented).
+                // Our stream implementation fetches ALL. So we filter here.
+                if (orderProvider.filterStatus != null) {
+                  orders = orders.where((o) => o.status == orderProvider.filterStatus).toList();
+                }
+
+                if (orders.isEmpty) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -97,10 +113,10 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
 
                 return ListView.separated(
                   padding: const EdgeInsets.all(16),
-                  itemCount: provider.orders.length,
+                  itemCount: orders.length,
                   separatorBuilder: (context, index) => const SizedBox(height: 16),
                   itemBuilder: (context, index) {
-                    return _OrderCard(order: provider.orders[index]);
+                    return _OrderCard(order: orders[index]);
                   },
                 );
               },

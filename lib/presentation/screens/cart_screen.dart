@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:urban_cafe/domain/entities/order_type.dart';
+import 'package:urban_cafe/presentation/providers/auth_provider.dart';
 import 'package:urban_cafe/presentation/providers/cart_provider.dart';
 
 class CartScreen extends StatelessWidget {
@@ -14,6 +15,7 @@ class CartScreen extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final priceFormat = NumberFormat.currency(symbol: '', decimalDigits: 0);
+    final auth = context.watch<AuthProvider>();
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -22,7 +24,13 @@ class CartScreen extends StatelessWidget {
         centerTitle: true,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
-          onPressed: () => context.pop(),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/');
+            }
+          },
         ),
         backgroundColor: colorScheme.surface,
         elevation: 0,
@@ -92,6 +100,9 @@ class CartScreen extends StatelessWidget {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
+                                if (item.selectedVariant != null) Text('Size: ${item.selectedVariant!.name} (+${priceFormat.format(item.selectedVariant!.priceAdjustment)})', style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant)),
+                                if (item.selectedAddons.isNotEmpty) Text('Add-ons: ${item.selectedAddons.map((e) => e.name).join(', ')}', style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant)),
+
                                 if (item.notes != null && item.notes!.isNotEmpty) ...[
                                   const SizedBox(height: 4),
                                   Text(
@@ -151,6 +162,37 @@ class CartScreen extends StatelessWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      // LOYALTY POINTS REDEMPTION
+                      if (auth.isClient && auth.loyaltyPoints > 0)
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 24),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Colors.amber.withValues(alpha: 0.5)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.stars_rounded, color: Colors.amber, size: 28),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Redeem Points',
+                                      style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.brown),
+                                    ),
+                                    Text('${auth.loyaltyPoints} available', style: theme.textTheme.bodySmall?.copyWith(color: Colors.brown)),
+                                  ],
+                                ),
+                              ),
+                              Switch(value: cart.usePoints, activeTrackColor: Colors.amber.withValues(alpha: 0.5), thumbColor: WidgetStateProperty.all(Colors.amber), onChanged: (value) => cart.toggleUsePoints(value, auth.loyaltyPoints)),
+                            ],
+                          ),
+                        ),
+
                       // ORDER TYPE SELECTOR
                       Container(
                         margin: const EdgeInsets.only(bottom: 24),
@@ -168,12 +210,36 @@ class CartScreen extends StatelessWidget {
                         ),
                       ),
 
+                      if (cart.usePoints) ...[
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('Subtotal', style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant)),
+                            Text(priceFormat.format(cart.totalAmount), style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant)),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Points Discount',
+                              style: theme.textTheme.bodyMedium?.copyWith(color: Colors.green, fontWeight: FontWeight.bold),
+                            ),
+                            Text(
+                              '-${priceFormat.format(cart.discountAmount)}',
+                              style: theme.textTheme.bodyMedium?.copyWith(color: Colors.green, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                        const Divider(height: 24),
+                      ],
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text('total_price'.tr(), style: theme.textTheme.titleLarge?.copyWith(color: colorScheme.onSurfaceVariant)),
                           Text(
-                            priceFormat.format(cart.totalAmount),
+                            priceFormat.format(cart.finalTotal),
                             style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold, color: colorScheme.primary),
                           ),
                         ],
@@ -189,22 +255,29 @@ class CartScreen extends StatelessWidget {
                                   if (!context.mounted) return;
 
                                   if (success) {
-                                    showDialog(
-                                      context: context,
-                                      builder: (context) => AlertDialog(
-                                        title: Text('order_placed'.tr()),
-                                        content: Text('thank_you_order'.tr()),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () {
-                                              Navigator.of(context).pop();
-                                              context.go('/orders'); // Navigate to Client Orders
-                                            },
-                                            child: Text('ok'.tr()),
-                                          ),
-                                        ],
-                                      ),
-                                    );
+                                    // Refresh profile to update points
+                                    if (context.mounted) {
+                                      context.read<AuthProvider>().refreshProfile();
+                                    }
+
+                                    if (context.mounted) {
+                                      showDialog(
+                                        context: context,
+                                        builder: (context) => AlertDialog(
+                                          title: Text('order_placed'.tr()),
+                                          content: Text('thank_you_order'.tr()),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () {
+                                                Navigator.of(context).pop();
+                                                context.go('/orders'); // Navigate to Client Orders
+                                              },
+                                              child: Text('ok'.tr()),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    }
                                   } else {
                                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(cart.error ?? 'error'.tr()), backgroundColor: colorScheme.error));
                                   }

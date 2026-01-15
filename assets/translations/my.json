@@ -1,6 +1,9 @@
 {
+  "welcome_back": "မင်္ဂလာပါ!",
+  "sign_in_subtitle": "အကောင့်ဝင်ရန်",
   "profile": "ပရိုဖိုင်",
   "sign_out": "အကောင့်ထွက်ရန်",
+  "add_to_cart": "ဈေးခြင်းထည့်ရန်",
   "recent_orders": "လတ်တလော အမှာစာများ",
   "view_all": "အားလုံးကြည့်ရန်",
   "kitchen_display": "မီးဖိုချောင်",
@@ -65,5 +68,5 @@
   "categories": "အမျိုးအစားများ",
   "kitchen": "မီးဖိုချောင်",
   "order_management": "အမှာစာ စီမံခန့်ခွဲမှု",
-  "items_count": "{} ခု"
+  "items_count": "ပစ္စည်းများ {} ခု"
 }

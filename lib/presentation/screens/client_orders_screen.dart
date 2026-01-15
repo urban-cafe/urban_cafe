@@ -6,6 +6,7 @@ import 'package:timeago/timeago.dart' as timeago;
 import 'package:urban_cafe/domain/entities/order_entity.dart';
 import 'package:urban_cafe/domain/entities/order_status.dart';
 import 'package:urban_cafe/domain/entities/order_type.dart';
+import 'package:urban_cafe/presentation/providers/auth_provider.dart';
 import 'package:urban_cafe/presentation/providers/order_provider.dart';
 
 class ClientOrdersScreen extends StatefulWidget {
@@ -29,13 +30,16 @@ class _ClientOrdersScreenState extends State<ClientOrdersScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final orderProvider = context.watch<OrderProvider>();
+    final authProvider = context.read<AuthProvider>(); // Need auth to filter
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: AppBar(title: Text('my_orders'.tr()), backgroundColor: colorScheme.surface, scrolledUnderElevation: 0),
-      body: Consumer<OrderProvider>(
-        builder: (context, provider, child) {
-          if (provider.isLoading && provider.orders.isEmpty) {
+      body: StreamBuilder<List<OrderEntity>>(
+        stream: orderProvider.getOrdersStream(userId: authProvider.currentUser?.id),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting && orderProvider.orders.isEmpty) {
             return Skeletonizer(
               enabled: true,
               child: ListView.separated(
@@ -50,7 +54,13 @@ class _ClientOrdersScreenState extends State<ClientOrdersScreen> {
             );
           }
 
-          if (provider.orders.isEmpty) {
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+
+          final orders = snapshot.data ?? orderProvider.orders;
+
+          if (orders.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -63,17 +73,14 @@ class _ClientOrdersScreenState extends State<ClientOrdersScreen> {
             );
           }
 
-          return RefreshIndicator(
-            onRefresh: () => provider.fetchOrders(),
-            child: ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: provider.orders.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 16),
-              itemBuilder: (context, index) {
-                final order = provider.orders[index];
-                return _ClientOrderCard(order: order);
-              },
-            ),
+          return ListView.separated(
+            padding: const EdgeInsets.all(16),
+            itemCount: orders.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 16),
+            itemBuilder: (context, index) {
+              final order = orders[index];
+              return _ClientOrderCard(order: order);
+            },
           );
         },
       ),

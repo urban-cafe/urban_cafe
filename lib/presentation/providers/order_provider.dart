@@ -21,7 +21,7 @@ class OrderProvider extends ChangeNotifier {
   OrderStatus? get filterStatus => _filterStatus;
 
   // Stream Support
-  Stream<List<OrderEntity>> get ordersStream => getOrdersUseCase.repository.getOrdersStream();
+  Stream<List<OrderEntity>> getOrdersStream({String? userId}) => getOrdersUseCase.repository.getOrdersStream(userId: userId);
 
   OrderProvider({required this.getOrdersUseCase, required this.updateOrderStatusUseCase});
 

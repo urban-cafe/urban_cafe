@@ -17,6 +17,7 @@ class CreateOrder implements UseCase<String, CreateOrderParams> {
       items: params.items,
       totalAmount: params.totalAmount,
       type: params.type,
+      pointsRedeemed: params.pointsRedeemed,
     );
   }
 }
@@ -25,13 +26,15 @@ class CreateOrderParams extends Equatable {
   final List<CartItem> items;
   final double totalAmount;
   final OrderType type;
+  final int pointsRedeemed;
 
   const CreateOrderParams({
     required this.items,
     required this.totalAmount,
     required this.type,
+    this.pointsRedeemed = 0,
   });
 
   @override
-  List<Object?> get props => [items, totalAmount, type];
+  List<Object?> get props => [items, totalAmount, type, pointsRedeemed];
 }

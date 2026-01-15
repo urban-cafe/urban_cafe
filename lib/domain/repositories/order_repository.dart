@@ -7,8 +7,9 @@ import 'package:urban_cafe/domain/entities/order_type.dart';
 
 abstract class OrderRepository {
   Future<Either<Failure, List<OrderEntity>>> getOrders({OrderStatus? status});
-  Future<Either<Failure, String>> createOrder({required List<CartItem> items, required double totalAmount, required OrderType type});
-  Stream<List<OrderEntity>> getOrdersStream();
+  Future<Either<Failure, String>> createOrder({required List<CartItem> items, required double totalAmount, required OrderType type, int pointsRedeemed = 0});
+  Stream<List<OrderEntity>> getOrdersStream({String? userId});
   Future<Either<Failure, void>> updateOrderStatus(String orderId, OrderStatus status);
   Future<Either<Failure, void>> updateOrderNotes(String orderId, String notes);
+  Future<Either<Failure, Map<String, dynamic>>> getAdminAnalytics();
 }

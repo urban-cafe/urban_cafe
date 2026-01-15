@@ -7,7 +7,7 @@ import 'package:urban_cafe/domain/usecases/orders/create_order.dart';
 class CartProvider extends ChangeNotifier {
   final List<CartItem> _items = [];
   OrderType _orderType = OrderType.dineIn;
-  
+
   // Dependency
   final CreateOrder? createOrderUseCase; // Optional for now to avoid breaking main.dart immediately
 
@@ -24,6 +24,34 @@ class CartProvider extends ChangeNotifier {
   String? _error;
   String? get error => _error;
 
+  // Loyalty Logic
+  bool _usePoints = false;
+  int _availablePoints = 0;
+
+  bool get usePoints => _usePoints;
+  static const int pointsPerUnit = 10; // 10 points = 1 currency unit
+
+  double get discountAmount {
+    if (!_usePoints) return 0.0;
+    // Max discount is total amount (free order)
+    final maxPointsNeeded = (totalAmount * pointsPerUnit).ceil();
+    final pointsToUse = _availablePoints < maxPointsNeeded ? _availablePoints : maxPointsNeeded;
+    return pointsToUse / pointsPerUnit;
+  }
+
+  int get pointsToRedeem {
+    if (!_usePoints) return 0;
+    return (discountAmount * pointsPerUnit).toInt();
+  }
+
+  double get finalTotal => totalAmount - discountAmount;
+
+  void toggleUsePoints(bool value, int userPoints) {
+    _usePoints = value;
+    _availablePoints = userPoints;
+    notifyListeners();
+  }
+
   void setOrderType(OrderType type) {
     _orderType = type;
     notifyListeners();
@@ -35,18 +63,21 @@ class CartProvider extends ChangeNotifier {
       notifyListeners();
       return false;
     }
-    
+
     if (_items.isEmpty) return false;
 
     _isPlacingOrder = true;
     _error = null;
     notifyListeners();
 
-    final result = await createOrderUseCase!(CreateOrderParams(
-      items: _items,
-      totalAmount: totalAmount,
-      type: _orderType,
-    ));
+    final result = await createOrderUseCase!(
+      CreateOrderParams(
+        items: _items,
+        totalAmount: finalTotal, // Use final total (discounted)
+        type: _orderType,
+        pointsRedeemed: pointsToRedeem,
+      ),
+    );
 
     return result.fold(
       (failure) {
@@ -64,19 +95,37 @@ class CartProvider extends ChangeNotifier {
     );
   }
 
-  void addToCart(MenuItemEntity menuItem, {int quantity = 1, String? notes}) {
-    // Check if item already exists with same notes
-    final existingIndex = _items.indexWhere(
-      (item) => item.menuItem.id == menuItem.id && item.notes == notes,
-    );
+  void addToCart(
+    MenuItemEntity menuItem, {
+    int quantity = 1,
+    String? notes,
+    MenuItemVariant? selectedVariant,
+    List<MenuItemAddon> selectedAddons = const [],
+  }) {
+    // Check if item already exists with same configuration (variant, addons, notes)
+    final existingIndex = _items.indexWhere((item) {
+      if (item.menuItem.id != menuItem.id) return false;
+      if (item.notes != notes) return false;
+      
+      // Check Variant
+      if (item.selectedVariant?.id != selectedVariant?.id) return false;
+
+      // Check Addons (Sort and compare IDs)
+      final existingAddonIds = item.selectedAddons.map((e) => e.id).toSet();
+      final newAddonIds = selectedAddons.map((e) => e.id).toSet();
+      
+      return setEquals(existingAddonIds, newAddonIds);
+    });
 
     if (existingIndex >= 0) {
       _items[existingIndex].quantity += quantity;
     } else {
       _items.add(CartItem(
-        menuItem: menuItem,
-        quantity: quantity,
+        menuItem: menuItem, 
+        quantity: quantity, 
         notes: notes,
+        selectedVariant: selectedVariant,
+        selectedAddons: selectedAddons,
       ));
     }
     notifyListeners();
@@ -98,6 +147,8 @@ class CartProvider extends ChangeNotifier {
 
   void clearCart() {
     _items.clear();
+    _usePoints = false;
+    _availablePoints = 0;
     notifyListeners();
   }
 }

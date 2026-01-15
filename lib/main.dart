@@ -12,16 +12,21 @@ import 'package:urban_cafe/data/repositories/menu_repository_impl.dart';
 import 'package:urban_cafe/data/repositories/order_repository_impl.dart';
 import 'package:urban_cafe/domain/entities/menu_item.dart';
 import 'package:urban_cafe/domain/usecases/auth/get_current_user_role_usecase.dart';
+import 'package:urban_cafe/domain/usecases/auth/get_user_profile_usecase.dart';
 import 'package:urban_cafe/domain/usecases/auth/sign_in_usecase.dart';
 import 'package:urban_cafe/domain/usecases/auth/sign_in_with_google_usecase.dart';
 import 'package:urban_cafe/domain/usecases/auth/sign_out_usecase.dart';
 import 'package:urban_cafe/domain/usecases/get_category_by_name.dart';
+import 'package:urban_cafe/domain/usecases/get_favorite_items.dart';
+import 'package:urban_cafe/domain/usecases/get_favorites.dart';
 import 'package:urban_cafe/domain/usecases/get_main_categories.dart';
 import 'package:urban_cafe/domain/usecases/get_menu_items.dart';
 import 'package:urban_cafe/domain/usecases/get_sub_categories.dart';
 import 'package:urban_cafe/domain/usecases/orders/create_order.dart';
+import 'package:urban_cafe/domain/usecases/orders/get_admin_analytics.dart';
 import 'package:urban_cafe/domain/usecases/orders/get_orders.dart';
 import 'package:urban_cafe/domain/usecases/orders/update_order_status.dart';
+import 'package:urban_cafe/domain/usecases/toggle_favorite.dart';
 import 'package:urban_cafe/presentation/providers/admin_provider.dart';
 import 'package:urban_cafe/presentation/providers/auth_provider.dart';
 import 'package:urban_cafe/presentation/providers/cart_provider.dart';
@@ -29,6 +34,7 @@ import 'package:urban_cafe/presentation/providers/category_manager_provider.dart
 import 'package:urban_cafe/presentation/providers/menu_provider.dart';
 import 'package:urban_cafe/presentation/providers/order_provider.dart';
 import 'package:urban_cafe/presentation/providers/theme_provider.dart';
+import 'package:urban_cafe/presentation/screens/admin/analytics_screen.dart';
 import 'package:urban_cafe/presentation/screens/admin/category_manager_screen.dart';
 import 'package:urban_cafe/presentation/screens/admin/edit_screen.dart';
 import 'package:urban_cafe/presentation/screens/admin/list_screen.dart';
@@ -40,7 +46,10 @@ import 'package:urban_cafe/presentation/screens/login_screen.dart';
 import 'package:urban_cafe/presentation/screens/main_menu_screen.dart';
 import 'package:urban_cafe/presentation/screens/menu_detail_screen.dart';
 import 'package:urban_cafe/presentation/screens/menu_screen.dart';
-import 'package:urban_cafe/presentation/screens/profile_screen.dart';
+import 'package:urban_cafe/presentation/screens/profile/favorites_screen.dart';
+import 'package:urban_cafe/presentation/screens/profile/language_screen.dart';
+import 'package:urban_cafe/presentation/screens/profile/profile_screen.dart';
+import 'package:urban_cafe/presentation/screens/profile/theme_screen.dart';
 import 'package:urban_cafe/presentation/screens/staff/staff_orders_screen.dart';
 import 'package:urban_cafe/presentation/widgets/main_scaffold.dart';
 import 'package:urban_cafe/presentation/widgets/upgrade_listener.dart';
@@ -62,6 +71,7 @@ Future<void> main() async {
   final signInUseCase = SignInUseCase(authRepository);
   final signOutUseCase = SignOutUseCase(authRepository);
   final getCurrentUserRoleUseCase = GetCurrentUserRoleUseCase(authRepository);
+  final getUserProfileUseCase = GetUserProfileUseCase(authRepository);
   final signInWithGoogleUseCase = SignInWithGoogleUseCase(authRepository);
 
   final menuRepository = MenuRepositoryImpl();
@@ -69,11 +79,15 @@ Future<void> main() async {
   final getSubCategoriesUseCase = GetSubCategories(menuRepository);
   final getMenuItemsUseCase = GetMenuItems(menuRepository);
   final getCategoryByNameUseCase = GetCategoryByName(menuRepository);
+  final getFavoritesUseCase = GetFavorites(menuRepository);
+  final getFavoriteItemsUseCase = GetFavoriteItems(menuRepository);
+  final toggleFavoriteUseCase = ToggleFavorite(menuRepository);
 
   final orderRepository = OrderRepositoryImpl();
   final getOrdersUseCase = GetOrders(orderRepository);
   final updateOrderStatusUseCase = UpdateOrderStatus(orderRepository);
   final createOrderUseCase = CreateOrder(orderRepository);
+  final getAdminAnalyticsUseCase = GetAdminAnalytics(orderRepository);
 
   runApp(
     EasyLocalization(
@@ -83,16 +97,16 @@ Future<void> main() async {
       child: MultiProvider(
         providers: [
           ChangeNotifierProvider(
-            create: (_) => AuthProvider(signInUseCase: signInUseCase, signOutUseCase: signOutUseCase, getCurrentUserRoleUseCase: getCurrentUserRoleUseCase, signInWithGoogleUseCase: signInWithGoogleUseCase),
+            create: (_) => AuthProvider(signInUseCase: signInUseCase, signOutUseCase: signOutUseCase, getCurrentUserRoleUseCase: getCurrentUserRoleUseCase, getUserProfileUseCase: getUserProfileUseCase, signInWithGoogleUseCase: signInWithGoogleUseCase),
           ),
           ChangeNotifierProvider(create: (_) => CartProvider(createOrderUseCase: createOrderUseCase)),
           ChangeNotifierProvider(
-            create: (_) => MenuProvider(getMainCategoriesUseCase: getMainCategoriesUseCase, getSubCategoriesUseCase: getSubCategoriesUseCase, getMenuItemsUseCase: getMenuItemsUseCase, getCategoryByNameUseCase: getCategoryByNameUseCase),
+            create: (_) => MenuProvider(getMainCategoriesUseCase: getMainCategoriesUseCase, getSubCategoriesUseCase: getSubCategoriesUseCase, getMenuItemsUseCase: getMenuItemsUseCase, getCategoryByNameUseCase: getCategoryByNameUseCase, getFavoritesUseCase: getFavoritesUseCase, getFavoriteItemsUseCase: getFavoriteItemsUseCase, toggleFavoriteUseCase: toggleFavoriteUseCase),
           ),
           ChangeNotifierProvider(
             create: (_) => CategoryManagerProvider(getMainCategoriesUseCase: getMainCategoriesUseCase, getSubCategoriesUseCase: getSubCategoriesUseCase),
           ),
-          ChangeNotifierProvider(create: (_) => AdminProvider()),
+          ChangeNotifierProvider(create: (_) => AdminProvider(getAdminAnalyticsUseCase: getAdminAnalyticsUseCase)),
           ChangeNotifierProvider(create: (_) => ThemeProvider()),
           ChangeNotifierProvider(
             create: (_) => OrderProvider(getOrdersUseCase: getOrdersUseCase, updateOrderStatusUseCase: updateOrderStatusUseCase),
@@ -209,9 +223,25 @@ class _UrbanCafeAppState extends State<UrbanCafeApp> {
             GoRoute(path: '/admin', builder: (context, state) => const AdminListScreen()),
             GoRoute(path: '/admin/orders', builder: (context, state) => const AdminOrdersScreen()),
             GoRoute(path: '/admin/categories', builder: (context, state) => const AdminCategoryManagerScreen()),
+            GoRoute(path: '/admin/analytics', builder: (context, state) => const AdminAnalyticsScreen()),
 
             // SHARED ROUTES
-            GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen()),
+            GoRoute(
+              path: '/profile',
+              builder: (context, state) => const ProfileScreen(),
+              routes: [
+                GoRoute(path: 'language', builder: (context, state) => const LanguageScreen()),
+                GoRoute(path: 'theme', builder: (context, state) => const ThemeScreen()),
+                GoRoute(path: 'favorites', builder: (context, state) => const FavoritesScreen()),
+                // For order history, we can either reuse /orders or make it a sub-route.
+                // Reusing /orders is cleaner for deep linking, but we linked to /profile/orders in the profile screen.
+                // Let's add it here as a sub-route for better context handling if needed,
+                // OR we can just redirect/push to /orders.
+                // In ProfileScreen I used context.push('/profile/orders'). So I must define it.
+                // But reusing ClientOrdersScreen is fine.
+                GoRoute(path: 'orders', builder: (context, state) => const ClientOrdersScreen()),
+              ],
+            ),
           ],
         ),
 

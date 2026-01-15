@@ -25,7 +25,7 @@ class StaffOrdersScreen extends StatelessWidget {
         ],
       ),
       body: StreamBuilder<List<OrderEntity>>(
-        stream: provider.ordersStream,
+        stream: provider.getOrdersStream(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));

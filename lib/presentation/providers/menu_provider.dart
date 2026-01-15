@@ -3,24 +3,31 @@ import 'package:urban_cafe/core/usecases/usecase.dart';
 import 'package:urban_cafe/domain/entities/category.dart';
 import 'package:urban_cafe/domain/entities/menu_item.dart';
 import 'package:urban_cafe/domain/usecases/get_category_by_name.dart';
+import 'package:urban_cafe/domain/usecases/get_favorite_items.dart';
+import 'package:urban_cafe/domain/usecases/get_favorites.dart';
 import 'package:urban_cafe/domain/usecases/get_main_categories.dart';
 import 'package:urban_cafe/domain/usecases/get_menu_items.dart';
 import 'package:urban_cafe/domain/usecases/get_sub_categories.dart';
+import 'package:urban_cafe/domain/usecases/toggle_favorite.dart';
 
 class MenuProvider extends ChangeNotifier {
   final GetMainCategories getMainCategoriesUseCase;
   final GetSubCategories getSubCategoriesUseCase;
   final GetMenuItems getMenuItemsUseCase;
   final GetCategoryByName getCategoryByNameUseCase;
+  final GetFavorites getFavoritesUseCase;
+  final GetFavoriteItems getFavoriteItemsUseCase;
+  final ToggleFavorite toggleFavoriteUseCase;
 
   // 1. CACHE: Store Main Category IDs (Name -> ID) to save 1 DB call per switch
   final Map<String, String> _mainIdCache = {};
-  
+
   // Store Main Categories List for UI
   List<Category> mainCategories = [];
   bool mainCategoriesLoading = false;
 
   List<MenuItemEntity> items = [];
+  List<MenuItemEntity> favoriteItems = []; // Store full items
   List<Category> subCategories = [];
 
   bool loading = false;
@@ -37,17 +44,62 @@ class MenuProvider extends ChangeNotifier {
   final int _pageSize = 10;
   bool hasMore = true;
 
-  MenuProvider({
-    required this.getMainCategoriesUseCase,
-    required this.getSubCategoriesUseCase,
-    required this.getMenuItemsUseCase,
-    required this.getCategoryByNameUseCase,
-  });
+  // Favorites
+  Set<String> _favoriteIds = {};
+  Set<String> get favoriteIds => _favoriteIds;
+
+  MenuProvider({required this.getMainCategoriesUseCase, required this.getSubCategoriesUseCase, required this.getMenuItemsUseCase, required this.getCategoryByNameUseCase, required this.getFavoritesUseCase, required this.getFavoriteItemsUseCase, required this.toggleFavoriteUseCase});
+
+  Future<void> loadFavorites() async {
+    loading = true;
+    notifyListeners();
+
+    // 1. Get IDs (for badges)
+    final idsResult = await getFavoritesUseCase(NoParams());
+    idsResult.fold((failure) => debugPrint('Error loading favorite IDs: ${failure.message}'), (ids) {
+      _favoriteIds = ids.toSet();
+    });
+
+    // 2. Get Items (for screen)
+    final itemsResult = await getFavoriteItemsUseCase(NoParams());
+    itemsResult.fold((failure) => error = failure.message, (items) {
+      favoriteItems = items;
+    });
+
+    loading = false;
+    notifyListeners();
+  }
+
+  Future<void> toggleFavorite(String itemId) async {
+    // Optimistic Update
+    final isFav = _favoriteIds.contains(itemId);
+    if (isFav) {
+      _favoriteIds.remove(itemId);
+    } else {
+      _favoriteIds.add(itemId);
+    }
+    notifyListeners();
+
+    final result = await toggleFavoriteUseCase(itemId);
+    result.fold(
+      (failure) {
+        // Revert on failure
+        if (isFav) {
+          _favoriteIds.add(itemId);
+        } else {
+          _favoriteIds.remove(itemId);
+        }
+        notifyListeners();
+        debugPrint('Error toggling favorite: ${failure.message}');
+      },
+      (_) => null, // Success
+    );
+  }
 
   // New method to fetch main categories
   Future<void> loadMainCategories() async {
     if (mainCategories.isNotEmpty) return; // Return cached if available
-    
+
     mainCategoriesLoading = true;
     notifyListeners();
 
@@ -106,7 +158,7 @@ class MenuProvider extends ChangeNotifier {
 
       if (parentId == null) {
         final result = await getCategoryByNameUseCase(GetCategoryByNameParams(mainCategoryName));
-        
+
         await result.fold(
           (failure) async {
             error = failure.message;
@@ -122,15 +174,15 @@ class MenuProvider extends ChangeNotifier {
             parentId = category.id;
             // Save to cache
             _mainIdCache[mainCategoryName] = parentId!;
-          }
+          },
         );
       }
-      
+
       if (parentId == null) return;
 
       // 3. FETCH SUB-CATEGORIES
       final subsResult = await getSubCategoriesUseCase(GetSubCategoriesParams(parentId!));
-      
+
       await subsResult.fold(
         (failure) async {
           error = failure.message;
@@ -144,9 +196,8 @@ class MenuProvider extends ChangeNotifier {
 
           // 4. FETCH ITEMS (Now that we have the IDs)
           await _fetchItems(reset: true);
-        }
+        },
       );
-
     } catch (e) {
       error = e.toString();
       loading = false;
@@ -202,13 +253,7 @@ class MenuProvider extends ChangeNotifier {
         return;
       }
 
-      final result = await getMenuItemsUseCase(GetMenuItemsParams(
-        page: _page, 
-        pageSize: _pageSize, 
-        search: _searchQuery, 
-        categoryId: singleId, 
-        categoryIds: listIds
-      ));
+      final result = await getMenuItemsUseCase(GetMenuItemsParams(page: _page, pageSize: _pageSize, search: _searchQuery, categoryId: singleId, categoryIds: listIds));
 
       result.fold(
         (failure) {
@@ -223,9 +268,8 @@ class MenuProvider extends ChangeNotifier {
 
           hasMore = newItems.length == _pageSize;
           if (hasMore) _page++;
-        }
+        },
       );
-
     } catch (e) {
       error = e.toString();
     } finally {

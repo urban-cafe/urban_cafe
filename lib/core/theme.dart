@@ -18,29 +18,36 @@ class BrandColors extends ThemeExtension<BrandColors> {
 }
 
 class AppTheme {
-  // Richer Coffee Palette
-  static const Color primary = Color(0xFF6F4E37); // Coffee Bean
-  static const Color secondary = Color(0xFFC19A6B); // Latte Art
+  // Richer Coffee Palette (Restored & Enhanced)
+  static const Color primary = Color(0xFF6F4E37); // Classic Coffee Bean
+  static const Color secondary = Color(0xFFC19A6B); // Latte Art / Warm Gold
   static const Color tertiary = Color(0xFF2C3E50); // Dark Slate (Modern contrast)
 
-  static const Color neutralBg = Color(0xFFFDFBF7); // Warm Paper
+  static const Color neutralBg = Color(0xFFFDFBF7); // Warm Paper (Retained as it's better than pure white)
   static const Color surface = Colors.white;
+
+  // Accents (Retained as they are good)
+  static const Color accentGreen = Color(0xFF2E7D32); // Standard Success Green
+  static const Color accentRed = Color(0xFFC62828); // Standard Error Red
 
   static TextTheme _buildTextTheme(TextTheme base) {
     return base.copyWith(
-      displayLarge: GoogleFonts.playfairDisplay(textStyle: base.displayLarge, fontWeight: FontWeight.bold),
-      displayMedium: GoogleFonts.playfairDisplay(textStyle: base.displayMedium, fontWeight: FontWeight.bold),
-      displaySmall: GoogleFonts.playfairDisplay(textStyle: base.displaySmall, fontWeight: FontWeight.w600),
-      headlineLarge: GoogleFonts.playfairDisplay(textStyle: base.headlineLarge, fontWeight: FontWeight.bold),
-      headlineMedium: GoogleFonts.playfairDisplay(textStyle: base.headlineMedium, fontWeight: FontWeight.w600),
-      headlineSmall: GoogleFonts.playfairDisplay(textStyle: base.headlineSmall, fontWeight: FontWeight.w600),
-      titleLarge: GoogleFonts.lato(textStyle: base.titleLarge, fontWeight: FontWeight.bold),
-      titleMedium: GoogleFonts.lato(textStyle: base.titleMedium, fontWeight: FontWeight.bold),
-      titleSmall: GoogleFonts.lato(textStyle: base.titleSmall, fontWeight: FontWeight.bold),
-      bodyLarge: GoogleFonts.lato(textStyle: base.bodyLarge),
-      bodyMedium: GoogleFonts.lato(textStyle: base.bodyMedium),
-      bodySmall: GoogleFonts.lato(textStyle: base.bodySmall),
-      labelLarge: GoogleFonts.lato(textStyle: base.labelLarge, fontWeight: FontWeight.bold),
+      // Fraunces: A "Soft Serif" - warm, premium, distinct (Perfect for Coffee)
+      displayLarge: GoogleFonts.fraunces(textStyle: base.displayLarge, fontWeight: FontWeight.bold),
+      displayMedium: GoogleFonts.fraunces(textStyle: base.displayMedium, fontWeight: FontWeight.bold),
+      displaySmall: GoogleFonts.fraunces(textStyle: base.displaySmall, fontWeight: FontWeight.w600),
+      headlineLarge: GoogleFonts.fraunces(textStyle: base.headlineLarge, fontWeight: FontWeight.bold),
+      headlineMedium: GoogleFonts.fraunces(textStyle: base.headlineMedium, fontWeight: FontWeight.w600),
+      headlineSmall: GoogleFonts.fraunces(textStyle: base.headlineSmall, fontWeight: FontWeight.w600),
+
+      // Urbanist: Modern, geometric but friendly sans-serif
+      titleLarge: GoogleFonts.urbanist(textStyle: base.titleLarge, fontWeight: FontWeight.bold),
+      titleMedium: GoogleFonts.urbanist(textStyle: base.titleMedium, fontWeight: FontWeight.bold),
+      titleSmall: GoogleFonts.urbanist(textStyle: base.titleSmall, fontWeight: FontWeight.bold),
+      bodyLarge: GoogleFonts.urbanist(textStyle: base.bodyLarge),
+      bodyMedium: GoogleFonts.urbanist(textStyle: base.bodyMedium),
+      bodySmall: GoogleFonts.urbanist(textStyle: base.bodySmall),
+      labelLarge: GoogleFonts.urbanist(textStyle: base.labelLarge, fontWeight: FontWeight.bold),
     );
   }
 
@@ -53,14 +60,14 @@ class AppTheme {
         style: FilledButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), // More rounded
-          textStyle: GoogleFonts.lato(fontWeight: FontWeight.bold, fontSize: 16),
+          textStyle: GoogleFonts.urbanist(fontWeight: FontWeight.bold, fontSize: 16),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          textStyle: GoogleFonts.lato(fontWeight: FontWeight.bold, fontSize: 16),
+          textStyle: GoogleFonts.urbanist(fontWeight: FontWeight.bold, fontSize: 16),
           elevation: 2,
         ),
       ),
@@ -68,7 +75,7 @@ class AppTheme {
         style: OutlinedButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          textStyle: GoogleFonts.lato(fontWeight: FontWeight.bold, fontSize: 16),
+          textStyle: GoogleFonts.urbanist(fontWeight: FontWeight.bold, fontSize: 16),
           side: const BorderSide(width: 1.5),
         ),
       ),
@@ -89,8 +96,8 @@ class AppTheme {
           borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: Colors.red, width: 1),
         ),
-        labelStyle: GoogleFonts.lato(color: Colors.grey.shade700),
-        hintStyle: GoogleFonts.lato(color: Colors.grey.shade400),
+        labelStyle: GoogleFonts.urbanist(color: Colors.grey.shade700),
+        hintStyle: GoogleFonts.urbanist(color: Colors.grey.shade400),
       ),
       cardTheme: CardThemeData(
         elevation: 0,
@@ -103,10 +110,10 @@ class AppTheme {
         backgroundColor: neutralBg,
         elevation: 0,
         centerTitle: true,
-        titleTextStyle: GoogleFonts.playfairDisplay(color: const Color(0xFF2C2C2C), fontSize: 22, fontWeight: FontWeight.bold),
+        titleTextStyle: GoogleFonts.fraunces(color: const Color(0xFF2C2C2C), fontSize: 22, fontWeight: FontWeight.bold),
         iconTheme: const IconThemeData(color: Color(0xFF2C2C2C)),
       ),
-      extensions: const <ThemeExtension<dynamic>>[BrandColors(success: Color(0xFF2E7D32), danger: Color(0xFFC62828))],
+      extensions: const <ThemeExtension<dynamic>>[BrandColors(success: accentGreen, danger: accentRed)],
     );
   }
 
@@ -131,7 +138,7 @@ class AppTheme {
         backgroundColor: darkBg,
         elevation: 0,
         centerTitle: true,
-        titleTextStyle: GoogleFonts.playfairDisplay(color: const Color(0xFFEDE3DD), fontSize: 22, fontWeight: FontWeight.bold),
+        titleTextStyle: GoogleFonts.fraunces(color: const Color(0xFFEDE3DD), fontSize: 22, fontWeight: FontWeight.bold),
         iconTheme: const IconThemeData(color: Color(0xFFEDE3DD)),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -147,8 +154,8 @@ class AppTheme {
           borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: secondary, width: 2),
         ),
-        labelStyle: GoogleFonts.lato(color: Colors.grey.shade400),
-        hintStyle: GoogleFonts.lato(color: Colors.grey.shade600),
+        labelStyle: GoogleFonts.urbanist(color: Colors.grey.shade400),
+        hintStyle: GoogleFonts.urbanist(color: Colors.grey.shade600),
       ),
       cardTheme: CardThemeData(
         elevation: 0,
@@ -162,10 +169,10 @@ class AppTheme {
           foregroundColor: const Color(0xFF2C2C2C),
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          textStyle: GoogleFonts.lato(fontWeight: FontWeight.bold, fontSize: 16),
+          textStyle: GoogleFonts.urbanist(fontWeight: FontWeight.bold, fontSize: 16),
         ),
       ),
-      extensions: const <ThemeExtension<dynamic>>[BrandColors(success: Color(0xFF81C784), danger: Color(0xFFE57373))],
+      extensions: const <ThemeExtension<dynamic>>[BrandColors(success: accentGreen, danger: accentRed)],
     );
   }
 }

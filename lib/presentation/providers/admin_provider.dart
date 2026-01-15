@@ -3,14 +3,43 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:urban_cafe/core/env.dart';
+import 'package:urban_cafe/core/usecases/usecase.dart';
 import 'package:urban_cafe/data/datasources/supabase_client.dart';
 import 'package:urban_cafe/data/repositories/menu_repository_impl.dart';
+import 'package:urban_cafe/domain/usecases/orders/get_admin_analytics.dart';
 
 class AdminProvider extends ChangeNotifier {
   final _repo = MenuRepositoryImpl();
+  final GetAdminAnalytics? getAdminAnalyticsUseCase; // Optional for now
+
+  AdminProvider({this.getAdminAnalyticsUseCase});
 
   bool loading = false;
   String? error;
+  
+  // Analytics State
+  Map<String, dynamic>? analytics;
+
+  Future<void> loadAnalytics() async {
+    if (getAdminAnalyticsUseCase == null) return;
+    
+    loading = true;
+    notifyListeners();
+
+    final result = await getAdminAnalyticsUseCase!(NoParams());
+    result.fold(
+      (failure) {
+        error = failure.message;
+        loading = false;
+        notifyListeners();
+      },
+      (data) {
+        analytics = data;
+        loading = false;
+        notifyListeners();
+      },
+    );
+  }
 
   Future<PlatformFile?> pickImage() async {
     final result = await FilePicker.platform.pickFiles(type: FileType.image, withData: true);

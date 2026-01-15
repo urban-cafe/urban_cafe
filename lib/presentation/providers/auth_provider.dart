@@ -1,9 +1,12 @@
 import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:urban_cafe/core/env.dart';
 import 'package:urban_cafe/core/usecases/usecase.dart';
 import 'package:urban_cafe/data/datasources/supabase_client.dart';
+import 'package:urban_cafe/domain/entities/user_profile.dart';
 import 'package:urban_cafe/domain/entities/user_role.dart';
 import 'package:urban_cafe/domain/usecases/auth/get_current_user_role_usecase.dart';
+import 'package:urban_cafe/domain/usecases/auth/get_user_profile_usecase.dart';
 import 'package:urban_cafe/domain/usecases/auth/sign_in_usecase.dart';
 import 'package:urban_cafe/domain/usecases/auth/sign_in_with_google_usecase.dart';
 import 'package:urban_cafe/domain/usecases/auth/sign_out_usecase.dart';
@@ -12,47 +15,56 @@ class AuthProvider extends ChangeNotifier {
   final SignInUseCase signInUseCase;
   final SignOutUseCase signOutUseCase;
   final GetCurrentUserRoleUseCase getCurrentUserRoleUseCase;
+  final GetUserProfileUseCase getUserProfileUseCase;
   final SignInWithGoogleUseCase signInWithGoogleUseCase;
 
   bool loading = false;
   String? error;
   UserRole? _role;
+  UserProfile? _profile;
 
   bool get isConfigured => Env.isConfigured;
   bool get isLoggedIn => Env.isConfigured && SupabaseClientProvider.client.auth.currentUser != null;
   String? get currentUserEmail => SupabaseClientProvider.client.auth.currentUser?.email;
+  // Add getter for current user
+  User? get currentUser => SupabaseClientProvider.client.auth.currentUser;
 
   UserRole get role => _role ?? UserRole.client;
+  UserProfile? get profile => _profile;
+  int get loyaltyPoints => _profile?.loyaltyPoints ?? 0;
   bool get isAdmin => role == UserRole.admin;
   bool get isStaff => role == UserRole.staff;
   bool get isClient => role == UserRole.client;
 
-  AuthProvider({
-    required this.signInUseCase,
-    required this.signOutUseCase,
-    required this.getCurrentUserRoleUseCase,
-    required this.signInWithGoogleUseCase,
-  }) {
+  AuthProvider({required this.signInUseCase, required this.signOutUseCase, required this.getCurrentUserRoleUseCase, required this.getUserProfileUseCase, required this.signInWithGoogleUseCase}) {
     _loadUserRole();
   }
 
   Future<void> _loadUserRole() async {
     if (!isLoggedIn) {
       _role = null;
+      _profile = null;
       return;
     }
 
-    final result = await getCurrentUserRoleUseCase(NoParams());
-    result.fold(
+    // Load Profile
+    final profileResult = await getUserProfileUseCase(NoParams());
+    profileResult.fold(
       (failure) {
-        debugPrint('Error loading user role: ${failure.message}');
+        debugPrint('Error loading user profile: ${failure.message}');
         _role = UserRole.client;
+        _profile = null;
       },
-      (role) {
-        _role = role;
+      (profile) {
+        _profile = profile;
+        _role = profile.role;
         notifyListeners();
       },
     );
+  }
+
+  Future<void> refreshProfile() async {
+    await _loadUserRole();
   }
 
   Future<bool> signIn(String email, String password) async {
@@ -60,9 +72,9 @@ class AuthProvider extends ChangeNotifier {
     loading = true;
     error = null;
     notifyListeners();
-    
+
     final result = await signInUseCase(SignInParams(email: email, password: password));
-    
+
     return result.fold(
       (failure) {
         error = failure.message;
@@ -98,7 +110,7 @@ class AuthProvider extends ChangeNotifier {
         // After Google Sign In, we might need to fetch role separately if redirect happens immediately
         // But if we are here, we are back in the app.
         // We should trigger load role just in case.
-        _loadUserRole(); 
+        _loadUserRole();
         loading = false;
         notifyListeners();
         return success;

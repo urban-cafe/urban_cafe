@@ -185,72 +185,76 @@ class _AdminCategoryManagerScreenState extends State<AdminCategoryManagerScreen>
                           child: Theme(
                             data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
                             child: ExpansionTile(
-                              tilePadding: const EdgeInsets.only(left: 16, right: 8),
+                              tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                               leading: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(color: colorScheme.primaryContainer, borderRadius: BorderRadius.circular(8)),
-                                child: Icon(Icons.category, color: colorScheme.onPrimaryContainer),
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(color: colorScheme.primaryContainer, borderRadius: BorderRadius.circular(12)),
+                                child: Icon(Icons.folder_outlined, color: colorScheme.onPrimaryContainer),
                               ),
-                              title: Text(main['name'], style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                              title: Text(main['name'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                              subtitle: Text('${subs.length} sub-categories', style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12)),
+                              // Custom Trailing for Main Category
                               trailing: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  IconButton(icon: const Icon(Icons.edit, size: 20), onPressed: isLoading ? null : () => _showRenameDialog(main['id'], main['name'])),
                                   IconButton(
-                                    icon: Icon(Icons.delete, size: 20, color: colorScheme.error),
+                                    icon: const Icon(Icons.edit_outlined),
+                                    onPressed: isLoading ? null : () => _showRenameDialog(main['id'], main['name']),
+                                  ),
+                                  IconButton(
+                                    icon: Icon(Icons.delete_outline, color: colorScheme.error),
                                     onPressed: isLoading ? null : () => _confirmDelete(main['id'], main['name']),
                                   ),
-                                  const Icon(Icons.keyboard_arrow_down),
+                                  const SizedBox(width: 8),
+                                  const Icon(Icons.expand_more),
                                 ],
                               ),
                               children: [
-                                Container(
-                                  decoration: BoxDecoration(
-                                    color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                                    border: Border(left: BorderSide(color: colorScheme.primary.withValues(alpha: 0.5), width: 4)),
-                                  ),
-                                  child: ListTile(
-                                    contentPadding: const EdgeInsets.only(left: 48, right: 16),
-                                    leading: Icon(Icons.add_circle_outline, color: colorScheme.primary, size: 20),
-                                    title: Text(
-                                      "Add Sub-Category",
-                                      style: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.w600),
-                                    ),
-                                    onTap: isLoading ? null : () => _triggerCreate(parentId: main['id']),
-                                  ),
-                                ),
-
-                                if (subs.isEmpty)
-                                  Padding(
-                                    padding: const EdgeInsets.all(16.0),
-                                    child: Center(
-                                      child: Text("No sub-categories", style: TextStyle(color: colorScheme.outline)),
-                                    ),
-                                  ),
-
+                                const Divider(height: 1),
+                                // Sub-categories List
                                 ...subs.map(
-                                  (sub) => Column(
-                                    children: [
-                                      const Divider(height: 1, indent: 16, endIndent: 16),
-                                      ListTile(
-                                        contentPadding: const EdgeInsets.only(left: 32, right: 16),
-                                        title: Text(sub['name']),
-                                        leading: const Icon(Icons.subdirectory_arrow_right, size: 18, color: Colors.grey),
-                                        trailing: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            IconButton(icon: const Icon(Icons.edit, size: 18), onPressed: isLoading ? null : () => _showRenameDialog(sub['id'], sub['name'])),
-                                            IconButton(
-                                              icon: Icon(Icons.delete_outline, size: 18, color: colorScheme.error),
-                                              onPressed: isLoading ? null : () => _confirmDelete(sub['id'], sub['name']),
-                                            ),
-                                          ],
-                                        ),
+                                  (sub) => Container(
+                                    color: colorScheme.surfaceContainerLow.withValues(alpha: 0.5),
+                                    child: ListTile(
+                                      contentPadding: const EdgeInsets.only(left: 72, right: 16),
+                                      title: Text(sub['name'], style: const TextStyle(fontWeight: FontWeight.w500)),
+                                      leading: const Icon(Icons.subdirectory_arrow_right, size: 20, color: Colors.grey),
+                                      trailing: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          IconButton(icon: const Icon(Icons.edit_outlined, size: 20), tooltip: 'Rename', onPressed: isLoading ? null : () => _showRenameDialog(sub['id'], sub['name'])),
+                                          IconButton(
+                                            icon: Icon(Icons.delete_outline, size: 20, color: colorScheme.error),
+                                            tooltip: 'Delete',
+                                            onPressed: isLoading ? null : () => _confirmDelete(sub['id'], sub['name']),
+                                          ),
+                                        ],
                                       ),
-                                    ],
+                                    ),
                                   ),
                                 ),
-                                const SizedBox(height: 8),
+
+                                // Add Sub-Category Button
+                                InkWell(
+                                  onTap: isLoading ? null : () => _triggerCreate(parentId: main['id']),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                                    color: colorScheme.primaryContainer.withValues(alpha: 0.1),
+                                    child: Row(
+                                      children: [
+                                        const SizedBox(width: 56), // Align with sub-cat text
+                                        Icon(Icons.add_circle_outline, size: 20, color: colorScheme.primary),
+                                        const SizedBox(width: 12),
+                                        Text(
+                                          "Add Sub-Category",
+                                          style: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.bold),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
                               ],
                             ),
                           ),

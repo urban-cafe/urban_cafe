@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:urban_cafe/domain/entities/menu_item.dart';
 import 'package:urban_cafe/presentation/providers/cart_provider.dart';
+import 'package:urban_cafe/presentation/providers/menu_provider.dart';
 import 'package:urban_cafe/presentation/widgets/menu_item_badges.dart';
 
 class MenuDetailScreen extends StatefulWidget {
@@ -18,6 +19,20 @@ class MenuDetailScreen extends StatefulWidget {
 class _MenuDetailScreenState extends State<MenuDetailScreen> {
   final ValueNotifier<int> _quantity = ValueNotifier(1);
   final TextEditingController _notesController = TextEditingController();
+
+  // Customization State
+  MenuItemVariant? _selectedVariant;
+  final Set<MenuItemAddon> _selectedAddons = {};
+
+  @override
+  void initState() {
+    super.initState();
+    // Select default variant if available
+    if (widget.item.variants.isNotEmpty) {
+      final defaultVar = widget.item.variants.where((v) => v.isDefault).firstOrNull;
+      _selectedVariant = defaultVar ?? widget.item.variants.first;
+    }
+  }
 
   @override
   void dispose() {
@@ -36,9 +51,36 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
     }
   }
 
+  void _toggleAddon(MenuItemAddon addon) {
+    setState(() {
+      if (_selectedAddons.contains(addon)) {
+        _selectedAddons.remove(addon);
+      } else {
+        _selectedAddons.add(addon);
+      }
+    });
+  }
+
+  void _selectVariant(MenuItemVariant variant) {
+    setState(() {
+      _selectedVariant = variant;
+    });
+  }
+
+  double get _currentUnitPrice {
+    double price = widget.item.price;
+    if (_selectedVariant != null) {
+      price += _selectedVariant!.priceAdjustment;
+    }
+    for (var addon in _selectedAddons) {
+      price += addon.price;
+    }
+    return price;
+  }
+
   void _addToCart() {
     final cart = context.read<CartProvider>();
-    cart.addToCart(widget.item, quantity: _quantity.value, notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim());
+    cart.addToCart(widget.item, quantity: _quantity.value, notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(), selectedVariant: _selectedVariant, selectedAddons: _selectedAddons.toList());
 
     if (!mounted) return;
 
@@ -67,6 +109,8 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final priceFormat = NumberFormat.currency(symbol: '', decimalDigits: 0);
+    final menuProvider = context.watch<MenuProvider>();
+    final isFavorite = menuProvider.favoriteIds.contains(widget.item.id);
 
     return Scaffold(
       backgroundColor: cs.surface,
@@ -89,6 +133,16 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
                     onPressed: () => context.pop(),
                   ),
                 ),
+                actions: [
+                  Container(
+                    margin: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(color: cs.surface.withValues(alpha: 0.8), shape: BoxShape.circle),
+                    child: IconButton(
+                      icon: Icon(isFavorite ? Icons.favorite : Icons.favorite_border, color: isFavorite ? Colors.red : cs.onSurface),
+                      onPressed: () => menuProvider.toggleFavorite(widget.item.id),
+                    ),
+                  ),
+                ],
                 flexibleSpace: FlexibleSpaceBar(
                   stretchModes: const [StretchMode.zoomBackground],
                   background: widget.item.imageUrl == null
@@ -171,6 +225,55 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
 
                         const SizedBox(height: 32),
 
+                        // CUSTOMIZATION
+                        if (widget.item.variants.isNotEmpty) ...[
+                          const SizedBox(height: 24),
+                          Text('Size', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 12),
+                          Wrap(
+                            spacing: 12,
+                            runSpacing: 12,
+                            children: widget.item.variants.map((variant) {
+                              final isSelected = _selectedVariant?.id == variant.id;
+                              return FilterChip(
+                                label: Text('${variant.name} ${variant.priceAdjustment > 0 ? "+${priceFormat.format(variant.priceAdjustment)}" : ""}'),
+                                selected: isSelected,
+                                onSelected: (selected) {
+                                  if (selected) _selectVariant(variant);
+                                },
+                                showCheckmark: false,
+                                selectedColor: cs.primaryContainer,
+                                checkmarkColor: cs.onPrimaryContainer,
+                              );
+                            }).toList(),
+                          ),
+                        ],
+
+                        if (widget.item.addons.isNotEmpty) ...[
+                          const SizedBox(height: 24),
+                          Text('Add-ons', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 12),
+                          Column(
+                            children: widget.item.addons.map((addon) {
+                              final isSelected = _selectedAddons.contains(addon);
+                              return CheckboxListTile(
+                                value: isSelected,
+                                onChanged: (val) => _toggleAddon(addon),
+                                title: Text(addon.name),
+                                secondary: Text(
+                                  '+${priceFormat.format(addon.price)}',
+                                  style: theme.textTheme.bodyMedium?.copyWith(color: cs.primary, fontWeight: FontWeight.bold),
+                                ),
+                                contentPadding: EdgeInsets.zero,
+                                controlAffinity: ListTileControlAffinity.leading,
+                                activeColor: cs.primary,
+                              );
+                            }).toList(),
+                          ),
+                        ],
+
+                        const SizedBox(height: 32),
+
                         // QUANTITY & NOTES
                         if (widget.item.isAvailable) ...[
                           Row(
@@ -249,8 +352,12 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
                             ValueListenableBuilder<int>(
                               valueListenable: _quantity,
                               builder: (context, qty, child) {
+                                // Force rebuild when customization changes (using setState in parent)
+                                // Actually ValueListenableBuilder only rebuilds on value change.
+                                // We need to wrap this in a builder that listens to state changes or just use setState.
+                                // Since we call setState in _selectVariant/_toggleAddon, the whole build runs.
                                 return Text(
-                                  priceFormat.format(widget.item.price * qty),
+                                  priceFormat.format(_currentUnitPrice * qty),
                                   style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: cs.primary),
                                 );
                               },

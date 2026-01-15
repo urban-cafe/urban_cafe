@@ -16,19 +16,34 @@ class OrderRepositoryImpl implements OrderRepository {
   SupabaseClient get _client => SupabaseClientProvider.client;
 
   @override
-  Future<Either<Failure, String>> createOrder({required List<CartItem> items, required double totalAmount, required OrderType type}) async {
+  Future<Either<Failure, String>> createOrder({required List<CartItem> items, required double totalAmount, required OrderType type, int pointsRedeemed = 0}) async {
     if (!Env.isConfigured) return const Left(AuthFailure('Supabase not configured'));
     final user = _client.auth.currentUser;
     if (user == null) return const Left(AuthFailure('User not logged in'));
 
     try {
       // 1. Create Order Record
-      final orderRes = await _client.from(table).insert({'user_id': user.id, 'total_amount': totalAmount, 'status': OrderStatus.pending.name, 'type': type.name}).select('id').single();
+      final orderRes = await _client.from(table).insert({'user_id': user.id, 'total_amount': totalAmount, 'status': OrderStatus.pending.name, 'type': type.name, 'points_redeemed': pointsRedeemed}).select('id').single();
 
       final orderId = orderRes['id'] as String;
 
       // 2. Create Order Items
-      final itemsData = items.map((item) => {'order_id': orderId, 'menu_item_id': item.menuItem.id, 'quantity': item.quantity, 'price_at_order': item.menuItem.price, 'notes': item.notes}).toList();
+      final itemsData = items.map((item) {
+        // Prepare customization data (JSONB)
+        final customization = {
+          'variant': item.selectedVariant != null ? {'id': item.selectedVariant!.id, 'name': item.selectedVariant!.name, 'price_adjustment': item.selectedVariant!.priceAdjustment} : null,
+          'addons': item.selectedAddons.map((addon) => {'id': addon.id, 'name': addon.name, 'price': addon.price}).toList(),
+        };
+
+        return {
+          'order_id': orderId,
+          'menu_item_id': item.menuItem.id,
+          'quantity': item.quantity,
+          'price_at_order': item.unitPrice, // Use unit price which includes adjustments
+          'notes': item.notes,
+          'customization': customization, // Assuming we add this JSONB column
+        };
+      }).toList();
 
       await _client.from(itemsTable).insert(itemsData);
 
@@ -39,34 +54,47 @@ class OrderRepositoryImpl implements OrderRepository {
   }
 
   @override
-  Stream<List<OrderEntity>> getOrdersStream() {
-    return _client.from(table).stream(primaryKey: ['id']).order('created_at', ascending: false).asyncMap((data) async {
+  Stream<List<OrderEntity>> getOrdersStream({String? userId}) {
+    // Listen to changes in the 'orders' table
+    var builder = _client.from(table).stream(primaryKey: ['id']);
+
+    // Note: Supabase stream filters are limited.
+    // eq filter MUST be applied BEFORE order/limit etc in newer SDKs, but for stream() it works differently.
+    // Actually, the `eq` method is available on `SupabaseStreamFilterBuilder` which is returned by `stream()`.
+    // However, chaining order() returns `SupabaseStreamBuilder` which might not have `eq`.
+    // We should apply filters first.
+
+    SupabaseStreamBuilder query;
+    if (userId != null) {
+      query = builder.eq('user_id', userId).order('created_at', ascending: false);
+    } else {
+      query = builder.order('created_at', ascending: false);
+    }
+
+    return query.asyncMap((data) async {
       // Supabase Stream only returns the main table data.
-      // We need to fetch items manually or join if possible.
-      // Note: .stream() doesn't support joins yet in most SDKs efficiently.
-      // For now, we will fetch full details for the changed IDs or just re-fetch all active orders.
-      // A better approach for scalability is to listen to changes and then trigger a fetch.
-      // However, for this demo, let's just map what we have and maybe fetch items for displayed orders.
+      // We need to fetch items manually to get full details (items, customizations).
 
-      // Actually, let's try to just return the stream and handle fetching details in the UI/Provider
-      // or do a quick fetch for details.
-      // Since we need to show items in the list, we really need the joins.
+      if (data.isEmpty) return [];
 
-      // Workaround: Return the list from stream, but we might miss items.
-      // Better Workaround: Use the stream to trigger a re-fetch in the Provider.
-      // But here we need to return Stream<List<OrderEntity>>.
+      final orderIds = data.map((e) => e['id'] as String).toList();
 
-      // Let's iterate and fetch items (N+1 problem, but okay for small scale).
-      final orders = <OrderEntity>[];
-      for (final map in data) {
+      // Fetch items for these orders
+      final itemsRes = await _client.from(itemsTable).select('*, menu_items(*)').inFilter('order_id', orderIds);
+
+      final itemsList = itemsRes as List<dynamic>;
+
+      // Map orders with their items
+      final orders = data.map((map) {
         final orderId = map['id'] as String;
-        final itemsRes = await _client.from(itemsTable).select('*, menu_items(*)').eq('order_id', orderId);
+        final orderItems = itemsList.where((item) => item['order_id'] == orderId).toList();
 
         final fullMap = Map<String, dynamic>.from(map);
-        fullMap['order_items'] = itemsRes;
+        fullMap['order_items'] = orderItems;
 
-        orders.add(OrderDto.fromMap(fullMap).toEntity());
-      }
+        return OrderDto.fromMap(fullMap).toEntity();
+      }).toList();
+
       return orders;
     });
   }
@@ -123,6 +151,17 @@ class OrderRepositoryImpl implements OrderRepository {
       return const Right(null);
     } catch (e) {
       // If column doesn't exist, this will fail.
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> getAdminAnalytics() async {
+    if (!Env.isConfigured) return const Left(AuthFailure('Supabase not configured'));
+    try {
+      final res = await _client.rpc('get_admin_analytics');
+      return Right(res as Map<String, dynamic>);
+    } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
   }

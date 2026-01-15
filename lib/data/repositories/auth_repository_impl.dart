@@ -30,6 +30,22 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Either<Failure, UserProfile>> getUserProfile() async {
+    try {
+      if (supabaseClient.auth.currentUser == null) {
+        return const Left(AuthFailure('User not logged in'));
+      }
+
+      final userId = supabaseClient.auth.currentUser!.id;
+      final response = await supabaseClient.from('profiles').select().eq('id', userId).single();
+      final profile = UserProfile.fromJson(response);
+      return Right(profile);
+    } catch (e) {
+      return Left(AuthFailure(e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, bool>> isSignedIn() async {
     return Right(supabaseClient.auth.currentUser != null);
   }

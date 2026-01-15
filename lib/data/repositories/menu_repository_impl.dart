@@ -19,8 +19,8 @@ class MenuRepositoryImpl implements MenuRepository {
     if (!Env.isConfigured) return const Left(AuthFailure('Supabase not configured'));
 
     try {
-      // JOIN categories to get the name for display
-      var query = _client.from(table).select('*, categories(name)');
+      // JOIN categories, variants, and addons
+      var query = _client.from(table).select('*, categories(name), menu_item_variants(*), menu_item_addons(*)');
 
       if (search != null && search.trim().isNotEmpty) {
         query = query.ilike('name', '%$search%');
@@ -159,6 +159,67 @@ class MenuRepositoryImpl implements MenuRepository {
     if (!Env.isConfigured) return const Left(AuthFailure('Supabase not configured'));
     try {
       await _client.from(table).delete().eq('id', id);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<String>>> getFavorites() async {
+    if (!Env.isConfigured) return const Left(AuthFailure('Supabase not configured'));
+    try {
+      final user = _client.auth.currentUser;
+      if (user == null) return const Left(AuthFailure('User not logged in'));
+
+      final data = await _client.from('favorites').select('menu_item_id').eq('user_id', user.id);
+      final ids = (data as List<dynamic>).map((e) => e['menu_item_id'] as String).toList();
+      return Right(ids);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<MenuItemEntity>>> getFavoriteItems() async {
+    if (!Env.isConfigured) return const Left(AuthFailure('Supabase not configured'));
+    try {
+      final user = _client.auth.currentUser;
+      if (user == null) return const Left(AuthFailure('User not logged in'));
+
+      // 1. Get IDs
+      final favRes = await _client.from('favorites').select('menu_item_id').eq('user_id', user.id);
+      final ids = (favRes as List<dynamic>).map((e) => e['menu_item_id'] as String).toList();
+
+      if (ids.isEmpty) return const Right([]);
+
+      // 2. Fetch Items with customizations
+      final itemsRes = await _client.from(table).select('*, categories(name), menu_item_variants(*), menu_item_addons(*)').inFilter('id', ids).order('name', ascending: true);
+
+      final items = (itemsRes as List<dynamic>).map((e) => MenuItemDto.fromMap(e as Map<String, dynamic>).toEntity()).toList();
+      return Right(items);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> toggleFavorite(String menuItemId) async {
+    if (!Env.isConfigured) return const Left(AuthFailure('Supabase not configured'));
+    try {
+      final user = _client.auth.currentUser;
+      if (user == null) return const Left(AuthFailure('User not logged in'));
+
+      // Check if exists
+      final exists = await _client.from('favorites').select().eq('user_id', user.id).eq('menu_item_id', menuItemId).maybeSingle();
+
+      if (exists != null) {
+        // Remove
+        await _client.from('favorites').delete().eq('id', exists['id']);
+      } else {
+        // Add
+        await _client.from('favorites').insert({'user_id': user.id, 'menu_item_id': menuItemId});
+      }
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));

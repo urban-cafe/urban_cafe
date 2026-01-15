@@ -58,34 +58,6 @@ class _AdminListScreenState extends State<AdminListScreen> {
   }
   // -------------------------------
 
-  Future<void> _handleLogout() async {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Log out'),
-        content: const Text('Are you sure you want to log out?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          TextButton(
-            style: TextButton.styleFrom(foregroundColor: colorScheme.error),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Log out'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true && mounted) {
-      final auth = context.read<AuthProvider>();
-      await auth.signOut();
-      if (!mounted) return;
-      context.go('/admin/login');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -105,13 +77,6 @@ class _AdminListScreenState extends State<AdminListScreen> {
             'Admin Dashboard',
             style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, letterSpacing: 0.5, color: colorScheme.onSurface),
           ),
-          // Actions
-          actions: [
-            IconButton(icon: const Icon(Icons.receipt_long_outlined), tooltip: 'Order Management', onPressed: () => context.push('/admin/orders')),
-            IconButton(icon: const Icon(Icons.kitchen_outlined), tooltip: 'Kitchen Display', onPressed: () => context.push('/staff')),
-            IconButton(icon: const Icon(Icons.category_outlined), tooltip: 'Manage Categories', onPressed: () => context.push('/admin/categories')),
-            IconButton(icon: const Icon(Icons.logout_outlined), tooltip: 'Log out', onPressed: _handleLogout),
-          ],
         ),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: () async {

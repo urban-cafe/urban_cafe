@@ -1,5 +1,8 @@
 {
+  "welcome_back": "Welcome",
+  "sign_in_subtitle": "Sign in to continue",
   "profile": "Profile",
+  "add_to_cart": "Add to Cart",
   "sign_out": "Sign Out",
   "recent_orders": "Recent Orders",
   "view_all": "View All",
