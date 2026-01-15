@@ -55,46 +55,58 @@ class AdminProvider extends ChangeNotifier {
   Future<String?> addCategory(String name, {String? parentId}) async {
     loading = true;
     notifyListeners();
-    try {
-      final id = await _repo.createCategory(name, parentId: parentId);
-      return id;
-    } catch (e) {
-      error = e.toString();
-      return null;
-    } finally {
-      loading = false;
-      notifyListeners();
-    }
+    final result = await _repo.createCategory(name, parentId: parentId);
+    return result.fold(
+      (failure) {
+        error = failure.message;
+        loading = false;
+        notifyListeners();
+        return null;
+      },
+      (id) {
+        loading = false;
+        notifyListeners();
+        return id;
+      }
+    );
   }
 
   Future<bool> renameCategory(String id, String newName) async {
     loading = true;
     notifyListeners();
-    try {
-      await _repo.updateCategory(id, newName);
-      return true;
-    } catch (e) {
-      error = e.toString();
-      return false;
-    } finally {
-      loading = false;
-      notifyListeners();
-    }
+    final result = await _repo.updateCategory(id, newName);
+    return result.fold(
+      (failure) {
+        error = failure.message;
+        loading = false;
+        notifyListeners();
+        return false;
+      },
+      (_) {
+        loading = false;
+        notifyListeners();
+        return true;
+      }
+    );
   }
 
   Future<bool> deleteCategory(String id) async {
     loading = true;
     notifyListeners();
-    try {
-      await _repo.deleteCategory(id);
-      return true;
-    } catch (e) {
-      error = e.toString();
-      return false;
-    } finally {
-      loading = false;
-      notifyListeners();
-    }
+    final result = await _repo.deleteCategory(id);
+    return result.fold(
+      (failure) {
+        error = failure.message;
+        loading = false;
+        notifyListeners();
+        return false;
+      },
+      (_) {
+        loading = false;
+        notifyListeners();
+        return true;
+      }
+    );
   }
 
   Future<bool> create({required String name, String? description, required double price, String? categoryId, bool isAvailable = true, bool isMostPopular = false, bool isWeekendSpecial = false, PlatformFile? imageFile}) async {
@@ -110,8 +122,15 @@ class AdminProvider extends ChangeNotifier {
           imageUrl = up.$2;
         }
       }
-      await _repo.createMenuItem(name: name, description: description, price: price, categoryId: categoryId, isAvailable: isAvailable, isMostPopular: isMostPopular, isWeekendSpecial: isWeekendSpecial, imagePath: imagePath, imageUrl: imageUrl);
-      return true;
+      final result = await _repo.createMenuItem(name: name, description: description, price: price, categoryId: categoryId, isAvailable: isAvailable, isMostPopular: isMostPopular, isWeekendSpecial: isWeekendSpecial, imagePath: imagePath, imageUrl: imageUrl);
+      
+      return result.fold(
+        (failure) {
+          error = failure.message;
+          return false;
+        },
+        (_) => true
+      );
     } catch (e) {
       error = e.toString();
       return false;
@@ -135,8 +154,15 @@ class AdminProvider extends ChangeNotifier {
           imageUrl = up.$2;
         }
       }
-      await _repo.updateMenuItem(id: id, name: name, description: description, price: price, categoryId: categoryId, isAvailable: isAvailable, isMostPopular: isMostPopular, isWeekendSpecial: isWeekendSpecial, imagePath: imagePath, imageUrl: imageUrl);
-      return true;
+      final result = await _repo.updateMenuItem(id: id, name: name, description: description, price: price, categoryId: categoryId, isAvailable: isAvailable, isMostPopular: isMostPopular, isWeekendSpecial: isWeekendSpecial, imagePath: imagePath, imageUrl: imageUrl);
+      
+      return result.fold(
+        (failure) {
+          error = failure.message;
+          return false;
+        },
+        (_) => true
+      );
     } catch (e) {
       error = e.toString();
       return false;
@@ -151,8 +177,14 @@ class AdminProvider extends ChangeNotifier {
     loading = true;
     notifyListeners();
     try {
-      await _repo.deleteMenuItem(id);
-      return true;
+      final result = await _repo.deleteMenuItem(id);
+      return result.fold(
+        (failure) {
+          error = failure.message;
+          return false;
+        },
+        (_) => true
+      );
     } catch (e) {
       error = e.toString();
       return false;

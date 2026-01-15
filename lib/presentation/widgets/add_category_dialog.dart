@@ -29,57 +29,75 @@ Future<String?> showAddCategoryDialog(BuildContext context, {String? parentId}) 
         ),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 600),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Header
-              Text(
-                isMain ? 'New Main Category' : 'New Sub Category',
-                style: Theme.of(ctx).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-
-              // Form
-              Form(
-                key: formKey,
-                child: TextFormField(
-                  controller: ctrl,
-                  autofocus: true,
-                  textCapitalization: TextCapitalization.words,
-                  decoration: const InputDecoration(
-                    labelText: 'Name',
-                    border: OutlineInputBorder(),
-                    // Clean content padding
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                  ),
-                  validator: (value) => AppValidators.required(value, 'Name'),
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Actions
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+          child: Consumer<AdminProvider>(
+            builder: (context, admin, child) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  TextButton(onPressed: () => Navigator.pop(ctx, null), child: const Text('Cancel')),
-                  const SizedBox(width: 16),
-                  FilledButton(
-                    onPressed: () async {
-                      if (!formKey.currentState!.validate()) return;
+                  // Header
+                  Text(
+                    isMain ? 'New Main Category' : 'New Sub Category',
+                    style: Theme.of(ctx).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
 
-                      final id = await ctx.read<AdminProvider>().addCategory(ctrl.text.trim(), parentId: parentId);
+                  // Form
+                  Form(
+                    key: formKey,
+                    child: TextFormField(
+                      controller: ctrl,
+                      autofocus: true,
+                      textCapitalization: TextCapitalization.words,
+                      enabled: !admin.loading, // Disable input while loading
+                      decoration: const InputDecoration(
+                        labelText: 'Name',
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      ),
+                      validator: (value) => AppValidators.required(value, 'Name'),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
 
-                      if (ctx.mounted) {
-                        Navigator.pop(ctx, id);
-                      }
-                    },
-                    child: const Text('Create'),
+                  if (admin.error != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16.0),
+                      child: Text(admin.error!, style: TextStyle(color: Theme.of(ctx).colorScheme.error)),
+                    ),
+
+                  // Actions
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: admin.loading ? null : () => Navigator.pop(ctx, null),
+                        child: const Text('Cancel'),
+                      ),
+                      const SizedBox(width: 16),
+                      FilledButton(
+                        onPressed: admin.loading
+                            ? null
+                            : () async {
+                                if (!formKey.currentState!.validate()) return;
+
+                                // We use the provider from the Consumer
+                                final id = await admin.addCategory(ctrl.text.trim(), parentId: parentId);
+
+                                if (ctx.mounted && id != null) {
+                                  Navigator.pop(ctx, id);
+                                }
+                              },
+                        child: admin.loading
+                            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                            : const Text('Create'),
+                      ),
+                    ],
                   ),
                 ],
-              ),
-            ],
+              );
+            },
           ),
         ),
       );

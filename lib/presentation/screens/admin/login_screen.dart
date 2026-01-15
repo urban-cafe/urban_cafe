@@ -1,8 +1,9 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:urban_cafe/core/utils.dart';
-import 'package:urban_cafe/core/validators.dart'; // Import Global Validators
+import 'package:urban_cafe/core/validators.dart';
 import 'package:urban_cafe/presentation/providers/auth_provider.dart';
 
 class AdminLoginScreen extends StatefulWidget {
@@ -38,7 +39,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Admin Login'),
+          title: Text('admin_login'.tr()),
           leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.go('/')),
         ),
         body: Center(
@@ -75,7 +76,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                     // 3. Use TextFormField with Email Validator
                     TextFormField(
                       controller: _emailCtrl,
-                      decoration: const InputDecoration(labelText: 'Email', border: OutlineInputBorder(), prefixIcon: Icon(Icons.email_outlined)),
+                      decoration: InputDecoration(labelText: 'email'.tr(), border: const OutlineInputBorder(), prefixIcon: const Icon(Icons.email_outlined)),
                       keyboardType: TextInputType.emailAddress,
                       validator: AppValidators.email, // Validates format and emptiness
                     ),
@@ -84,9 +85,9 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                     // 4. Use TextFormField with Password Validator
                     TextFormField(
                       controller: _passCtrl,
-                      decoration: const InputDecoration(labelText: 'Password', border: OutlineInputBorder(), prefixIcon: Icon(Icons.lock_outline)),
+                      decoration: InputDecoration(labelText: 'password'.tr(), border: const OutlineInputBorder(), prefixIcon: const Icon(Icons.lock_outline)),
                       obscureText: true,
-                      validator: (v) => AppValidators.required(v, 'Password'), // Ensures not empty
+                      validator: (v) => AppValidators.required(v, 'password'.tr()), // Ensures not empty
                     ),
                     const SizedBox(height: 24),
 
@@ -112,7 +113,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                                   showAppSnackBar(context, 'Invalid Email or Password', isError: true);
                                 }
                               },
-                        child: auth.loading ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) : const Text('Sign In'),
+                        child: auth.loading ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) : Text('sign_in'.tr()),
                       ),
                     ),
                   ],

@@ -8,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:urban_cafe/core/utils.dart';
 import 'package:urban_cafe/core/validators.dart';
 import 'package:urban_cafe/data/repositories/menu_repository_impl.dart';
+import 'package:urban_cafe/domain/entities/category.dart';
 import 'package:urban_cafe/domain/entities/menu_item.dart';
 import 'package:urban_cafe/presentation/providers/admin_provider.dart';
 import 'package:urban_cafe/presentation/widgets/add_category_dialog.dart';
@@ -34,8 +35,8 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
   bool _isWeekendSpecial = false;
   PlatformFile? _imageFile;
 
-  List<Map<String, dynamic>> _mainCategories = [];
-  List<Map<String, dynamic>> _subCategories = [];
+  List<Category> _mainCategories = [];
+  List<Category> _subCategories = [];
   String? _selectedMainId;
   String? _selectedSubId;
   bool isLoading = true;
@@ -58,9 +59,15 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
     try {
       await Future.delayed(const Duration(milliseconds: 400));
 
-      final mains = await _repo.getMainCategories();
+      final mainsResult = await _repo.getMainCategories();
+      mainsResult.fold(
+        (failure) => debugPrint('Error loading mains: ${failure.message}'),
+        (mains) {
+          if (mounted) setState(() => _mainCategories = mains);
+        },
+      );
+
       if (!mounted) return;
-      setState(() => _mainCategories = mains);
 
       if (widget.item != null) {
         final item = widget.item!;
@@ -77,14 +84,19 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
           final parentId = catResult['parent_id'] as String?;
 
           if (parentId != null) {
-            final subs = await _repo.getSubCategories(parentId);
-            if (mounted) {
-              setState(() {
-                _selectedMainId = parentId;
-                _subCategories = subs;
-                _selectedSubId = item.categoryId;
-              });
-            }
+            final subsResult = await _repo.getSubCategories(parentId);
+            subsResult.fold(
+              (f) => null,
+              (subs) {
+                if (mounted) {
+                  setState(() {
+                    _selectedMainId = parentId;
+                    _subCategories = subs;
+                    _selectedSubId = item.categoryId;
+                  });
+                }
+              },
+            );
           }
         }
       }
@@ -102,8 +114,13 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
       _subCategories = [];
     });
     if (mainId != null) {
-      final subs = await _repo.getSubCategories(mainId);
-      if (mounted) setState(() => _subCategories = subs);
+      final subsResult = await _repo.getSubCategories(mainId);
+      subsResult.fold(
+        (f) => null,
+        (subs) {
+          if (mounted) setState(() => _subCategories = subs);
+        },
+      );
     }
   }
 
@@ -112,19 +129,29 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
 
     if (newId != null && mounted) {
       if (parentId == null) {
-        final mains = await _repo.getMainCategories();
-        setState(() {
-          _mainCategories = mains;
-          _selectedMainId = newId;
-          _subCategories = [];
-          _selectedSubId = null;
-        });
+        final mainsResult = await _repo.getMainCategories();
+        mainsResult.fold(
+          (f) => null,
+          (mains) {
+            setState(() {
+              _mainCategories = mains;
+              _selectedMainId = newId;
+              _subCategories = [];
+              _selectedSubId = null;
+            });
+          },
+        );
       } else {
-        final subs = await _repo.getSubCategories(parentId);
-        setState(() {
-          _subCategories = subs;
-          _selectedSubId = newId;
-        });
+        final subsResult = await _repo.getSubCategories(parentId);
+        subsResult.fold(
+          (f) => null,
+          (subs) {
+            setState(() {
+              _subCategories = subs;
+              _selectedSubId = newId;
+            });
+          },
+        );
       }
     }
   }
@@ -149,7 +176,6 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
         ),
         body: Skeletonizer(
           enabled: isLoading,
-          // Fixed: Replaced withOpacity with withValues
           effect: ShimmerEffect(baseColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3), highlightColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.1)),
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
@@ -216,7 +242,7 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
                             child: DropdownButtonFormField<String>(
                               initialValue: _selectedMainId,
                               decoration: const InputDecoration(labelText: 'Main Category', border: OutlineInputBorder()),
-                              items: isLoading ? [const DropdownMenuItem(value: 'loading', child: Text('Loading Category...'))] : _mainCategories.map((c) => DropdownMenuItem(value: c['id'] as String, child: Text(c['name']))).toList(),
+                              items: isLoading ? [const DropdownMenuItem(value: 'loading', child: Text('Loading Category...'))] : _mainCategories.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name))).toList(),
                               onChanged: isLoading ? null : _onMainCategoryChanged,
                             ),
                           ),
@@ -233,7 +259,7 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
                             child: DropdownButtonFormField<String>(
                               initialValue: _selectedSubId,
                               decoration: const InputDecoration(labelText: 'Sub Category', border: OutlineInputBorder()),
-                              items: isLoading ? [const DropdownMenuItem(value: 'loading', child: Text('Loading Subcategory...'))] : _subCategories.map((c) => DropdownMenuItem(value: c['id'] as String, child: Text(c['name']))).toList(),
+                              items: isLoading ? [const DropdownMenuItem(value: 'loading', child: Text('Loading Subcategory...'))] : _subCategories.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name))).toList(),
                               onChanged: isLoading ? null : (v) => setState(() => _selectedSubId = v),
                             ),
                           ),

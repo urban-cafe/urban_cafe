@@ -1,24 +1,38 @@
 import 'package:flutter/foundation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:urban_cafe/core/env.dart';
+import 'package:urban_cafe/core/usecases/usecase.dart';
 import 'package:urban_cafe/data/datasources/supabase_client.dart';
-import 'package:urban_cafe/domain/entities/user_profile.dart';
 import 'package:urban_cafe/domain/entities/user_role.dart';
+import 'package:urban_cafe/domain/usecases/auth/get_current_user_role_usecase.dart';
+import 'package:urban_cafe/domain/usecases/auth/sign_in_usecase.dart';
+import 'package:urban_cafe/domain/usecases/auth/sign_in_with_google_usecase.dart';
+import 'package:urban_cafe/domain/usecases/auth/sign_out_usecase.dart';
 
 class AuthProvider extends ChangeNotifier {
+  final SignInUseCase signInUseCase;
+  final SignOutUseCase signOutUseCase;
+  final GetCurrentUserRoleUseCase getCurrentUserRoleUseCase;
+  final SignInWithGoogleUseCase signInWithGoogleUseCase;
+
   bool loading = false;
   String? error;
   UserRole? _role;
 
   bool get isConfigured => Env.isConfigured;
   bool get isLoggedIn => Env.isConfigured && SupabaseClientProvider.client.auth.currentUser != null;
+  String? get currentUserEmail => SupabaseClientProvider.client.auth.currentUser?.email;
 
   UserRole get role => _role ?? UserRole.client;
   bool get isAdmin => role == UserRole.admin;
   bool get isStaff => role == UserRole.staff;
   bool get isClient => role == UserRole.client;
 
-  AuthProvider() {
+  AuthProvider({
+    required this.signInUseCase,
+    required this.signOutUseCase,
+    required this.getCurrentUserRoleUseCase,
+    required this.signInWithGoogleUseCase,
+  }) {
     _loadUserRole();
   }
 
@@ -28,18 +42,17 @@ class AuthProvider extends ChangeNotifier {
       return;
     }
 
-    try {
-      final userId = SupabaseClientProvider.client.auth.currentUser!.id;
-      final response = await SupabaseClientProvider.client.from('profiles').select().eq('id', userId).single();
-
-      final profile = UserProfile.fromJson(response);
-      _role = profile.role;
-      notifyListeners();
-    } catch (e) {
-      // If profile fetch fails (e.g. table doesn't exist yet or network error), default to client
-      debugPrint('Error loading user role: $e');
-      _role = UserRole.client;
-    }
+    final result = await getCurrentUserRoleUseCase(NoParams());
+    result.fold(
+      (failure) {
+        debugPrint('Error loading user role: ${failure.message}');
+        _role = UserRole.client;
+      },
+      (role) {
+        _role = role;
+        notifyListeners();
+      },
+    );
   }
 
   Future<bool> signIn(String email, String password) async {
@@ -47,17 +60,23 @@ class AuthProvider extends ChangeNotifier {
     loading = true;
     error = null;
     notifyListeners();
-    try {
-      await SupabaseClientProvider.client.auth.signInWithPassword(email: email, password: password);
-      await _loadUserRole();
-      return true;
-    } catch (e) {
-      error = e.toString();
-      return false;
-    } finally {
-      loading = false;
-      notifyListeners();
-    }
+    
+    final result = await signInUseCase(SignInParams(email: email, password: password));
+    
+    return result.fold(
+      (failure) {
+        error = failure.message;
+        loading = false;
+        notifyListeners();
+        return false;
+      },
+      (role) {
+        _role = role;
+        loading = false;
+        notifyListeners();
+        return true;
+      },
+    );
   }
 
   Future<bool> signInWithGoogle() async {
@@ -65,29 +84,31 @@ class AuthProvider extends ChangeNotifier {
     loading = true;
     error = null;
     notifyListeners();
-    try {
-      // For Web, this redirects to Google.
-      // For Mobile, it opens a browser/system sheet if configured with deep links.
-      // Since we don't have deep links fully configured in code yet (AndroidManifest/Info.plist),
-      // this is primarily optimized for Web or simple mobile browser flows.
-      await SupabaseClientProvider.client.auth.signInWithOAuth(OAuthProvider.google, redirectTo: kIsWeb ? null : 'io.supabase.urbancafe://login-callback/');
 
-      // Note: On Web, the page will reload after redirect, so _loadUserRole() might happen on app init.
-      // On Mobile, we need to listen to auth state changes.
+    final result = await signInWithGoogleUseCase(NoParams());
 
-      return true;
-    } catch (e) {
-      error = e.toString();
-      return false;
-    } finally {
-      loading = false;
-      notifyListeners();
-    }
+    return result.fold(
+      (failure) {
+        error = failure.message;
+        loading = false;
+        notifyListeners();
+        return false;
+      },
+      (success) {
+        // After Google Sign In, we might need to fetch role separately if redirect happens immediately
+        // But if we are here, we are back in the app.
+        // We should trigger load role just in case.
+        _loadUserRole(); 
+        loading = false;
+        notifyListeners();
+        return success;
+      },
+    );
   }
 
   Future<void> signOut() async {
     if (!Env.isConfigured) return;
-    await SupabaseClientProvider.client.auth.signOut();
+    await signOutUseCase(NoParams());
     _role = null;
     notifyListeners();
   }

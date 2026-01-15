@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -18,16 +19,12 @@ class MenuScreen extends StatefulWidget {
 class _MenuScreenState extends State<MenuScreen> {
   final _searchCtrl = TextEditingController();
   final ScrollController _scrollCtrl = ScrollController();
-  late final MenuProvider provider;
-
-  // Track selected ID locally for instant UI updates
-  String? _selectedSubId;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      provider = Provider.of<MenuProvider>(context, listen: false);
+      final provider = context.read<MenuProvider>();
       _searchCtrl.clear();
 
       if (widget.initialMainCategory != null) {
@@ -39,7 +36,7 @@ class _MenuScreenState extends State<MenuScreen> {
 
     _scrollCtrl.addListener(() {
       if (_scrollCtrl.position.pixels >= _scrollCtrl.position.maxScrollExtent - 200) {
-        provider.loadMore();
+        context.read<MenuProvider>().loadMore();
       }
     });
   }
@@ -48,7 +45,8 @@ class _MenuScreenState extends State<MenuScreen> {
   void dispose() {
     _searchCtrl.dispose();
     _scrollCtrl.dispose();
-    provider.resetSearch("");
+    // We can't easily access context in dispose to reset search, 
+    // but MenuProvider handles reset on init anyway.
     super.dispose();
   }
 
@@ -70,7 +68,7 @@ class _MenuScreenState extends State<MenuScreen> {
         appBar: AppBar(
           centerTitle: true,
           title: Text(
-            widget.initialMainCategory ?? 'Menu',
+            widget.initialMainCategory ?? 'menu'.tr(),
             style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.0, color: colorScheme.onSurface),
           ),
           scrolledUnderElevation: 0,
@@ -91,9 +89,9 @@ class _MenuScreenState extends State<MenuScreen> {
                 child: TextField(
                   controller: _searchCtrl,
                   textAlignVertical: TextAlignVertical.center,
-                  decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Search', border: InputBorder.none, contentPadding: EdgeInsets.symmetric(horizontal: 16), isDense: true),
+                  decoration: InputDecoration(prefixIcon: const Icon(Icons.search), hintText: 'search'.tr(), border: InputBorder.none, contentPadding: const EdgeInsets.symmetric(horizontal: 16), isDense: true),
                   // Using read() ensures typing doesn't rebuild this widget itself
-                  onChanged: (v) => provider.setSearch(v),
+                  onChanged: (v) => context.read<MenuProvider>().setSearch(v),
                   onSubmitted: (v) => FocusScope.of(context).unfocus(),
                 ),
               ),
@@ -137,10 +135,11 @@ class _MenuScreenState extends State<MenuScreen> {
                         // REAL DATA
                         final isAll = index == 0;
                         final cat = isAll ? null : provider.subCategories[index - 1];
-                        final isSelected = isAll ? _selectedSubId == null : _selectedSubId == cat!.id;
+                        // Use Provider state directly
+                        final isSelected = isAll ? provider.currentCategoryId == null : provider.currentCategoryId == cat!.id;
 
                         return ChoiceChip(
-                          label: Text(isAll ? "All" : cat!.name),
+                          label: Text(isAll ? "all".tr() : cat!.name),
                           selected: isSelected,
                           showCheckmark: false,
                           selectedColor: colorScheme.primary,
@@ -152,8 +151,8 @@ class _MenuScreenState extends State<MenuScreen> {
                           ),
                           onSelected: (bool selected) {
                             if (selected) {
-                              setState(() => _selectedSubId = isAll ? null : cat!.id);
-                              provider.filterBySubCategory(_selectedSubId);
+                              // NO setState here! Provider notifies listeners.
+                              provider.filterBySubCategory(isAll ? null : cat!.id);
                             }
                           },
                         );
@@ -183,7 +182,7 @@ class _MenuScreenState extends State<MenuScreen> {
                               children: [
                                 Icon(Icons.restaurant_menu, size: 64, color: colorScheme.outlineVariant),
                                 const SizedBox(height: 16),
-                                Text('No items found', style: textTheme.bodyLarge),
+                                Text('no_items_found'.tr(), style: textTheme.bodyLarge),
                               ],
                             ),
                           )

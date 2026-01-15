@@ -1,7 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:urban_cafe/domain/entities/menu_item.dart';
 import 'package:urban_cafe/presentation/providers/cart_provider.dart';
@@ -16,44 +16,41 @@ class MenuDetailScreen extends StatefulWidget {
 }
 
 class _MenuDetailScreenState extends State<MenuDetailScreen> {
-  int _quantity = 1;
+  final ValueNotifier<int> _quantity = ValueNotifier(1);
   final TextEditingController _notesController = TextEditingController();
 
   @override
   void dispose() {
+    _quantity.dispose();
     _notesController.dispose();
     super.dispose();
   }
 
   void _incrementQuantity() {
-    setState(() {
-      _quantity++;
-    });
+    _quantity.value++;
   }
 
   void _decrementQuantity() {
-    if (_quantity > 1) {
-      setState(() {
-        _quantity--;
-      });
+    if (_quantity.value > 1) {
+      _quantity.value--;
     }
   }
 
   void _addToCart() {
     final cart = context.read<CartProvider>();
-    cart.addToCart(
-      widget.item,
-      quantity: _quantity,
-      notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
-    );
+    cart.addToCart(widget.item, quantity: _quantity.value, notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim());
 
-    if (!mounted) return; // Check if the widget is still mounted
+    if (!mounted) return;
+
+    // Remove current snackbar to prevent stacking/delay
+    ScaffoldMessenger.of(context).clearSnackBars();
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('${widget.item.name} added to cart'),
+        content: Text('added_to_cart'.tr()),
+        behavior: SnackBarBehavior.floating,
         action: SnackBarAction(
-          label: 'View Cart',
+          label: 'view_cart'.tr(),
           onPressed: () {
             if (mounted) {
               context.push('/cart');
@@ -73,218 +70,210 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
 
     return Scaffold(
       backgroundColor: cs.surface,
-      body: PopScope(
-        canPop: false,
-        onPopInvokedWithResult: (didPop, result) {
-          if (didPop) return;
-          context.pop();
-        },
-        child: SafeArea(
-          child: Stack(
-            children: [
-              // 1. SCROLLABLE CONTENT
-              Column(
-                children: [
-                  Expanded(
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 600),
-                        child: ListView(
-                          physics: const BouncingScrollPhysics(),
-                          padding: EdgeInsets.zero,
+      body: Stack(
+        children: [
+          CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              // 1. IMMERSIVE APP BAR
+              SliverAppBar(
+                expandedHeight: 300,
+                pinned: true,
+                stretch: true,
+                backgroundColor: cs.surface,
+                leading: Container(
+                  margin: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: cs.surface.withValues(alpha: 0.8), shape: BoxShape.circle),
+                  child: IconButton(
+                    icon: Icon(Icons.arrow_back, color: cs.onSurface),
+                    onPressed: () => context.pop(),
+                  ),
+                ),
+                flexibleSpace: FlexibleSpaceBar(
+                  stretchModes: const [StretchMode.zoomBackground],
+                  background: widget.item.imageUrl == null
+                      ? Container(
+                          color: cs.surfaceContainerHighest,
+                          child: Icon(Icons.fastfood, size: 80, color: cs.onSurfaceVariant),
+                        )
+                      : CachedNetworkImage(
+                          imageUrl: widget.item.imageUrl!,
+                          fit: BoxFit.cover,
+                          placeholder: (_, _) => Container(color: cs.surfaceContainerHighest),
+                          errorWidget: (_, _, _) => const Icon(Icons.error),
+                        ),
+                ),
+              ),
+
+              // 2. CONTENT
+              SliverToBoxAdapter(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: cs.surface,
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                  ),
+                  transform: Matrix4.translationValues(0, -24, 0), // Overlap effect
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Center(
+                          child: Container(
+                            width: 40,
+                            height: 4,
+                            margin: const EdgeInsets.only(bottom: 20),
+                            decoration: BoxDecoration(color: cs.outlineVariant, borderRadius: BorderRadius.circular(2)),
+                          ),
+                        ),
+                        // Title + Price
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // IMAGE SECTION
-                            AspectRatio(
-                              aspectRatio: 1.2,
-                              child: widget.item.imageUrl == null
-                                  ? Container(
-                                      color: cs.surfaceContainerHighest,
-                                      child: Icon(Icons.fastfood, size: 60, color: cs.onSurfaceVariant),
-                                    )
-                                  : CachedNetworkImage(
-                                      imageUrl: widget.item.imageUrl!,
-                                      fit: BoxFit.contain,
-                                      alignment: Alignment.center,
-                                      placeholder: (_, _) => const Center(child: CircularProgressIndicator()),
-                                      errorWidget: (_, _, _) => const Icon(Icons.error),
-                                    ),
+                            Expanded(
+                              child: Text(
+                                widget.item.name,
+                                style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold, color: cs.onSurface),
+                              ),
                             ),
+                            const SizedBox(width: 16),
+                            Text(
+                              priceFormat.format(widget.item.price),
+                              style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: cs.primary),
+                            ),
+                          ],
+                        ),
 
-                            // DETAILS CONTENT
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(24),
-                              decoration: BoxDecoration(
-                                color: cs.surface,
-                                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // Title + Price
-                                  Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          widget.item.name,
-                                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800, color: cs.onSurface, fontSize: 20),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 16),
-                                      Text(
-                                        priceFormat.format(widget.item.price),
-                                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: cs.primary, fontSize: 20),
-                                      ),
-                                    ],
-                                  ),
+                        const SizedBox(height: 16),
 
-                                  const SizedBox(height: 16),
+                        // Badges
+                        MenuItemBadges(isMostPopular: widget.item.isMostPopular, isWeekendSpecial: widget.item.isWeekendSpecial),
+                        const SizedBox(height: 16),
 
-                                  // Badges
-                                  MenuItemBadges(isMostPopular: widget.item.isMostPopular, isWeekendSpecial: widget.item.isWeekendSpecial),
-                                  const SizedBox(height: 16),
+                        // Tags
+                        Wrap(
+                          spacing: 8,
+                          children: [
+                            if (widget.item.categoryName != null) _buildTag(context, widget.item.categoryName!, Icons.category_outlined),
+                            widget.item.isAvailable
+                                ? _buildTag(context, "Available", Icons.check_circle_outline, color: cs.secondary) // Use secondary (greenish gold) or success color
+                                : _buildTag(context, "Unavailable", Icons.cancel_outlined, color: cs.error),
+                          ],
+                        ),
 
-                                  // Tags
-                                  Wrap(
-                                    spacing: 8,
-                                    children: [
-                                      if (widget.item.categoryName != null) _buildTag(context, widget.item.categoryName!, Icons.category_outlined),
-                                      widget.item.isAvailable ? _buildTag(context, "Available", Icons.check_circle_outline, color: Colors.green) : _buildTag(context, "Unavailable", Icons.cancel_outlined, color: cs.error),
-                                    ],
-                                  ),
+                        const SizedBox(height: 32),
+                        const Divider(),
+                        const SizedBox(height: 24),
 
-                                  const SizedBox(height: 24),
-                                  const Divider(),
-                                  const SizedBox(height: 16),
+                        Text("Description", style: theme.textTheme.titleMedium),
+                        const SizedBox(height: 12),
+                        Text((widget.item.description?.isNotEmpty ?? false) ? widget.item.description! : "No description available.", style: theme.textTheme.bodyLarge?.copyWith(color: cs.onSurfaceVariant, height: 1.6)),
 
-                                  Text("Description", style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
-                                  const SizedBox(height: 8),
-                                  Text((widget.item.description?.isNotEmpty ?? false) ? widget.item.description! : "No description available.", style: theme.textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant, height: 1.5)),
+                        const SizedBox(height: 32),
 
-                                  const SizedBox(height: 24),
-                                  
-                                  // QUANTITY & NOTES
-                                  if (widget.item.isAvailable) ...[
-                                    Row(
+                        // QUANTITY & NOTES
+                        if (widget.item.isAvailable) ...[
+                          Row(
+                            children: [
+                              Text("quantity".tr(), style: theme.textTheme.titleMedium),
+                              const Spacer(),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                                decoration: BoxDecoration(color: cs.surfaceContainerHighest, borderRadius: BorderRadius.circular(12)),
+                                child: ValueListenableBuilder<int>(
+                                  valueListenable: _quantity,
+                                  builder: (context, qty, child) {
+                                    return Row(
                                       children: [
-                                        Text("Quantity", style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
-                                        const Spacer(),
-                                        Container(
-                                          decoration: BoxDecoration(
-                                            border: Border.all(color: cs.outlineVariant),
-                                            borderRadius: BorderRadius.circular(8),
-                                          ),
-                                          child: Row(
-                                            children: [
-                                              IconButton(
-                                                onPressed: _decrementQuantity,
-                                                icon: const Icon(Icons.remove),
-                                                color: _quantity > 1 ? cs.primary : cs.outline,
-                                              ),
-                                              Text('$_quantity', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                                              IconButton(
-                                                onPressed: _incrementQuantity,
-                                                icon: const Icon(Icons.add),
-                                                color: cs.primary,
-                                              ),
-                                            ],
+                                        IconButton(onPressed: _decrementQuantity, icon: const Icon(Icons.remove), color: qty > 1 ? cs.primary : cs.outline),
+                                        SizedBox(
+                                          width: 40,
+                                          child: Text(
+                                            '$qty',
+                                            textAlign: TextAlign.center,
+                                            style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                                           ),
                                         ),
+                                        IconButton(onPressed: _incrementQuantity, icon: const Icon(Icons.add), color: cs.primary),
                                       ],
-                                    ),
-                                    const SizedBox(height: 16),
-                                    TextField(
-                                      controller: _notesController,
-                                      decoration: InputDecoration(
-                                        labelText: 'Special Instructions (Optional)',
-                                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                                        hintText: 'e.g., No sugar, Extra hot',
-                                      ),
-                                      maxLines: 2,
-                                    ),
-                                    const SizedBox(height: 100), // Space for bottom bar
-                                  ],
-                                ],
+                                    );
+                                  },
+                                ),
                               ),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
+                          TextField(
+                            controller: _notesController,
+                            decoration: InputDecoration(
+                              labelText: 'special_instructions'.tr(),
+                              hintText: 'e.g., No sugar, Extra hot',
+                              alignLabelWithHint: true,
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                            ),
+                            maxLines: 3,
+                          ),
+                          const SizedBox(height: 120), // Space for bottom bar
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          // 3. BOTTOM ACTION BAR
+          if (widget.item.isAvailable)
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: cs.surface,
+                  boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 20, offset: const Offset(0, -5))],
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                ),
+                child: SafeArea(
+                  top: false,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text('total_price'.tr(), style: theme.textTheme.labelMedium?.copyWith(color: cs.onSurfaceVariant)),
+                            ValueListenableBuilder<int>(
+                              valueListenable: _quantity,
+                              builder: (context, qty, child) {
+                                return Text(
+                                  priceFormat.format(widget.item.price * qty),
+                                  style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: cs.primary),
+                                );
+                              },
                             ),
                           ],
                         ),
                       ),
-                    ),
-                  ),
-                ],
-              ),
-
-              // 2. FLOATING BACK BUTTON
-              Positioned(
-                top: 8,
-                left: 16,
-                child: CircleAvatar(
-                  backgroundColor: cs.surface.withValues(alpha: 0.8),
-                  radius: 20,
-                  child: IconButton(
-                    icon: Icon(Icons.arrow_back, color: cs.onSurface),
-                    padding: EdgeInsets.zero,
-                    onPressed: () => context.pop(),
-                  ),
-                ),
-              ),
-
-              // 3. BOTTOM ACTION BAR
-              if (widget.item.isAvailable)
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: cs.surface,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, -5),
+                      const SizedBox(width: 24),
+                      Expanded(
+                        flex: 2,
+                        child: FilledButton.icon(
+                          onPressed: _addToCart,
+                          icon: const Icon(Icons.shopping_cart_outlined),
+                          label: Text("add_to_cart".tr()),
+                          style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 18)),
                         ),
-                      ],
-                    ),
-                    child: SafeArea(
-                      top: false,
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text('Total Price', style: theme.textTheme.labelMedium),
-                                Text(
-                                  priceFormat.format(widget.item.price * _quantity),
-                                  style: theme.textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: cs.primary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Expanded(
-                            flex: 2,
-                            child: FilledButton.icon(
-                              onPressed: _addToCart,
-                              icon: const Icon(Icons.shopping_cart_outlined),
-                              label: const Text("Add to Cart"),
-                            ),
-                          ),
-                        ],
                       ),
-                    ),
+                    ],
                   ),
                 ),
-            ],
-          ),
-        ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -295,7 +284,7 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
     final finalColor = color ?? cs.primary;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: finalColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
@@ -304,11 +293,11 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: finalColor),
-          const SizedBox(width: 6),
+          Icon(icon, size: 18, color: finalColor),
+          const SizedBox(width: 8),
           Text(
             label,
-            style: theme.textTheme.labelSmall?.copyWith(color: finalColor, fontWeight: FontWeight.w600),
+            style: theme.textTheme.labelMedium?.copyWith(color: finalColor, fontWeight: FontWeight.w700),
           ),
         ],
       ),

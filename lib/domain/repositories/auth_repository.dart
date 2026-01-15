@@ -1,0 +1,11 @@
+import 'package:fpdart/fpdart.dart';
+import 'package:urban_cafe/core/error/failures.dart';
+import 'package:urban_cafe/domain/entities/user_role.dart';
+
+abstract class AuthRepository {
+  Future<Either<Failure, UserRole>> signIn(String email, String password);
+  Future<Either<Failure, void>> signOut();
+  Future<Either<Failure, UserRole>> getCurrentUserRole();
+  Future<Either<Failure, bool>> signInWithGoogle();
+  Future<Either<Failure, bool>> isSignedIn();
+}

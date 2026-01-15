@@ -1,7 +1,10 @@
+import 'package:fpdart/fpdart.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:urban_cafe/core/env.dart';
+import 'package:urban_cafe/core/error/failures.dart';
 import 'package:urban_cafe/data/datasources/supabase_client.dart';
 import 'package:urban_cafe/data/dtos/menu_item_dto.dart';
+import 'package:urban_cafe/domain/entities/category.dart';
 import 'package:urban_cafe/domain/entities/menu_item.dart';
 import 'package:urban_cafe/domain/repositories/menu_repository.dart';
 
@@ -12,8 +15,8 @@ class MenuRepositoryImpl implements MenuRepository {
   SupabaseClient get _client => SupabaseClientProvider.client;
 
   @override
-  Future<List<MenuItemEntity>> getMenuItems({int page = 1, int pageSize = 10, String? search, String? categoryId, List<String>? categoryIds}) async {
-    if (!Env.isConfigured) return [];
+  Future<Either<Failure, List<MenuItemEntity>>> getMenuItems({int page = 1, int pageSize = 10, String? search, String? categoryId, List<String>? categoryIds}) async {
+    if (!Env.isConfigured) return const Left(AuthFailure('Supabase not configured'));
 
     try {
       // JOIN categories to get the name for display
@@ -32,85 +35,133 @@ class MenuRepositoryImpl implements MenuRepository {
 
       final data = await query.order('name', ascending: true).range((page - 1) * pageSize, page * pageSize - 1);
 
-      return (data as List<dynamic>).map((e) => MenuItemDto.fromMap(e as Map<String, dynamic>).toEntity()).toList();
+      final items = (data as List<dynamic>).map((e) => MenuItemDto.fromMap(e as Map<String, dynamic>).toEntity()).toList();
+
+      return Right(items);
     } catch (e) {
-      // Return empty or throw based on preference
-      return [];
+      return Left(ServerFailure(e.toString()));
     }
   }
 
   @override
-  Future<List<Map<String, dynamic>>> getMainCategories() async {
-    if (!Env.isConfigured) return [];
-    final data = await _client.from(catTable).select('id, name').isFilter('parent_id', null).order('name', ascending: true);
-    return List<Map<String, dynamic>>.from(data);
+  Future<Either<Failure, List<Category>>> getMainCategories() async {
+    if (!Env.isConfigured) return const Left(AuthFailure('Supabase not configured'));
+    try {
+      final data = await _client.from(catTable).select('id, name').isFilter('parent_id', null).order('name', ascending: true);
+
+      final categories = (data as List<dynamic>).map((e) => Category(id: e['id'] as String, name: e['name'] as String)).toList();
+      return Right(categories);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 
   @override
-  Future<List<Map<String, dynamic>>> getSubCategories(String parentId) async {
-    if (!Env.isConfigured) return [];
-    final data = await _client.from(catTable).select('id, name').eq('parent_id', parentId).order('name', ascending: true);
-    return List<Map<String, dynamic>>.from(data);
+  Future<Either<Failure, List<Category>>> getSubCategories(String parentId) async {
+    if (!Env.isConfigured) return const Left(AuthFailure('Supabase not configured'));
+    try {
+      final data = await _client.from(catTable).select('id, name').eq('parent_id', parentId).order('name', ascending: true);
+
+      final categories = (data as List<dynamic>).map((e) => Category(id: e['id'] as String, name: e['name'] as String)).toList();
+      return Right(categories);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 
   @override
-  Future<List<Map<String, dynamic>>> getAllCategories() async {
-    if (!Env.isConfigured) return [];
-    // Fetch all categories (Main and Sub) to show in the filter list
-    final data = await _client.from(catTable).select('id, name').order('name', ascending: true);
-    return List<Map<String, dynamic>>.from(data);
+  Future<Either<Failure, Category?>> getCategoryByName(String name) async {
+    if (!Env.isConfigured) return const Left(AuthFailure('Supabase not configured'));
+    try {
+      final res = await _client.from(catTable).select('id, name').ilike('name', name).maybeSingle();
+
+      if (res == null) return const Right(null);
+      return Right(Category(id: res['id'] as String, name: res['name'] as String));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 
   @override
-  Future<String> createCategory(String name, {String? parentId}) async {
-    if (!Env.isConfigured) throw Exception('Supabase not configured');
-    final res = await _client.from(catTable).insert({'name': name, 'parent_id': parentId}).select('id').single();
-    return res['id'] as String;
+  Future<Either<Failure, List<Category>>> getAllCategories() async {
+    if (!Env.isConfigured) return const Left(AuthFailure('Supabase not configured'));
+    try {
+      final data = await _client.from(catTable).select('id, name').order('name', ascending: true);
+
+      final categories = (data as List<dynamic>).map((e) => Category(id: e['id'] as String, name: e['name'] as String)).toList();
+      return Right(categories);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 
   @override
-  Future<void> deleteCategory(String id) async {
-    if (!Env.isConfigured) throw Exception('Supabase not configured');
-    await _client.from(catTable).delete().eq('id', id);
+  Future<Either<Failure, String>> createCategory(String name, {String? parentId}) async {
+    if (!Env.isConfigured) return const Left(AuthFailure('Supabase not configured'));
+    try {
+      final res = await _client.from(catTable).insert({'name': name, 'parent_id': parentId}).select('id').single();
+      return Right(res['id'] as String);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 
   @override
-  Future<void> updateCategory(String id, String newName) async {
-    if (!Env.isConfigured) throw Exception('Supabase not configured');
-    await _client.from(catTable).update({'name': newName}).eq('id', id);
+  Future<Either<Failure, void>> deleteCategory(String id) async {
+    if (!Env.isConfigured) return const Left(AuthFailure('Supabase not configured'));
+    try {
+      await _client.from(catTable).delete().eq('id', id);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 
   @override
-  Future<MenuItemEntity> createMenuItem({required String name, String? description, required double price, String? categoryId, bool isAvailable = true, bool isMostPopular = false, bool isWeekendSpecial = false, String? imagePath, String? imageUrl}) async {
-    if (!Env.isConfigured) throw Exception('No Config');
-
-    final inserted = await _client.from(table).insert({'name': name, 'description': description, 'price': price, 'category_id': categoryId, 'image_path': imagePath, 'image_url': imageUrl, 'is_available': isAvailable, 'is_most_popular': isMostPopular, 'is_weekend_special': isWeekendSpecial}).select('*, categories(name)').single();
-
-    return MenuItemDto.fromMap(inserted).toEntity();
+  Future<Either<Failure, void>> updateCategory(String id, String newName) async {
+    if (!Env.isConfigured) return const Left(AuthFailure('Supabase not configured'));
+    try {
+      await _client.from(catTable).update({'name': newName}).eq('id', id);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 
   @override
-  Future<MenuItemEntity> updateMenuItem({required String id, String? name, String? description, double? price, String? categoryId, bool? isAvailable, bool? isMostPopular, bool? isWeekendSpecial, String? imagePath, String? imageUrl}) async {
-    if (!Env.isConfigured) throw Exception('No Config');
+  Future<Either<Failure, MenuItemEntity>> createMenuItem({required String name, String? description, required double price, String? categoryId, bool isAvailable = true, bool isMostPopular = false, bool isWeekendSpecial = false, String? imagePath, String? imageUrl}) async {
+    if (!Env.isConfigured) return const Left(AuthFailure('Supabase not configured'));
 
-    final updated = await _client.from(table).update({
-      if (name != null) 'name': name,
-      if (description != null) 'description': description,
-      if (price != null) 'price': price,
-      if (categoryId != null) 'category_id': categoryId,
-      if (isAvailable != null) 'is_available': isAvailable,
-      if (isMostPopular != null) 'is_most_popular': isMostPopular,
-      if (isWeekendSpecial != null) 'is_weekend_special': isWeekendSpecial,
-      if (imagePath != null) 'image_path': imagePath,
-      if (imageUrl != null) 'image_url': imageUrl
-    }).eq('id', id).select('*, categories(name)').single();
+    try {
+      final inserted = await _client.from(table).insert({'name': name, 'description': description, 'price': price, 'category_id': categoryId, 'image_path': imagePath, 'image_url': imageUrl, 'is_available': isAvailable, 'is_most_popular': isMostPopular, 'is_weekend_special': isWeekendSpecial}).select('*, categories(name)').single();
 
-    return MenuItemDto.fromMap(updated).toEntity();
+      return Right(MenuItemDto.fromMap(inserted).toEntity());
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 
   @override
-  Future<void> deleteMenuItem(String id) async {
-    if (!Env.isConfigured) return;
-    await _client.from(table).delete().eq('id', id);
+  Future<Either<Failure, MenuItemEntity>> updateMenuItem({required String id, String? name, String? description, double? price, String? categoryId, bool? isAvailable, bool? isMostPopular, bool? isWeekendSpecial, String? imagePath, String? imageUrl}) async {
+    if (!Env.isConfigured) return const Left(AuthFailure('Supabase not configured'));
+
+    try {
+      final updated = await _client.from(table).update({if (name != null) 'name': name, if (description != null) 'description': description, if (price != null) 'price': price, if (categoryId != null) 'category_id': categoryId, if (isAvailable != null) 'is_available': isAvailable, if (isMostPopular != null) 'is_most_popular': isMostPopular, if (isWeekendSpecial != null) 'is_weekend_special': isWeekendSpecial, if (imagePath != null) 'image_path': imagePath, if (imageUrl != null) 'image_url': imageUrl}).eq('id', id).select('*, categories(name)').single();
+
+      return Right(MenuItemDto.fromMap(updated).toEntity());
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteMenuItem(String id) async {
+    if (!Env.isConfigured) return const Left(AuthFailure('Supabase not configured'));
+    try {
+      await _client.from(table).delete().eq('id', id);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 }

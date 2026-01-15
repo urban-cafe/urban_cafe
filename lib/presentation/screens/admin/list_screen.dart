@@ -105,7 +105,10 @@ class _AdminListScreenState extends State<AdminListScreen> {
             'Admin Dashboard',
             style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, letterSpacing: 0.5, color: colorScheme.onSurface),
           ),
+          // Actions
           actions: [
+            IconButton(icon: const Icon(Icons.receipt_long_outlined), tooltip: 'Order Management', onPressed: () => context.push('/admin/orders')),
+            IconButton(icon: const Icon(Icons.kitchen_outlined), tooltip: 'Kitchen Display', onPressed: () => context.push('/staff')),
             IconButton(icon: const Icon(Icons.category_outlined), tooltip: 'Manage Categories', onPressed: () => context.push('/admin/categories')),
             IconButton(icon: const Icon(Icons.logout_outlined), tooltip: 'Log out', onPressed: _handleLogout),
           ],

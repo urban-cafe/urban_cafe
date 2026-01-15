@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:urban_cafe/core/common_constants.dart';
-import 'package:urban_cafe/presentation/providers/auth_provider.dart';
 import 'package:urban_cafe/presentation/providers/cart_provider.dart';
 import 'package:urban_cafe/presentation/providers/menu_provider.dart';
 import 'package:urban_cafe/presentation/widgets/contact_info_sheet.dart';
@@ -20,15 +19,13 @@ class MainMenuScreen extends StatefulWidget {
 }
 
 class _MainMenuScreenState extends State<MainMenuScreen> {
-  // 2. Define a variable to hold the Future
-  late Future<List<CategoryObj>> _categoriesFuture;
-
   @override
   void initState() {
     super.initState();
-    // 3. Initialize the Future only ONCE.
-    // Use read() here, not watch(), because we only need to fetch the reference once.
-    _categoriesFuture = context.read<MenuProvider>().getMainCategories();
+    // Trigger load on init. Data is stored in Provider.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<MenuProvider>().loadMainCategories();
+    });
   }
 
   @override
@@ -37,38 +34,12 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     final colorScheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
 
-    // Note: If you need to listen to other changes in MenuProvider, keep this watch.
-    // But for the categories list specifically, we rely on _categoriesFuture.
-    final menuProvider = context.watch<MenuProvider>();
-
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.logout, color: colorScheme.primary),
-          tooltip: 'Sign Out',
-          onPressed: () {
-            showDialog(
-              context: context,
-              builder: (context) => AlertDialog(
-                title: const Text('Sign Out'),
-                content: const Text('Are you sure you want to sign out?'),
-                actions: [
-                  TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      context.read<AuthProvider>().signOut();
-                    },
-                    child: const Text('Sign Out'),
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
+        // Removed leading Profile Icon as it is now in BottomNavBar
         actions: const [ThemeSelectionButton()],
       ),
       body: LayoutBuilder(
@@ -96,17 +67,14 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        // 4. Use the cached _categoriesFuture
-                        FutureBuilder<List<CategoryObj>>(
-                          future: _categoriesFuture,
-                          builder: (context, snapshot) {
-                            final isLoading = snapshot.connectionState == ConnectionState.waiting;
-
-                            // 1. LOADING STATE: Show Skeleton
-                            if (isLoading) {
+                        // Use Consumer instead of FutureBuilder
+                        Consumer<MenuProvider>(
+                          builder: (context, menu, child) {
+                            // 1. LOADING STATE
+                            if (menu.mainCategoriesLoading && menu.mainCategories.isEmpty) {
                               return Skeletonizer(
                                 enabled: true,
-                                effect: ShimmerEffect(baseColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3), highlightColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.1)),
+                                effect: ShimmerEffect(baseColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3), highlightColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.1)),
                                 child: Column(
                                   children: List.generate(4, (index) {
                                     return const _MenuButton(label: 'Delicious Category', icon: Icons.local_cafe_rounded, route: '');
@@ -115,9 +83,8 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                               );
                             }
 
-                            // 2. ERROR / EMPTY STATE: Fallback
-                            final categories = snapshot.data ?? [];
-                            if (categories.isEmpty) {
+                            // 2. ERROR / EMPTY STATE
+                            if (menu.mainCategories.isEmpty) {
                               return const Column(
                                 children: [
                                   _MenuButton(label: 'Coffee', icon: Icons.local_cafe_rounded, route: '/menu?initialMainCategory=Coffee'),
@@ -128,12 +95,11 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                               );
                             }
 
-                            // 3. SUCCESS STATE: Real Data
+                            // 3. SUCCESS STATE
                             return Column(
-                              children: categories.map((cat) {
+                              children: menu.mainCategories.map((cat) {
                                 final encodedName = Uri.encodeComponent(cat.name);
-                                // Note: Ensure menuProvider has this method or pass logic appropriately
-                                final icon = menuProvider.getIconForCategory(cat.name);
+                                final icon = menu.getIconForCategory(cat.name);
                                 return _MenuButton(label: cat.name, icon: icon, route: '/menu?initialMainCategory=$encodedName');
                               }).toList(),
                             );
@@ -201,30 +167,42 @@ class _MenuButton extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: InkWell(
-        onTap: () => context.push(route),
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          width: double.infinity,
-          height: 60,
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          decoration: BoxDecoration(
-            color: isDark ? colorScheme.secondaryContainer : colorScheme.primary,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [if (!isDark) BoxShadow(color: colorScheme.primary.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 4))],
-          ),
-          child: Row(
-            children: [
-              Icon(icon, size: 28, color: isDark ? colorScheme.onSecondaryContainer : colorScheme.onPrimary),
-              const SizedBox(width: 20),
-              Text(
-                label,
-                style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.0, fontSize: 18, color: isDark ? colorScheme.onSecondaryContainer : colorScheme.onPrimary),
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Container(
+        height: 80, // Taller button
+        decoration: BoxDecoration(
+          gradient: LinearGradient(colors: isDark ? [colorScheme.surfaceContainerHighest, colorScheme.surfaceContainer] : [colorScheme.primary, colorScheme.primary.withValues(alpha: 0.8)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+          borderRadius: BorderRadius.circular(24), // More rounded
+          boxShadow: [BoxShadow(color: (isDark ? Colors.black : colorScheme.primary).withValues(alpha: 0.3), blurRadius: 15, offset: const Offset(0, 8))],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => context.push(route),
+            borderRadius: BorderRadius.circular(24),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), shape: BoxShape.circle),
+                    child: Icon(icon, size: 28, color: Colors.white),
+                  ),
+                  const SizedBox(width: 24),
+                  Text(
+                    label,
+                    style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, letterSpacing: 0.5, fontSize: 20, color: Colors.white),
+                  ),
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+                    child: const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Colors.white70),
+                  ),
+                ],
               ),
-              const Spacer(),
-              Icon(Icons.arrow_forward_ios_rounded, size: 18, color: (isDark ? colorScheme.onSecondaryContainer : colorScheme.onPrimary).withValues(alpha: 0.5)),
-            ],
+            ),
           ),
         ),
       ),

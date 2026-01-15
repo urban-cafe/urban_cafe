@@ -1,28 +1,35 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:urban_cafe/data/repositories/menu_repository_impl.dart';
+import 'package:urban_cafe/core/usecases/usecase.dart';
+import 'package:urban_cafe/domain/entities/category.dart';
 import 'package:urban_cafe/domain/entities/menu_item.dart';
-
-class CategoryObj {
-  final String id;
-  final String name;
-  CategoryObj(this.id, this.name);
-}
+import 'package:urban_cafe/domain/usecases/get_category_by_name.dart';
+import 'package:urban_cafe/domain/usecases/get_main_categories.dart';
+import 'package:urban_cafe/domain/usecases/get_menu_items.dart';
+import 'package:urban_cafe/domain/usecases/get_sub_categories.dart';
 
 class MenuProvider extends ChangeNotifier {
-  final _repo = MenuRepositoryImpl();
+  final GetMainCategories getMainCategoriesUseCase;
+  final GetSubCategories getSubCategoriesUseCase;
+  final GetMenuItems getMenuItemsUseCase;
+  final GetCategoryByName getCategoryByNameUseCase;
 
   // 1. CACHE: Store Main Category IDs (Name -> ID) to save 1 DB call per switch
   final Map<String, String> _mainIdCache = {};
+  
+  // Store Main Categories List for UI
+  List<Category> mainCategories = [];
+  bool mainCategoriesLoading = false;
 
   List<MenuItemEntity> items = [];
-  List<CategoryObj> subCategories = [];
+  List<Category> subCategories = [];
 
   bool loading = false;
   bool loadingMore = false;
   String? error;
 
   String? _currentCategoryId;
+  String? get currentCategoryId => _currentCategoryId; // Expose getter
+
   List<String>? _currentCategoryIds;
   String _searchQuery = '';
 
@@ -30,19 +37,43 @@ class MenuProvider extends ChangeNotifier {
   final int _pageSize = 10;
   bool hasMore = true;
 
+  MenuProvider({
+    required this.getMainCategoriesUseCase,
+    required this.getSubCategoriesUseCase,
+    required this.getMenuItemsUseCase,
+    required this.getCategoryByNameUseCase,
+  });
+
   // New method to fetch main categories
-  Future<List<CategoryObj>> getMainCategories() async {
-    try {
-      final mains = await _repo.getMainCategories();
-      // Populate cache if needed
-      for (var m in mains) {
-        _mainIdCache[m['name']] = m['id'];
-      }
-      return mains.map((m) => CategoryObj(m['id'], m['name'])).toList();
-    } catch (e) {
-      error = e.toString();
-      return [];
-    }
+  Future<void> loadMainCategories() async {
+    if (mainCategories.isNotEmpty) return; // Return cached if available
+    
+    mainCategoriesLoading = true;
+    notifyListeners();
+
+    final result = await getMainCategoriesUseCase(NoParams());
+    result.fold(
+      (failure) {
+        error = failure.message;
+        mainCategoriesLoading = false;
+        notifyListeners();
+      },
+      (categories) {
+        mainCategories = categories;
+        // Populate cache
+        for (var m in categories) {
+          _mainIdCache[m.name] = m.id;
+        }
+        mainCategoriesLoading = false;
+        notifyListeners();
+      },
+    );
+  }
+
+  // Deprecated: Use loadMainCategories() and access mainCategories property instead
+  Future<List<Category>> getMainCategories() async {
+    await loadMainCategories();
+    return mainCategories;
   }
 
   IconData getIconForCategory(String name) {
@@ -74,28 +105,48 @@ class MenuProvider extends ChangeNotifier {
       String? parentId = _mainIdCache[mainCategoryName];
 
       if (parentId == null) {
-        final client = Supabase.instance.client;
-        final parentRes = await client.from('categories').select('id').ilike('name', mainCategoryName).maybeSingle();
-
-        if (parentRes == null) {
-          loading = false;
-          notifyListeners();
-          return;
-        }
-        parentId = parentRes['id'] as String;
-        // Save to cache
-        _mainIdCache[mainCategoryName] = parentId;
+        final result = await getCategoryByNameUseCase(GetCategoryByNameParams(mainCategoryName));
+        
+        await result.fold(
+          (failure) async {
+            error = failure.message;
+            loading = false;
+            notifyListeners();
+          },
+          (category) async {
+            if (category == null) {
+              loading = false;
+              notifyListeners();
+              return;
+            }
+            parentId = category.id;
+            // Save to cache
+            _mainIdCache[mainCategoryName] = parentId!;
+          }
+        );
       }
+      
+      if (parentId == null) return;
 
       // 3. FETCH SUB-CATEGORIES
-      final subs = await _repo.getSubCategories(parentId);
-      subCategories = subs.map((e) => CategoryObj(e['id'], e['name'])).toList();
+      final subsResult = await getSubCategoriesUseCase(GetSubCategoriesParams(parentId!));
+      
+      await subsResult.fold(
+        (failure) async {
+          error = failure.message;
+          loading = false;
+          notifyListeners();
+        },
+        (subs) async {
+          subCategories = subs;
+          // Set filter to allow ALL sub-categories by default
+          _currentCategoryIds = subCategories.map((e) => e.id).toList();
 
-      // Set filter to allow ALL sub-categories by default
-      _currentCategoryIds = subCategories.map((e) => e.id).toList();
+          // 4. FETCH ITEMS (Now that we have the IDs)
+          await _fetchItems(reset: true);
+        }
+      );
 
-      // 4. FETCH ITEMS (Now that we have the IDs)
-      await _fetchItems(reset: true);
     } catch (e) {
       error = e.toString();
       loading = false;
@@ -151,16 +202,30 @@ class MenuProvider extends ChangeNotifier {
         return;
       }
 
-      final result = await _repo.getMenuItems(page: _page, pageSize: _pageSize, search: _searchQuery, categoryId: singleId, categoryIds: listIds);
+      final result = await getMenuItemsUseCase(GetMenuItemsParams(
+        page: _page, 
+        pageSize: _pageSize, 
+        search: _searchQuery, 
+        categoryId: singleId, 
+        categoryIds: listIds
+      ));
 
-      if (reset) {
-        items = result;
-      } else {
-        items.addAll(result);
-      }
+      result.fold(
+        (failure) {
+          error = failure.message;
+        },
+        (newItems) {
+          if (reset) {
+            items = newItems;
+          } else {
+            items.addAll(newItems);
+          }
 
-      hasMore = result.length == _pageSize;
-      if (hasMore) _page++;
+          hasMore = newItems.length == _pageSize;
+          if (hasMore) _page++;
+        }
+      );
+
     } catch (e) {
       error = e.toString();
     } finally {
