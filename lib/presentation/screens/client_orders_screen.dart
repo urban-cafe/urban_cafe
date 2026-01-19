@@ -20,9 +20,10 @@ class _ClientOrdersScreenState extends State<ClientOrdersScreen> {
   @override
   void initState() {
     super.initState();
-    // Fetch orders on init
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<OrderProvider>().fetchOrders();
+      if (context.read<OrderProvider>().orders.isEmpty) {
+        context.read<OrderProvider>().fetchOrders();
+      }
     });
   }
 
@@ -36,53 +37,68 @@ class _ClientOrdersScreenState extends State<ClientOrdersScreen> {
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: AppBar(title: Text('my_orders'.tr()), backgroundColor: colorScheme.surface, scrolledUnderElevation: 0),
-      body: StreamBuilder<List<OrderEntity>>(
-        stream: orderProvider.getOrdersStream(userId: authProvider.currentUser?.id),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting && orderProvider.orders.isEmpty) {
-            return Skeletonizer(
-              enabled: true,
-              child: ListView.separated(
-                padding: const EdgeInsets.all(16),
-                itemCount: 5,
-                separatorBuilder: (_, _) => const SizedBox(height: 16),
-                itemBuilder: (_, _) => Container(
-                  height: 120,
-                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+      body: RefreshIndicator(
+        onRefresh: () => orderProvider.fetchOrders(),
+        child: StreamBuilder<List<OrderEntity>>(
+          stream: orderProvider.getOrdersStream(userId: authProvider.currentUser?.id),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting && orderProvider.orders.isEmpty) {
+              return Skeletonizer(
+                enabled: true,
+                child: ListView.separated(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: 5,
+                  separatorBuilder: (_, _) => const SizedBox(height: 16),
+                  itemBuilder: (_, _) => Container(
+                    height: 120,
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                  ),
                 ),
-              ),
+              );
+            }
+
+            if (snapshot.hasError) {
+              return SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: SizedBox(
+                  height: MediaQuery.of(context).size.height - 200,
+                  child: Center(child: Text('Error: ${snapshot.error}')),
+                ),
+              );
+            }
+
+            final orders = snapshot.data ?? orderProvider.orders;
+
+            if (orders.isEmpty) {
+              return LayoutBuilder(
+                builder: (context, constraints) => SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: SizedBox(
+                    height: constraints.maxHeight,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.history, size: 80, color: colorScheme.outlineVariant),
+                        const SizedBox(height: 16),
+                        Text('no_orders_yet'.tr(), style: theme.textTheme.titleMedium?.copyWith(color: colorScheme.onSurfaceVariant)),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }
+
+            return ListView.separated(
+              padding: const EdgeInsets.all(16),
+              itemCount: orders.length,
+              separatorBuilder: (_, _) => const SizedBox(height: 16),
+              itemBuilder: (context, index) {
+                final order = orders[index];
+                return _ClientOrderCard(order: order);
+              },
             );
-          }
-
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
-
-          final orders = snapshot.data ?? orderProvider.orders;
-
-          if (orders.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.history, size: 80, color: colorScheme.outlineVariant),
-                  const SizedBox(height: 16),
-                  Text('no_orders_yet'.tr(), style: theme.textTheme.titleMedium?.copyWith(color: colorScheme.onSurfaceVariant)),
-                ],
-              ),
-            );
-          }
-
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: orders.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 16),
-            itemBuilder: (context, index) {
-              final order = orders[index];
-              return _ClientOrderCard(order: order);
-            },
-          );
-        },
+          },
+        ),
       ),
     );
   }

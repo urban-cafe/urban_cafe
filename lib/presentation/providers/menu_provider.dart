@@ -27,6 +27,8 @@ class MenuProvider extends ChangeNotifier {
   bool mainCategoriesLoading = false;
 
   List<MenuItemEntity> items = [];
+  List<MenuItemEntity> popularItems = []; // New
+  List<MenuItemEntity> specialItems = []; // New
   List<MenuItemEntity> favoriteItems = []; // Store full items
   List<Category> subCategories = [];
 
@@ -120,6 +122,27 @@ class MenuProvider extends ChangeNotifier {
         notifyListeners();
       },
     );
+  }
+
+  // New: Load Home Screen Data (Popular & Specials)
+  Future<void> loadHomeData() async {
+    // We can load these in parallel
+    loading = true;
+    notifyListeners();
+
+    // 1. Popular Items (Top 5)
+    final popResult = await getMenuItemsUseCase(const GetMenuItemsParams(page: 1, pageSize: 5, isMostPopular: true));
+    popResult.fold((f) => debugPrint('Error loading popular: ${f.message}'), (list) => popularItems = list);
+
+    // 2. Weekend Specials (Top 5)
+    final specResult = await getMenuItemsUseCase(const GetMenuItemsParams(page: 1, pageSize: 5, isWeekendSpecial: true));
+    specResult.fold((f) => debugPrint('Error loading specials: ${f.message}'), (list) => specialItems = list);
+
+    // 3. Main Categories (if not loaded)
+    await loadMainCategories();
+
+    loading = false;
+    notifyListeners();
   }
 
   // Deprecated: Use loadMainCategories() and access mainCategories property instead

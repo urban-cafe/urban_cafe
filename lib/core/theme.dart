@@ -18,36 +18,36 @@ class BrandColors extends ThemeExtension<BrandColors> {
 }
 
 class AppTheme {
-  // Richer Coffee Palette (Restored & Enhanced)
-  static const Color primary = Color(0xFF6F4E37); // Classic Coffee Bean
-  static const Color secondary = Color(0xFFC19A6B); // Latte Art / Warm Gold
-  static const Color tertiary = Color(0xFF2C3E50); // Dark Slate (Modern contrast)
+  // Popular "Coffee Shop App" Palette (Figma Reference Style)
+  static const Color primary = Color(0xFFC67C4E); // Copper / Burnt Orange
+  static const Color secondary = Color(0xFFEDD6C8); // Light Beige
+  static const Color tertiary = Color(0xFF313131); // Dark Charcoal
 
-  static const Color neutralBg = Color(0xFFFDFBF7); // Warm Paper (Retained as it's better than pure white)
+  static const Color neutralBg = Color(0xFFF9F9F9); // Clean White/Grey
   static const Color surface = Colors.white;
 
-  // Accents (Retained as they are good)
-  static const Color accentGreen = Color(0xFF2E7D32); // Standard Success Green
-  static const Color accentRed = Color(0xFFC62828); // Standard Error Red
+  // Accents
+  static const Color accentGreen = Color(0xFF2E7D32);
+  static const Color accentRed = Color(0xFFC62828);
 
   static TextTheme _buildTextTheme(TextTheme base) {
+    // SORA: The signature font for this specific design style
     return base.copyWith(
-      // Fraunces: A "Soft Serif" - warm, premium, distinct (Perfect for Coffee)
-      displayLarge: GoogleFonts.fraunces(textStyle: base.displayLarge, fontWeight: FontWeight.bold),
-      displayMedium: GoogleFonts.fraunces(textStyle: base.displayMedium, fontWeight: FontWeight.bold),
-      displaySmall: GoogleFonts.fraunces(textStyle: base.displaySmall, fontWeight: FontWeight.w600),
-      headlineLarge: GoogleFonts.fraunces(textStyle: base.headlineLarge, fontWeight: FontWeight.bold),
-      headlineMedium: GoogleFonts.fraunces(textStyle: base.headlineMedium, fontWeight: FontWeight.w600),
-      headlineSmall: GoogleFonts.fraunces(textStyle: base.headlineSmall, fontWeight: FontWeight.w600),
+      displayLarge: GoogleFonts.sora(textStyle: base.displayLarge, fontWeight: FontWeight.bold),
+      displayMedium: GoogleFonts.sora(textStyle: base.displayMedium, fontWeight: FontWeight.bold),
+      displaySmall: GoogleFonts.sora(textStyle: base.displaySmall, fontWeight: FontWeight.w600),
+      headlineLarge: GoogleFonts.sora(textStyle: base.headlineLarge, fontWeight: FontWeight.bold),
+      headlineMedium: GoogleFonts.sora(textStyle: base.headlineMedium, fontWeight: FontWeight.w600),
+      headlineSmall: GoogleFonts.sora(textStyle: base.headlineSmall, fontWeight: FontWeight.w600),
 
-      // Urbanist: Modern, geometric but friendly sans-serif
-      titleLarge: GoogleFonts.urbanist(textStyle: base.titleLarge, fontWeight: FontWeight.bold),
-      titleMedium: GoogleFonts.urbanist(textStyle: base.titleMedium, fontWeight: FontWeight.bold),
-      titleSmall: GoogleFonts.urbanist(textStyle: base.titleSmall, fontWeight: FontWeight.bold),
-      bodyLarge: GoogleFonts.urbanist(textStyle: base.bodyLarge),
-      bodyMedium: GoogleFonts.urbanist(textStyle: base.bodyMedium),
-      bodySmall: GoogleFonts.urbanist(textStyle: base.bodySmall),
-      labelLarge: GoogleFonts.urbanist(textStyle: base.labelLarge, fontWeight: FontWeight.bold),
+      titleLarge: GoogleFonts.sora(textStyle: base.titleLarge, fontWeight: FontWeight.bold),
+      titleMedium: GoogleFonts.sora(textStyle: base.titleMedium, fontWeight: FontWeight.bold),
+      titleSmall: GoogleFonts.sora(textStyle: base.titleSmall, fontWeight: FontWeight.bold),
+
+      bodyLarge: GoogleFonts.sora(textStyle: base.bodyLarge),
+      bodyMedium: GoogleFonts.sora(textStyle: base.bodyMedium),
+      bodySmall: GoogleFonts.sora(textStyle: base.bodySmall),
+      labelLarge: GoogleFonts.sora(textStyle: base.labelLarge, fontWeight: FontWeight.bold),
     );
   }
 
@@ -60,14 +60,14 @@ class AppTheme {
         style: FilledButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), // More rounded
-          textStyle: GoogleFonts.urbanist(fontWeight: FontWeight.bold, fontSize: 16),
+          textStyle: GoogleFonts.sora(fontWeight: FontWeight.bold, fontSize: 16),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          textStyle: GoogleFonts.urbanist(fontWeight: FontWeight.bold, fontSize: 16),
+          textStyle: GoogleFonts.sora(fontWeight: FontWeight.bold, fontSize: 16),
           elevation: 2,
         ),
       ),
@@ -75,7 +75,7 @@ class AppTheme {
         style: OutlinedButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          textStyle: GoogleFonts.urbanist(fontWeight: FontWeight.bold, fontSize: 16),
+          textStyle: GoogleFonts.sora(fontWeight: FontWeight.bold, fontSize: 16),
           side: const BorderSide(width: 1.5),
         ),
       ),
@@ -96,8 +96,8 @@ class AppTheme {
           borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: Colors.red, width: 1),
         ),
-        labelStyle: GoogleFonts.urbanist(color: Colors.grey.shade700),
-        hintStyle: GoogleFonts.urbanist(color: Colors.grey.shade400),
+        labelStyle: GoogleFonts.sora(color: Colors.grey.shade700),
+        hintStyle: GoogleFonts.sora(color: Colors.grey.shade400),
       ),
       cardTheme: CardThemeData(
         elevation: 0,
@@ -110,7 +110,7 @@ class AppTheme {
         backgroundColor: neutralBg,
         elevation: 0,
         centerTitle: true,
-        titleTextStyle: GoogleFonts.fraunces(color: const Color(0xFF2C2C2C), fontSize: 22, fontWeight: FontWeight.bold),
+        titleTextStyle: GoogleFonts.sora(color: const Color(0xFF2C2C2C), fontSize: 18, fontWeight: FontWeight.bold),
         iconTheme: const IconThemeData(color: Color(0xFF2C2C2C)),
       ),
       extensions: const <ThemeExtension<dynamic>>[BrandColors(success: accentGreen, danger: accentRed)],
@@ -119,27 +119,28 @@ class AppTheme {
 
   static ThemeData get darkTheme {
     final base = ThemeData.dark();
-    const darkBg = Color(0xFF1A1614); // Very Dark Brown/Black
-    const darkSurface = Color(0xFF26211E);
+    const darkBg = Color(0xFF272727); // Deep Charcoal (Figma Style)
+    const darkSurface = Color(0xFF313131); // Slightly lighter
 
     return base.copyWith(
       colorScheme: ColorScheme.fromSeed(
         seedColor: primary,
         brightness: Brightness.dark,
-        primary: secondary, // Use lighter gold/latte for primary in dark mode
-        onPrimary: const Color(0xFF2C2C2C),
-        secondary: primary,
+        primary: primary, // Copper Orange
+        onPrimary: Colors.white,
+        secondary: secondary,
+        onSecondary: const Color(0xFF2C2C2C),
         surface: darkBg,
         surfaceContainer: darkSurface,
       ),
-      textTheme: _buildTextTheme(base.textTheme).apply(displayColor: const Color(0xFFEDE3DD), bodyColor: const Color(0xFFD7CCC8), fontFamilyFallback: ['Roboto']),
+      textTheme: _buildTextTheme(base.textTheme).apply(displayColor: Colors.white, bodyColor: const Color(0xFFE0E0E0), fontFamilyFallback: ['Roboto']),
       scaffoldBackgroundColor: darkBg,
       appBarTheme: AppBarTheme(
         backgroundColor: darkBg,
         elevation: 0,
         centerTitle: true,
-        titleTextStyle: GoogleFonts.fraunces(color: const Color(0xFFEDE3DD), fontSize: 22, fontWeight: FontWeight.bold),
-        iconTheme: const IconThemeData(color: Color(0xFFEDE3DD)),
+        titleTextStyle: GoogleFonts.sora(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
@@ -152,10 +153,10 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: secondary, width: 2),
+          borderSide: const BorderSide(color: primary, width: 2),
         ),
-        labelStyle: GoogleFonts.urbanist(color: Colors.grey.shade400),
-        hintStyle: GoogleFonts.urbanist(color: Colors.grey.shade600),
+        labelStyle: GoogleFonts.sora(color: Colors.grey.shade400),
+        hintStyle: GoogleFonts.sora(color: Colors.grey.shade600),
       ),
       cardTheme: CardThemeData(
         elevation: 0,
@@ -165,11 +166,11 @@ class AppTheme {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: secondary,
-          foregroundColor: const Color(0xFF2C2C2C),
+          backgroundColor: primary,
+          foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          textStyle: GoogleFonts.urbanist(fontWeight: FontWeight.bold, fontSize: 16),
+          textStyle: GoogleFonts.sora(fontWeight: FontWeight.bold, fontSize: 16),
         ),
       ),
       extensions: const <ThemeExtension<dynamic>>[BrandColors(success: accentGreen, danger: accentRed)],

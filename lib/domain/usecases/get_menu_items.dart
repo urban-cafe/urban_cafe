@@ -17,6 +17,8 @@ class GetMenuItems implements UseCase<List<MenuItemEntity>, GetMenuItemsParams> 
       search: params.search,
       categoryId: params.categoryId,
       categoryIds: params.categoryIds,
+      isMostPopular: params.isMostPopular,
+      isWeekendSpecial: params.isWeekendSpecial,
     );
   }
 }
@@ -27,6 +29,8 @@ class GetMenuItemsParams extends Equatable {
   final String? search;
   final String? categoryId;
   final List<String>? categoryIds;
+  final bool? isMostPopular;
+  final bool? isWeekendSpecial;
 
   const GetMenuItemsParams({
     this.page = 1,
@@ -34,8 +38,10 @@ class GetMenuItemsParams extends Equatable {
     this.search,
     this.categoryId,
     this.categoryIds,
+    this.isMostPopular,
+    this.isWeekendSpecial,
   });
 
   @override
-  List<Object?> get props => [page, pageSize, search, categoryId, categoryIds];
+  List<Object?> get props => [page, pageSize, search, categoryId, categoryIds, isMostPopular, isWeekendSpecial];
 }

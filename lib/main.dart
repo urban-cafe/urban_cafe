@@ -136,7 +136,106 @@ class _UrbanCafeAppState extends State<UrbanCafeApp> {
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = context.read<AuthProvider>();
+    // Watch AuthProvider to rebuild router when role/login changes
+    final authProvider = context.watch<AuthProvider>();
+
+    // Define branches based on role
+    List<StatefulShellBranch> branches;
+
+    if (authProvider.isAdmin) {
+      branches = [
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/admin',
+              builder: (context, state) => const AdminListScreen(),
+              routes: [GoRoute(path: 'analytics', builder: (context, state) => const AdminAnalyticsScreen())],
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [GoRoute(path: '/admin/orders', builder: (context, state) => const AdminOrdersScreen())],
+        ),
+        StatefulShellBranch(
+          routes: [GoRoute(path: '/admin/categories', builder: (context, state) => const AdminCategoryManagerScreen())],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/profile',
+              builder: (context, state) => const ProfileScreen(),
+              routes: [
+                GoRoute(path: 'language', builder: (context, state) => const LanguageScreen()),
+                GoRoute(path: 'theme', builder: (context, state) => const ThemeScreen()),
+                GoRoute(path: 'favorites', builder: (context, state) => const FavoritesScreen()),
+                GoRoute(path: 'orders', builder: (context, state) => const ClientOrdersScreen()),
+              ],
+            ),
+          ],
+        ),
+      ];
+    } else if (authProvider.isStaff) {
+      branches = [
+        StatefulShellBranch(
+          routes: [GoRoute(path: '/staff', builder: (context, state) => const StaffOrdersScreen())],
+        ),
+        StatefulShellBranch(
+          routes: [GoRoute(path: '/admin/orders', builder: (context, state) => const AdminOrdersScreen())],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/profile',
+              builder: (context, state) => const ProfileScreen(),
+              routes: [
+                GoRoute(path: 'language', builder: (context, state) => const LanguageScreen()),
+                GoRoute(path: 'theme', builder: (context, state) => const ThemeScreen()),
+                GoRoute(path: 'favorites', builder: (context, state) => const FavoritesScreen()),
+                GoRoute(path: 'orders', builder: (context, state) => const ClientOrdersScreen()),
+              ],
+            ),
+          ],
+        ),
+      ];
+    } else {
+      // Client (Default)
+      branches = [
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/',
+              pageBuilder: (context, state) => CustomTransitionPage(key: state.pageKey, child: const MainMenuScreen(), transitionsBuilder: (context, animation, secondaryAnimation, child) => child),
+              routes: [
+                GoRoute(
+                  path: 'menu', // /menu
+                  builder: (context, state) => MenuScreen(initialMainCategory: state.uri.queryParameters['initialMainCategory'], focusSearch: state.uri.queryParameters['focusSearch'] == 'true'),
+                ),
+              ],
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [GoRoute(path: '/cart', builder: (context, state) => const CartScreen())],
+        ),
+        StatefulShellBranch(
+          routes: [GoRoute(path: '/orders', builder: (context, state) => const ClientOrdersScreen())],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/profile',
+              builder: (context, state) => const ProfileScreen(),
+              routes: [
+                GoRoute(path: 'language', builder: (context, state) => const LanguageScreen()),
+                GoRoute(path: 'theme', builder: (context, state) => const ThemeScreen()),
+                GoRoute(path: 'favorites', builder: (context, state) => const FavoritesScreen()),
+                GoRoute(path: 'orders', builder: (context, state) => const ClientOrdersScreen()),
+              ],
+            ),
+          ],
+        ),
+      ];
+    }
 
     final router = GoRouter(
       navigatorKey: _rootNavigatorKey,
@@ -163,6 +262,12 @@ class _UrbanCafeAppState extends State<UrbanCafeApp> {
 
         // 2. Logged in
         if (isLoggedIn) {
+          // Redirect root path '/' to role-specific home for non-clients
+          if (location == '/') {
+            if (isAdmin) return '/admin';
+            if (isStaff) return '/staff';
+          }
+
           // If trying to go to login page, redirect based on role
           if (isGoingToLogin || isGoingToAdminLogin) {
             if (isAdmin) return '/admin';
@@ -196,53 +301,14 @@ class _UrbanCafeAppState extends State<UrbanCafeApp> {
         GoRoute(path: '/admin/login', builder: (context, state) => const AdminLoginScreen()),
 
         // SHELL ROUTE FOR BOTTOM NAV
-        ShellRoute(
-          builder: (context, state, child) {
+        StatefulShellRoute.indexedStack(
+          builder: (context, state, navigationShell) {
             // Only show MainScaffold if NOT on login pages
             // Actually, ShellRoute wraps routes inside it.
             // Login pages are OUTSIDE ShellRoute.
-            return MainScaffold(child: child);
+            return MainScaffold(navigationShell: navigationShell);
           },
-          routes: [
-            // CLIENT ROUTES
-            GoRoute(
-              path: '/',
-              pageBuilder: (context, state) => CustomTransitionPage(key: state.pageKey, child: const MainMenuScreen(), transitionsBuilder: (context, animation, secondaryAnimation, child) => child),
-            ),
-            GoRoute(
-              path: '/menu',
-              builder: (context, state) => MenuScreen(initialMainCategory: state.uri.queryParameters['initialMainCategory']),
-            ),
-            GoRoute(path: '/cart', builder: (context, state) => const CartScreen()),
-            GoRoute(path: '/orders', builder: (context, state) => const ClientOrdersScreen()),
-
-            // STAFF ROUTES
-            GoRoute(path: '/staff', builder: (context, state) => const StaffOrdersScreen()),
-
-            // ADMIN ROUTES
-            GoRoute(path: '/admin', builder: (context, state) => const AdminListScreen()),
-            GoRoute(path: '/admin/orders', builder: (context, state) => const AdminOrdersScreen()),
-            GoRoute(path: '/admin/categories', builder: (context, state) => const AdminCategoryManagerScreen()),
-            GoRoute(path: '/admin/analytics', builder: (context, state) => const AdminAnalyticsScreen()),
-
-            // SHARED ROUTES
-            GoRoute(
-              path: '/profile',
-              builder: (context, state) => const ProfileScreen(),
-              routes: [
-                GoRoute(path: 'language', builder: (context, state) => const LanguageScreen()),
-                GoRoute(path: 'theme', builder: (context, state) => const ThemeScreen()),
-                GoRoute(path: 'favorites', builder: (context, state) => const FavoritesScreen()),
-                // For order history, we can either reuse /orders or make it a sub-route.
-                // Reusing /orders is cleaner for deep linking, but we linked to /profile/orders in the profile screen.
-                // Let's add it here as a sub-route for better context handling if needed,
-                // OR we can just redirect/push to /orders.
-                // In ProfileScreen I used context.push('/profile/orders'). So I must define it.
-                // But reusing ClientOrdersScreen is fine.
-                GoRoute(path: 'orders', builder: (context, state) => const ClientOrdersScreen()),
-              ],
-            ),
-          ],
+          branches: branches,
         ),
 
         // FULL SCREEN ROUTES (No Bottom Nav)

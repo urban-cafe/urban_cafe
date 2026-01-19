@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:urban_cafe/domain/entities/menu_item.dart';
 import 'package:urban_cafe/presentation/providers/menu_provider.dart';
-import 'package:urban_cafe/presentation/widgets/menu_item_badges.dart';
+import 'package:urban_cafe/presentation/widgets/badges/menu_item_badges.dart';
 
 class MenuCard extends StatelessWidget {
   final MenuItemEntity item;

@@ -5,7 +5,15 @@ import 'package:urban_cafe/domain/entities/menu_item.dart';
 
 abstract class MenuRepository {
   // Fetch items with optional ID-based filtering
-  Future<Either<Failure, List<MenuItemEntity>>> getMenuItems({int page, int pageSize, String? search, String? categoryId, List<String>? categoryIds});
+  Future<Either<Failure, List<MenuItemEntity>>> getMenuItems({
+    int page,
+    int pageSize,
+    String? search,
+    String? categoryId,
+    List<String>? categoryIds,
+    bool? isMostPopular,
+    bool? isWeekendSpecial,
+  });
 
   // Category Management
   Future<Either<Failure, List<Category>>> getMainCategories();

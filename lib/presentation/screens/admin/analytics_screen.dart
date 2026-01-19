@@ -18,7 +18,10 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<AdminProvider>().loadAnalytics();
+      final provider = context.read<AdminProvider>();
+      if (provider.analytics == null) {
+        provider.loadAnalytics();
+      }
     });
   }
 

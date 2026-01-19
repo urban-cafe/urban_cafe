@@ -11,7 +11,7 @@ import 'package:urban_cafe/data/repositories/menu_repository_impl.dart';
 import 'package:urban_cafe/domain/entities/category.dart';
 import 'package:urban_cafe/domain/entities/menu_item.dart';
 import 'package:urban_cafe/presentation/providers/admin_provider.dart';
-import 'package:urban_cafe/presentation/widgets/add_category_dialog.dart';
+import 'package:urban_cafe/presentation/widgets/dialogs/add_category_dialog.dart';
 
 class AdminEditScreen extends StatefulWidget {
   final String? id;

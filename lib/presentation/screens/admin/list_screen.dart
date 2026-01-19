@@ -7,7 +7,7 @@ import 'package:urban_cafe/domain/entities/menu_item.dart';
 import 'package:urban_cafe/presentation/providers/admin_provider.dart';
 import 'package:urban_cafe/presentation/providers/auth_provider.dart';
 import 'package:urban_cafe/presentation/providers/menu_provider.dart';
-import 'package:urban_cafe/presentation/widgets/admin_item_tile.dart';
+import 'package:urban_cafe/presentation/widgets/tiles/admin_item_tile.dart';
 
 class AdminListScreen extends StatefulWidget {
   const AdminListScreen({super.key});
@@ -32,7 +32,9 @@ class _AdminListScreenState extends State<AdminListScreen> {
         return;
       }
 
-      menuProvider.fetchAdminList();
+      if (menuProvider.items.isEmpty) {
+        menuProvider.fetchAdminList();
+      }
     });
 
     _scrollCtrl.addListener(() {

@@ -19,7 +19,9 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<OrderProvider>().fetchOrders();
+      if (context.read<OrderProvider>().orders.isEmpty) {
+        context.read<OrderProvider>().fetchOrders();
+      }
     });
   }
 
@@ -70,56 +72,71 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
           ),
 
           Expanded(
-            child: StreamBuilder<List<OrderEntity>>(
-              stream: orderProvider.getOrdersStream(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting && orderProvider.orders.isEmpty) {
-                  return Skeletonizer(
-                    enabled: true,
-                    child: ListView.builder(
-                      itemCount: 5,
-                      padding: const EdgeInsets.all(16),
-                      itemBuilder: (context, index) => const Card(child: SizedBox(height: 150)),
-                    ),
+            child: RefreshIndicator(
+              onRefresh: () => orderProvider.fetchOrders(),
+              child: StreamBuilder<List<OrderEntity>>(
+                stream: orderProvider.getOrdersStream(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting && orderProvider.orders.isEmpty) {
+                    return Skeletonizer(
+                      enabled: true,
+                      child: ListView.builder(
+                        itemCount: 5,
+                        padding: const EdgeInsets.all(16),
+                        itemBuilder: (context, index) => const Card(child: SizedBox(height: 150)),
+                      ),
+                    );
+                  }
+
+                  if (snapshot.hasError) {
+                    return SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: SizedBox(
+                        height: MediaQuery.of(context).size.height - 200,
+                        child: Center(child: Text('Error: ${snapshot.error}')),
+                      ),
+                    );
+                  }
+
+                  var orders = snapshot.data ?? orderProvider.orders;
+
+                  // Apply local filtering if stream returns all
+                  // The stream currently returns ALL orders unless filtered by UserID.
+                  // Admin needs to filter by status locally or via stream params (if implemented).
+                  // Our stream implementation fetches ALL. So we filter here.
+                  if (orderProvider.filterStatus != null) {
+                    orders = orders.where((o) => o.status == orderProvider.filterStatus).toList();
+                  }
+
+                  if (orders.isEmpty) {
+                    return LayoutBuilder(
+                      builder: (context, constraints) => SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        child: SizedBox(
+                          height: constraints.maxHeight,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.receipt_long_outlined, size: 64, color: colorScheme.outlineVariant),
+                              const SizedBox(height: 16),
+                              Text('no_orders_yet'.tr(), style: theme.textTheme.titleMedium),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+
+                  return ListView.separated(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: orders.length,
+                    separatorBuilder: (context, index) => const SizedBox(height: 16),
+                    itemBuilder: (context, index) {
+                      return _OrderCard(order: orders[index]);
+                    },
                   );
-                }
-
-                if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                }
-
-                var orders = snapshot.data ?? orderProvider.orders;
-
-                // Apply local filtering if stream returns all
-                // The stream currently returns ALL orders unless filtered by UserID.
-                // Admin needs to filter by status locally or via stream params (if implemented).
-                // Our stream implementation fetches ALL. So we filter here.
-                if (orderProvider.filterStatus != null) {
-                  orders = orders.where((o) => o.status == orderProvider.filterStatus).toList();
-                }
-
-                if (orders.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.receipt_long_outlined, size: 64, color: colorScheme.outlineVariant),
-                        const SizedBox(height: 16),
-                        Text('no_orders_yet'.tr(), style: theme.textTheme.titleMedium),
-                      ],
-                    ),
-                  );
-                }
-
-                return ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: orders.length,
-                  separatorBuilder: (context, index) => const SizedBox(height: 16),
-                  itemBuilder: (context, index) {
-                    return _OrderCard(order: orders[index]);
-                  },
-                );
-              },
+                },
+              ),
             ),
           ),
         ],

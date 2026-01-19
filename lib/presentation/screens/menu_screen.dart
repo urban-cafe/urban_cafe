@@ -6,11 +6,13 @@ import 'package:skeletonizer/skeletonizer.dart';
 import 'package:urban_cafe/domain/entities/menu_item.dart';
 import 'package:urban_cafe/presentation/providers/cart_provider.dart';
 import 'package:urban_cafe/presentation/providers/menu_provider.dart';
-import 'package:urban_cafe/presentation/widgets/menu_card.dart';
+import 'package:urban_cafe/presentation/widgets/cards/menu_card.dart';
+import 'package:urban_cafe/presentation/widgets/inputs/custom_search_bar.dart';
 
 class MenuScreen extends StatefulWidget {
   final String? initialMainCategory;
-  const MenuScreen({super.key, this.initialMainCategory});
+  final bool focusSearch;
+  const MenuScreen({super.key, this.initialMainCategory, this.focusSearch = false});
 
   @override
   State<MenuScreen> createState() => _MenuScreenState();
@@ -30,7 +32,9 @@ class _MenuScreenState extends State<MenuScreen> {
       if (widget.initialMainCategory != null) {
         await provider.initForMainCategory(widget.initialMainCategory!);
       } else {
-        await provider.fetchAdminList();
+        if (provider.items.isEmpty) {
+          await provider.fetchAdminList();
+        }
       }
     });
 
@@ -45,7 +49,7 @@ class _MenuScreenState extends State<MenuScreen> {
   void dispose() {
     _searchCtrl.dispose();
     _scrollCtrl.dispose();
-    // We can't easily access context in dispose to reset search, 
+    // We can't easily access context in dispose to reset search,
     // but MenuProvider handles reset on init anyway.
     super.dispose();
   }
@@ -79,22 +83,7 @@ class _MenuScreenState extends State<MenuScreen> {
             // 1. SEARCH BAR
             Padding(
               padding: const EdgeInsets.only(left: 16, bottom: 8, right: 16),
-              child: Container(
-                height: 40,
-                decoration: BoxDecoration(
-                  color: colorScheme.surface,
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: colorScheme.outlineVariant),
-                ),
-                child: TextField(
-                  controller: _searchCtrl,
-                  textAlignVertical: TextAlignVertical.center,
-                  decoration: InputDecoration(prefixIcon: const Icon(Icons.search), hintText: 'search'.tr(), border: InputBorder.none, contentPadding: const EdgeInsets.symmetric(horizontal: 16), isDense: true),
-                  // Using read() ensures typing doesn't rebuild this widget itself
-                  onChanged: (v) => context.read<MenuProvider>().setSearch(v),
-                  onSubmitted: (v) => FocusScope.of(context).unfocus(),
-                ),
-              ),
+              child: CustomSearchBar(controller: _searchCtrl, hintText: 'search'.tr(), onChanged: (v) => context.read<MenuProvider>().setSearch(v), onSubmitted: (v) => FocusScope.of(context).unfocus(), showFilter: true),
             ),
 
             // 2. HORIZONTAL CATEGORY CHIPS (Replacing the Modal)
@@ -172,43 +161,52 @@ class _MenuScreenState extends State<MenuScreen> {
                   final isLoadingInitial = provider.loading && provider.items.isEmpty;
                   final displayItems = isLoadingInitial ? List.generate(6, (index) => _dummyItem) : provider.items;
 
-                  return Skeletonizer(
-                    enabled: isLoadingInitial,
-                    effect: ShimmerEffect(baseColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5), highlightColor: colorScheme.surface),
-                    child: provider.items.isEmpty && !isLoadingInitial
-                        ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.restaurant_menu, size: 64, color: colorScheme.outlineVariant),
-                                const SizedBox(height: 16),
-                                Text('no_items_found'.tr(), style: textTheme.bodyLarge),
-                              ],
-                            ),
-                          )
-                        : ListView.separated(
-                            controller: _scrollCtrl,
-                            cacheExtent: 2000, // Keep more items in memory to prevent smooth scrolling issues
-                            padding: const EdgeInsets.only(top: 8, bottom: 32),
-                            itemCount: displayItems.length + (provider.loadingMore ? 1 : 0),
-                            separatorBuilder: (_, _) => Divider(height: 1, indent: 16, endIndent: 16, color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
-                            itemBuilder: (context, index) {
-                              if (index == displayItems.length) {
-                                return Skeletonizer(enabled: true, child: MenuCard(item: _dummyItem, onTap: null));
-                              }
+                  return RefreshIndicator(
+                    onRefresh: () async {
+                      if (widget.initialMainCategory != null) {
+                        await provider.initForMainCategory(widget.initialMainCategory!);
+                      } else {
+                        await provider.fetchAdminList();
+                      }
+                    },
+                    child: Skeletonizer(
+                      enabled: isLoadingInitial,
+                      effect: ShimmerEffect(baseColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5), highlightColor: colorScheme.surface),
+                      child: provider.items.isEmpty && !isLoadingInitial
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.restaurant_menu, size: 64, color: colorScheme.outlineVariant),
+                                  const SizedBox(height: 16),
+                                  Text('no_items_found'.tr(), style: textTheme.bodyLarge),
+                                ],
+                              ),
+                            )
+                          : ListView.separated(
+                              controller: _scrollCtrl,
+                              cacheExtent: 2000, // Keep more items in memory to prevent smooth scrolling issues
+                              padding: const EdgeInsets.only(top: 8, bottom: 32),
+                              itemCount: displayItems.length + (provider.loadingMore ? 1 : 0),
+                              separatorBuilder: (_, _) => Divider(height: 1, indent: 16, endIndent: 16, color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
+                              itemBuilder: (context, index) {
+                                if (index == displayItems.length) {
+                                  return Skeletonizer(enabled: true, child: MenuCard(item: _dummyItem, onTap: null));
+                                }
 
-                              final item = displayItems[index];
-                              return MenuCard(
-                                item: item,
-                                onTap: isLoadingInitial
-                                    ? null
-                                    : () {
-                                        FocusScope.of(context).unfocus();
-                                        context.push('/detail', extra: item);
-                                      },
-                              );
-                            },
-                          ),
+                                final item = displayItems[index];
+                                return MenuCard(
+                                  item: item,
+                                  onTap: isLoadingInitial
+                                      ? null
+                                      : () {
+                                          FocusScope.of(context).unfocus();
+                                          context.push('/detail', extra: item);
+                                        },
+                                );
+                              },
+                            ),
+                    ),
                   );
                 },
               ),

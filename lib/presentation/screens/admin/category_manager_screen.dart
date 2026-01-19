@@ -6,7 +6,7 @@ import 'package:urban_cafe/core/utils.dart';
 import 'package:urban_cafe/core/validators.dart';
 import 'package:urban_cafe/presentation/providers/admin_provider.dart';
 import 'package:urban_cafe/presentation/providers/category_manager_provider.dart';
-import 'package:urban_cafe/presentation/widgets/add_category_dialog.dart';
+import 'package:urban_cafe/presentation/widgets/dialogs/add_category_dialog.dart';
 
 class AdminCategoryManagerScreen extends StatefulWidget {
   const AdminCategoryManagerScreen({super.key});
@@ -21,7 +21,10 @@ class _AdminCategoryManagerScreenState extends State<AdminCategoryManagerScreen>
     super.initState();
     // Fetch data on init, but logic lives in Provider
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<CategoryManagerProvider>().loadTree();
+      final provider = context.read<CategoryManagerProvider>();
+      if (provider.displayTree.isEmpty) {
+        provider.loadTree();
+      }
     });
   }
 
@@ -165,102 +168,111 @@ class _AdminCategoryManagerScreenState extends State<AdminCategoryManagerScreen>
             final displayList = provider.displayTree;
             final isLoading = provider.isLoading;
 
-            return Skeletonizer(
-              enabled: isLoading,
-              effect: ShimmerEffect(baseColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5), highlightColor: colorScheme.surface),
-              child: displayList.isEmpty && !isLoading
-                  ? Center(child: Text("No categories yet", style: theme.textTheme.titleMedium))
-                  : ListView.builder(
-                      padding: const EdgeInsets.only(bottom: 80),
-                      itemCount: displayList.length,
-                      itemBuilder: (context, index) {
-                        final node = displayList[index];
-                        final main = node['data'] as Map<String, dynamic>;
-                        final subs = node['subs'] as List<Map<String, dynamic>>;
+            return RefreshIndicator(
+              onRefresh: () async => provider.loadTree(),
+              child: Skeletonizer(
+                enabled: isLoading,
+                effect: ShimmerEffect(baseColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5), highlightColor: colorScheme.surface),
+                child: displayList.isEmpty && !isLoading
+                    ? LayoutBuilder(
+                        builder: (context, constraints) => SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                            child: Center(child: Text("No categories yet", style: theme.textTheme.titleMedium)),
+                          ),
+                        ),
+                      )
+                    : ListView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.only(bottom: 80),
+                        itemCount: displayList.length,
+                        itemBuilder: (context, index) {
+                          final node = displayList[index];
+                          final main = node['data'] as Map<String, dynamic>;
+                          final subs = node['subs'] as List<Map<String, dynamic>>;
 
-                        return Card(
-                          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          elevation: 2,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          child: Theme(
-                            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-                            child: ExpansionTile(
-                              tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                              collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              leading: Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(color: colorScheme.primaryContainer, borderRadius: BorderRadius.circular(12)),
-                                child: Icon(Icons.folder_outlined, color: colorScheme.onPrimaryContainer),
-                              ),
-                              title: Text(main['name'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                              subtitle: Text('${subs.length} sub-categories', style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12)),
-                              // Custom Trailing for Main Category
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
+                          return Card(
+                            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            elevation: 2,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            child: Theme(
+                              data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                              child: ExpansionTile(
+                                tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                leading: Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(color: colorScheme.primaryContainer, borderRadius: BorderRadius.circular(12)),
+                                  child: Icon(Icons.folder_outlined, color: colorScheme.onPrimaryContainer),
+                                ),
+                                title: Text(main['name'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                subtitle: Text('${subs.length} sub-categories', style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12)),
+                                // Custom Trailing for Main Category
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(icon: const Icon(Icons.edit_outlined), onPressed: isLoading ? null : () => _showRenameDialog(main['id'], main['name'])),
+                                    IconButton(
+                                      icon: Icon(Icons.delete_outline, color: colorScheme.error),
+                                      onPressed: isLoading ? null : () => _confirmDelete(main['id'], main['name']),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    const Icon(Icons.expand_more),
+                                  ],
+                                ),
                                 children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.edit_outlined),
-                                    onPressed: isLoading ? null : () => _showRenameDialog(main['id'], main['name']),
+                                  const Divider(height: 1),
+                                  // Sub-categories List
+                                  ...subs.map(
+                                    (sub) => Container(
+                                      color: colorScheme.surfaceContainerLow.withValues(alpha: 0.5),
+                                      child: ListTile(
+                                        contentPadding: const EdgeInsets.only(left: 72, right: 16),
+                                        title: Text(sub['name'], style: const TextStyle(fontWeight: FontWeight.w500)),
+                                        leading: const Icon(Icons.subdirectory_arrow_right, size: 20, color: Colors.grey),
+                                        trailing: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            IconButton(icon: const Icon(Icons.edit_outlined, size: 20), tooltip: 'Rename', onPressed: isLoading ? null : () => _showRenameDialog(sub['id'], sub['name'])),
+                                            IconButton(
+                                              icon: Icon(Icons.delete_outline, size: 20, color: colorScheme.error),
+                                              tooltip: 'Delete',
+                                              onPressed: isLoading ? null : () => _confirmDelete(sub['id'], sub['name']),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
                                   ),
-                                  IconButton(
-                                    icon: Icon(Icons.delete_outline, color: colorScheme.error),
-                                    onPressed: isLoading ? null : () => _confirmDelete(main['id'], main['name']),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  const Icon(Icons.expand_more),
-                                ],
-                              ),
-                              children: [
-                                const Divider(height: 1),
-                                // Sub-categories List
-                                ...subs.map(
-                                  (sub) => Container(
-                                    color: colorScheme.surfaceContainerLow.withValues(alpha: 0.5),
-                                    child: ListTile(
-                                      contentPadding: const EdgeInsets.only(left: 72, right: 16),
-                                      title: Text(sub['name'], style: const TextStyle(fontWeight: FontWeight.w500)),
-                                      leading: const Icon(Icons.subdirectory_arrow_right, size: 20, color: Colors.grey),
-                                      trailing: Row(
-                                        mainAxisSize: MainAxisSize.min,
+
+                                  // Add Sub-Category Button
+                                  InkWell(
+                                    onTap: isLoading ? null : () => _triggerCreate(parentId: main['id']),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                                      color: colorScheme.primaryContainer.withValues(alpha: 0.1),
+                                      child: Row(
                                         children: [
-                                          IconButton(icon: const Icon(Icons.edit_outlined, size: 20), tooltip: 'Rename', onPressed: isLoading ? null : () => _showRenameDialog(sub['id'], sub['name'])),
-                                          IconButton(
-                                            icon: Icon(Icons.delete_outline, size: 20, color: colorScheme.error),
-                                            tooltip: 'Delete',
-                                            onPressed: isLoading ? null : () => _confirmDelete(sub['id'], sub['name']),
+                                          const SizedBox(width: 56), // Align with sub-cat text
+                                          Icon(Icons.add_circle_outline, size: 20, color: colorScheme.primary),
+                                          const SizedBox(width: 12),
+                                          Text(
+                                            "Add Sub-Category",
+                                            style: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.bold),
                                           ),
                                         ],
                                       ),
                                     ),
                                   ),
-                                ),
-
-                                // Add Sub-Category Button
-                                InkWell(
-                                  onTap: isLoading ? null : () => _triggerCreate(parentId: main['id']),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-                                    color: colorScheme.primaryContainer.withValues(alpha: 0.1),
-                                    child: Row(
-                                      children: [
-                                        const SizedBox(width: 56), // Align with sub-cat text
-                                        Icon(Icons.add_circle_outline, size: 20, color: colorScheme.primary),
-                                        const SizedBox(width: 12),
-                                        Text(
-                                          "Add Sub-Category",
-                                          style: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.bold),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
+                          );
+                        },
+                      ),
+              ),
             );
           },
         ),

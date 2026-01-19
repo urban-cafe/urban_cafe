@@ -3,7 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:urban_cafe/domain/entities/menu_item.dart';
-import 'package:urban_cafe/presentation/widgets/menu_item_badges.dart';
+import 'package:urban_cafe/presentation/widgets/badges/menu_item_badges.dart';
 
 class AdminItemTile extends StatelessWidget {
   final MenuItemEntity item;

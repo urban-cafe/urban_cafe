@@ -8,66 +8,101 @@ import 'package:urban_cafe/domain/entities/order_status.dart';
 import 'package:urban_cafe/domain/entities/order_type.dart';
 import 'package:urban_cafe/presentation/providers/order_provider.dart';
 
-class StaffOrdersScreen extends StatelessWidget {
+class StaffOrdersScreen extends StatefulWidget {
   const StaffOrdersScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final provider = context.read<OrderProvider>();
+  State<StaffOrdersScreen> createState() => _StaffOrdersScreenState();
+}
 
+class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
+  late Stream<List<OrderEntity>> _ordersStream;
+
+  @override
+  void initState() {
+    super.initState();
+    _ordersStream = context.read<OrderProvider>().getOrdersStream();
+  }
+
+  Future<void> _refresh() async {
+    setState(() {
+      _ordersStream = context.read<OrderProvider>().getOrdersStream();
+    });
+    // Optional: Add a small delay to show the refresh indicator
+    await Future.delayed(const Duration(milliseconds: 500));
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('live_kitchen_orders'.tr()),
-        actions: [
-          // Preparation Timer Toggle or Status could go here
-          IconButton(icon: const Icon(Icons.print), onPressed: () => _showPrintDialog(context)),
-          // Removed redundant Profile Icon (now in Bottom Nav)
-        ],
+        actions: [IconButton(icon: const Icon(Icons.print), onPressed: () => _showPrintDialog(context))],
       ),
-      body: StreamBuilder<List<OrderEntity>>(
-        stream: provider.getOrdersStream(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
+      body: RefreshIndicator(
+        onRefresh: _refresh,
+        child: StreamBuilder<List<OrderEntity>>(
+          stream: _ordersStream,
+          builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              return LayoutBuilder(
+                builder: (context, constraints) => SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                    child: Center(child: Text('Error: ${snapshot.error}')),
+                  ),
+                ),
+              );
+            }
 
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Skeletonizer(
-              enabled: true,
-              child: ListView.builder(
-                itemCount: 5,
-                padding: const EdgeInsets.all(16),
-                itemBuilder: (context, index) => const Card(child: SizedBox(height: 150)),
-              ),
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Skeletonizer(
+                enabled: true,
+                child: ListView.builder(
+                  itemCount: 5,
+                  padding: const EdgeInsets.all(16),
+                  itemBuilder: (context, index) => const Card(child: SizedBox(height: 150)),
+                ),
+              );
+            }
+
+            final orders = snapshot.data ?? [];
+            // Filter out completed/cancelled for Kitchen View (Focus on Active)
+            final activeOrders = orders.where((o) => o.status != OrderStatus.completed && o.status != OrderStatus.cancelled).toList();
+
+            if (activeOrders.isEmpty) {
+              return LayoutBuilder(
+                builder: (context, constraints) => SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.check_circle_outline, size: 80, color: Colors.green),
+                          const SizedBox(height: 16),
+                          Text('no_items_found'.tr(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }
+
+            return ListView.separated(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(16),
+              itemCount: activeOrders.length,
+              separatorBuilder: (_, _) => const SizedBox(height: 16),
+              itemBuilder: (context, index) {
+                return _StaffOrderCard(order: activeOrders[index]);
+              },
             );
-          }
-
-          final orders = snapshot.data ?? [];
-          // Filter out completed/cancelled for Kitchen View (Focus on Active)
-          final activeOrders = orders.where((o) => o.status != OrderStatus.completed && o.status != OrderStatus.cancelled).toList();
-
-          if (activeOrders.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.check_circle_outline, size: 80, color: Colors.green),
-                  const SizedBox(height: 16),
-                  Text('no_items_found'.tr(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                ],
-              ),
-            );
-          }
-
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: activeOrders.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 16),
-            itemBuilder: (context, index) {
-              return _StaffOrderCard(order: activeOrders[index]);
-            },
-          );
-        },
+          },
+        ),
       ),
     );
   }

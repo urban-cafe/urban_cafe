@@ -15,7 +15,15 @@ class MenuRepositoryImpl implements MenuRepository {
   SupabaseClient get _client => SupabaseClientProvider.client;
 
   @override
-  Future<Either<Failure, List<MenuItemEntity>>> getMenuItems({int page = 1, int pageSize = 10, String? search, String? categoryId, List<String>? categoryIds}) async {
+  Future<Either<Failure, List<MenuItemEntity>>> getMenuItems({
+    int page = 1,
+    int pageSize = 10,
+    String? search,
+    String? categoryId,
+    List<String>? categoryIds,
+    bool? isMostPopular,
+    bool? isWeekendSpecial,
+  }) async {
     if (!Env.isConfigured) return const Left(AuthFailure('Supabase not configured'));
 
     try {
@@ -31,6 +39,14 @@ class MenuRepositoryImpl implements MenuRepository {
         query = query.inFilter('category_id', categoryIds);
       } else if (categoryId != null) {
         query = query.eq('category_id', categoryId);
+      }
+
+      // Filter by Flags
+      if (isMostPopular == true) {
+        query = query.eq('is_most_popular', true);
+      }
+      if (isWeekendSpecial == true) {
+        query = query.eq('is_weekend_special', true);
       }
 
       final data = await query.order('name', ascending: true).range((page - 1) * pageSize, page * pageSize - 1);

@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
-import 'package:urban_cafe/core/common_constants.dart';
-import 'package:urban_cafe/presentation/providers/cart_provider.dart';
+import 'package:urban_cafe/presentation/providers/auth_provider.dart';
 import 'package:urban_cafe/presentation/providers/menu_provider.dart';
-import 'package:urban_cafe/presentation/widgets/contact_info_sheet.dart';
-import 'package:urban_cafe/presentation/widgets/social_link_button.dart';
-import 'package:urban_cafe/presentation/widgets/theme_selection_button.dart';
+import 'package:urban_cafe/presentation/widgets/cards/grid_menu_card.dart';
+import 'package:urban_cafe/presentation/widgets/inputs/custom_search_bar.dart';
 
-// 1. Change to StatefulWidget
 class MainMenuScreen extends StatefulWidget {
   const MainMenuScreen({super.key});
 
@@ -19,191 +15,265 @@ class MainMenuScreen extends StatefulWidget {
 }
 
 class _MainMenuScreenState extends State<MainMenuScreen> {
+  final TextEditingController _searchCtrl = TextEditingController();
+
   @override
   void initState() {
     super.initState();
-    // Trigger load on init. Data is stored in Provider.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<MenuProvider>().loadMainCategories();
+      final provider = context.read<MenuProvider>();
+      if (provider.popularItems.isEmpty || provider.specialItems.isEmpty) {
+        provider.loadHomeData();
+      }
     });
+  }
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final isDark = theme.brightness == Brightness.dark;
+    final cs = theme.colorScheme;
+    final provider = context.watch<MenuProvider>();
+    final auth = context.watch<AuthProvider>();
+    final user = auth.currentUser;
+    final userName = user?.userMetadata?['full_name']?.split(' ').first ?? 'Guest';
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        // Removed leading Profile Icon as it is now in BottomNavBar
-        actions: const [ThemeSelectionButton()],
-      ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          return SingleChildScrollView(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: constraints.maxHeight),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 600),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 2),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Hero(
-                          tag: 'app_logo',
-                          child: Image.asset(
-                            'assets/logos/urbancafelogo.png',
-                            height: 220,
-                            fit: BoxFit.contain,
-                            color: isDark ? colorScheme.onSecondaryContainer : null,
-                            errorBuilder: (_, _, _) => Icon(Icons.local_cafe, size: 100, color: colorScheme.primary),
+      backgroundColor: cs.surface,
+      body: SafeArea(
+        child: RefreshIndicator(
+          onRefresh: () => provider.loadHomeData(),
+          child: CustomScrollView(
+            slivers: [
+              // 1. HEADER & SEARCH
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Location / Greeting
+                      Row(
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Location', style: theme.textTheme.labelMedium?.copyWith(color: cs.onSurfaceVariant)),
+                              Row(
+                                children: [
+                                  Text(
+                                    'Yangon, Myanmar',
+                                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: cs.onSurface),
+                                  ),
+                                  const Icon(Icons.keyboard_arrow_down, size: 20),
+                                ],
+                              ),
+                            ],
+                          ),
+                          const Spacer(),
+                          // Profile Image (or Initials)
+                          InkWell(
+                            onTap: () => context.go('/profile'),
+                            borderRadius: BorderRadius.circular(12),
+                            child: Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: cs.surfaceContainerHigh,
+                                borderRadius: BorderRadius.circular(12),
+                                image: user?.userMetadata?['avatar_url'] != null ? DecorationImage(image: NetworkImage(user!.userMetadata!['avatar_url']), fit: BoxFit.cover) : null,
+                              ),
+                              child: user?.userMetadata?['avatar_url'] == null ? Icon(Icons.person, color: cs.onSurfaceVariant) : null,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Search Bar
+                      Hero(
+                        tag: 'search-bar-hero',
+                        child: Material(
+                          type: MaterialType.transparency,
+                          child: CustomSearchBar(
+                            controller: _searchCtrl,
+                            hintText: 'Search coffee, drinks...',
+                            readOnly: true, // Navigate to full search page on tap
+                            onTap: () => context.push('/menu?focusSearch=true'),
+                            showFilter: true,
                           ),
                         ),
-                        const SizedBox(height: 16),
-
-                        // Use Consumer instead of FutureBuilder
-                        Consumer<MenuProvider>(
-                          builder: (context, menu, child) {
-                            // 1. LOADING STATE
-                            if (menu.mainCategoriesLoading && menu.mainCategories.isEmpty) {
-                              return Skeletonizer(
-                                enabled: true,
-                                effect: ShimmerEffect(baseColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3), highlightColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.1)),
-                                child: Column(
-                                  children: List.generate(4, (index) {
-                                    return const _MenuButton(label: 'Delicious Category', icon: Icons.local_cafe_rounded, route: '');
-                                  }),
-                                ),
-                              );
-                            }
-
-                            // 2. ERROR / EMPTY STATE
-                            if (menu.mainCategories.isEmpty) {
-                              return const Column(
-                                children: [
-                                  _MenuButton(label: 'Coffee', icon: Icons.local_cafe_rounded, route: '/menu?initialMainCategory=Coffee'),
-                                  _MenuButton(label: 'Drinks', icon: Icons.local_drink_rounded, route: '/menu?initialMainCategory=Drinks'),
-                                  _MenuButton(label: 'Food', icon: Icons.restaurant_menu_rounded, route: '/menu?initialMainCategory=FOOD'),
-                                  _MenuButton(label: 'Bread & Cakes', icon: Icons.bakery_dining_rounded, route: '/menu?initialMainCategory=Bread%20%26%20Cakes'),
-                                ],
-                              );
-                            }
-
-                            // 3. SUCCESS STATE
-                            return Column(
-                              children: menu.mainCategories.map((cat) {
-                                final encodedName = Uri.encodeComponent(cat.name);
-                                final icon = menu.getIconForCategory(cat.name);
-                                return _MenuButton(label: cat.name, icon: icon, route: '/menu?initialMainCategory=$encodedName');
-                              }).toList(),
-                            );
-                          },
-                        ),
-
-                        const SizedBox(height: 16),
-                        const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            SocialLinkButton(icon: FontAwesomeIcons.tiktok, url: CommonConstants.tiktokUrl),
-                            SizedBox(width: 16),
-                            SocialLinkButton(icon: FontAwesomeIcons.facebookF, url: CommonConstants.facebookUrl),
-                            SizedBox(width: 16),
-                            SocialLinkButton(icon: FontAwesomeIcons.instagram, url: CommonConstants.instagramUrl),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        TextButton.icon(
-                          onPressed: () => _showContactSheet(context),
-                          label: const Text('Contact Us'),
-                          style: TextButton.styleFrom(foregroundColor: colorScheme.primary),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            ),
-          );
-        },
-      ),
-      floatingActionButton: Consumer<CartProvider>(
-        builder: (context, cart, child) {
-          if (cart.items.isEmpty) return const SizedBox.shrink();
-          return FloatingActionButton.extended(onPressed: () => context.push('/cart'), backgroundColor: colorScheme.primary, foregroundColor: colorScheme.onPrimary, icon: const Icon(Icons.shopping_cart), label: Text('${cart.itemCount} items'));
-        },
+
+              // 2. PROMO BANNER
+              SliverToBoxAdapter(
+                child: Skeletonizer(
+                  enabled: provider.loading,
+                  child: _PromoBanner(item: provider.specialItems.isNotEmpty ? provider.specialItems.first : null),
+                ),
+              ),
+
+              // 3. CATEGORIES (Horizontal)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Text("Categories", style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        height: 48,
+                        child: Skeletonizer(
+                          enabled: provider.mainCategoriesLoading,
+                          child: ListView.separated(
+                            padding: const EdgeInsets.symmetric(horizontal: 24),
+                            scrollDirection: Axis.horizontal,
+                            itemCount: provider.mainCategories.isEmpty ? 5 : provider.mainCategories.length,
+                            separatorBuilder: (_, _) => const SizedBox(width: 12),
+                            itemBuilder: (context, index) {
+                              if (provider.mainCategories.isEmpty) {
+                                return const _CategoryChip(label: 'Loading...', isSelected: false);
+                              }
+                              final cat = provider.mainCategories[index];
+                              return _CategoryChip(
+                                label: cat.name,
+                                isSelected: index == 0, // Highlight first for visual
+                                onTap: () => context.push('/menu?initialMainCategory=${Uri.encodeComponent(cat.name)}'),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // 4. POPULAR ITEMS (Grid)
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                sliver: SliverToBoxAdapter(
+                  child: Text("Popular Now", style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                ),
+              ),
+
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 100), // Bottom padding for FAB
+                sliver: Skeletonizer.sliver(
+                  enabled: provider.loading,
+                  child: SliverGrid(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      mainAxisSpacing: 16,
+                      crossAxisSpacing: 16,
+                      childAspectRatio: 0.75, // Taller cards
+                    ),
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      if (provider.popularItems.isEmpty) {
+                        // Show placeholder if empty or loading
+                        return Container(
+                          decoration: BoxDecoration(color: cs.surfaceContainer, borderRadius: BorderRadius.circular(16)),
+                        );
+                      }
+                      return GridMenuCard(item: provider.popularItems[index]);
+                    }, childCount: provider.popularItems.isEmpty ? 4 : provider.popularItems.length),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 }
 
-// ... Keep existing _showContactSheet and _MenuButton code ...
-void _showContactSheet(BuildContext context) {
-  showModalBottomSheet(
-    context: context,
-    backgroundColor: Theme.of(context).colorScheme.surface,
-    isScrollControlled: true,
-    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
-    builder: (_) => const ContactInfoSheet(),
-  );
-}
+class _PromoBanner extends StatelessWidget {
+  final dynamic item; // Can be MenuItemEntity or null
 
-class _MenuButton extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final String route;
-
-  const _MenuButton({required this.label, required this.icon, required this.route});
+  const _PromoBanner({this.item});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final isDark = theme.brightness == Brightness.dark;
+    final cs = theme.colorScheme;
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
-      child: Container(
-        height: 80, // Taller button
-        decoration: BoxDecoration(
-          gradient: LinearGradient(colors: isDark ? [colorScheme.surfaceContainerHighest, colorScheme.surfaceContainer] : [colorScheme.primary, colorScheme.primary.withValues(alpha: 0.8)], begin: Alignment.topLeft, end: Alignment.bottomRight),
-          borderRadius: BorderRadius.circular(24), // More rounded
-          boxShadow: [BoxShadow(color: (isDark ? Colors.black : colorScheme.primary).withValues(alpha: 0.3), blurRadius: 15, offset: const Offset(0, 8))],
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => context.push(route),
-            borderRadius: BorderRadius.circular(24),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), shape: BoxShape.circle),
-                    child: Icon(icon, size: 28, color: Colors.white),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 24),
+      height: 160,
+      decoration: BoxDecoration(
+        color: cs.primary,
+        borderRadius: BorderRadius.circular(24),
+        image: item?.imageUrl != null ? DecorationImage(image: NetworkImage(item.imageUrl!), fit: BoxFit.cover, colorFilter: ColorFilter.mode(Colors.black.withValues(alpha: 0.4), BlendMode.darken)) : null,
+        boxShadow: [BoxShadow(color: cs.primary.withValues(alpha: 0.4), blurRadius: 15, offset: const Offset(0, 8))],
+      ),
+      child: Stack(
+        children: [
+          // Background Pattern (Optional)
+          if (item?.imageUrl == null) Positioned(right: -20, bottom: -20, child: Icon(Icons.local_cafe, size: 180, color: Colors.white.withValues(alpha: 0.1))),
+
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(color: cs.error, borderRadius: BorderRadius.circular(8)),
+                  child: const Text(
+                    'Promo',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
                   ),
-                  const SizedBox(width: 24),
-                  Text(
-                    label,
-                    style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, letterSpacing: 0.5, fontSize: 20, color: Colors.white),
-                  ),
-                  const Spacer(),
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
-                    child: const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Colors.white70),
-                  ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  item != null ? 'Weekend Special:\n${item.name}' : 'Buy one get\none FREE',
+                  style: theme.textTheme.headlineSmall?.copyWith(color: Colors.white, fontWeight: FontWeight.bold, height: 1.2),
+                ),
+              ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CategoryChip extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback? onTap;
+
+  const _CategoryChip({required this.label, required this.isSelected, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        decoration: BoxDecoration(color: isSelected ? cs.primary : (cs.surfaceContainerHigh.withValues(alpha: 0.3)), borderRadius: BorderRadius.circular(16)),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: TextStyle(color: isSelected ? Colors.white : cs.onSurface, fontWeight: isSelected ? FontWeight.bold : FontWeight.w600),
         ),
       ),
     );

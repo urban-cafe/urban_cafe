@@ -7,34 +7,86 @@ class LanguageScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currentLocale = context.locale;
+    final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text('language'.tr())),
-      body: ListView(
-        children: [
-          _LanguageTile(locale: const Locale('en'), label: 'English', isSelected: currentLocale == const Locale('en'), onTap: () => context.setLocale(const Locale('en'))),
-          _LanguageTile(locale: const Locale('my'), label: 'Myanmar', isSelected: currentLocale == const Locale('my'), onTap: () => context.setLocale(const Locale('my'))),
-        ],
+      appBar: AppBar(title: Text('language'.tr()), centerTitle: true),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Select Language',
+              style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
+            ),
+            const SizedBox(height: 8),
+            Text('Choose your preferred language.', style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+            const SizedBox(height: 24),
+            Container(
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainer,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
+              ),
+              child: Column(
+                children: [
+                  _LanguageOption(label: 'English', flag: '🇺🇸', isSelected: currentLocale.languageCode == 'en', onTap: () => context.setLocale(const Locale('en')), isFirst: true),
+                  Divider(height: 1, color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
+                  _LanguageOption(label: 'Myanmar', flag: '🇲🇲', isSelected: currentLocale.languageCode == 'my', onTap: () => context.setLocale(const Locale('my')), isLast: true),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _LanguageTile extends StatelessWidget {
-  final Locale locale;
+class _LanguageOption extends StatelessWidget {
   final String label;
+  final String flag;
   final bool isSelected;
   final VoidCallback onTap;
+  final bool isFirst;
+  final bool isLast;
 
-  const _LanguageTile({required this.locale, required this.label, required this.isSelected, required this.onTap});
+  const _LanguageOption({required this.label, required this.flag, required this.isSelected, required this.onTap, this.isFirst = false, this.isLast = false});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return ListTile(
-      onTap: onTap,
-      title: Text(label),
-      trailing: isSelected ? Icon(Icons.check, color: theme.colorScheme.primary) : null,
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.vertical(top: isFirst ? const Radius.circular(16) : Radius.zero, bottom: isLast ? const Radius.circular(16) : Radius.zero),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          color: isSelected ? theme.colorScheme.primaryContainer.withValues(alpha: 0.1) : null,
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(color: isSelected ? theme.colorScheme.primary.withValues(alpha: 0.1) : theme.colorScheme.surfaceContainerHigh , shape: BoxShape.circle),
+                child: Text(flag, style: const TextStyle(fontSize: 24)),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  label,
+                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
+                ),
+              ),
+              if (isSelected) Icon(Icons.check_circle, color: theme.colorScheme.primary),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

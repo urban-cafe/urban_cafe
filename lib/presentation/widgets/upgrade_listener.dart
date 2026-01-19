@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:urban_cafe/core/services/version_check_service.dart';
-import 'package:urban_cafe/presentation/widgets/new_version_dialog.dart';
+import 'package:urban_cafe/presentation/widgets/dialogs/new_version_dialog.dart';
 
 class UpgradeListener extends StatefulWidget {
   final Widget child;
