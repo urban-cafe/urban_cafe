@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 /// Displays a global styled SnackBar
@@ -10,7 +11,7 @@ void showAppSnackBar(BuildContext context, String message, {bool isError = false
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
       content: Text(
-        message,
+        message.tr(),
         style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
       ),
       // Use Error color for errors, Primary color for success

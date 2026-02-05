@@ -4,55 +4,42 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+// DI
+import 'package:urban_cafe/core/di/injection_container.dart';
 import 'package:urban_cafe/core/env.dart';
+import 'package:urban_cafe/core/services/supabase_client.dart';
 import 'package:urban_cafe/core/theme.dart';
-import 'package:urban_cafe/data/datasources/supabase_client.dart';
-import 'package:urban_cafe/data/repositories/auth_repository_impl.dart';
-import 'package:urban_cafe/data/repositories/menu_repository_impl.dart';
-import 'package:urban_cafe/data/repositories/order_repository_impl.dart';
-import 'package:urban_cafe/domain/entities/menu_item.dart';
-import 'package:urban_cafe/domain/usecases/auth/get_current_user_role_usecase.dart';
-import 'package:urban_cafe/domain/usecases/auth/get_user_profile_usecase.dart';
-import 'package:urban_cafe/domain/usecases/auth/sign_in_usecase.dart';
-import 'package:urban_cafe/domain/usecases/auth/sign_in_with_google_usecase.dart';
-import 'package:urban_cafe/domain/usecases/auth/sign_out_usecase.dart';
-import 'package:urban_cafe/domain/usecases/get_category_by_name.dart';
-import 'package:urban_cafe/domain/usecases/get_favorite_items.dart';
-import 'package:urban_cafe/domain/usecases/get_favorites.dart';
-import 'package:urban_cafe/domain/usecases/get_main_categories.dart';
-import 'package:urban_cafe/domain/usecases/get_menu_items.dart';
-import 'package:urban_cafe/domain/usecases/get_sub_categories.dart';
-import 'package:urban_cafe/domain/usecases/orders/create_order.dart';
-import 'package:urban_cafe/domain/usecases/orders/get_admin_analytics.dart';
-import 'package:urban_cafe/domain/usecases/orders/get_orders.dart';
-import 'package:urban_cafe/domain/usecases/orders/update_order_status.dart';
-import 'package:urban_cafe/domain/usecases/toggle_favorite.dart';
-import 'package:urban_cafe/presentation/providers/admin_provider.dart';
-import 'package:urban_cafe/presentation/providers/auth_provider.dart';
-import 'package:urban_cafe/presentation/providers/cart_provider.dart';
-import 'package:urban_cafe/presentation/providers/category_manager_provider.dart';
-import 'package:urban_cafe/presentation/providers/menu_provider.dart';
-import 'package:urban_cafe/presentation/providers/order_provider.dart';
-import 'package:urban_cafe/presentation/providers/theme_provider.dart';
-import 'package:urban_cafe/presentation/screens/admin/analytics_screen.dart';
-import 'package:urban_cafe/presentation/screens/admin/category_manager_screen.dart';
-import 'package:urban_cafe/presentation/screens/admin/edit_screen.dart';
-import 'package:urban_cafe/presentation/screens/admin/list_screen.dart';
-import 'package:urban_cafe/presentation/screens/admin/login_screen.dart';
-import 'package:urban_cafe/presentation/screens/admin/orders_screen.dart';
-import 'package:urban_cafe/presentation/screens/cart_screen.dart';
-import 'package:urban_cafe/presentation/screens/client_orders_screen.dart';
-import 'package:urban_cafe/presentation/screens/login_screen.dart';
-import 'package:urban_cafe/presentation/screens/main_menu_screen.dart';
-import 'package:urban_cafe/presentation/screens/menu_detail_screen.dart';
-import 'package:urban_cafe/presentation/screens/menu_screen.dart';
-import 'package:urban_cafe/presentation/screens/profile/favorites_screen.dart';
-import 'package:urban_cafe/presentation/screens/profile/language_screen.dart';
-import 'package:urban_cafe/presentation/screens/profile/profile_screen.dart';
-import 'package:urban_cafe/presentation/screens/profile/theme_screen.dart';
-import 'package:urban_cafe/presentation/screens/staff/staff_orders_screen.dart';
-import 'package:urban_cafe/presentation/widgets/main_scaffold.dart';
-import 'package:urban_cafe/presentation/widgets/upgrade_listener.dart';
+// Common/Shared
+import 'package:urban_cafe/features/_common/theme_provider.dart';
+import 'package:urban_cafe/features/_common/widgets/main_scaffold.dart';
+import 'package:urban_cafe/features/_common/widgets/upgrade_listener.dart';
+// Admin Feature
+import 'package:urban_cafe/features/admin/presentation/providers/admin_provider.dart';
+import 'package:urban_cafe/features/admin/presentation/screens/analytics_screen.dart';
+import 'package:urban_cafe/features/admin/presentation/screens/category_manager_screen.dart';
+import 'package:urban_cafe/features/admin/presentation/screens/edit_screen.dart';
+import 'package:urban_cafe/features/admin/presentation/screens/list_screen.dart';
+import 'package:urban_cafe/features/admin/presentation/screens/login_screen.dart' as admin;
+import 'package:urban_cafe/features/admin/presentation/screens/orders_screen.dart';
+import 'package:urban_cafe/features/auth/presentation/providers/auth_provider.dart';
+import 'package:urban_cafe/features/auth/presentation/screens/login_screen.dart';
+// Cart Feature
+import 'package:urban_cafe/features/cart/presentation/providers/cart_provider.dart';
+import 'package:urban_cafe/features/cart/presentation/screens/cart_screen.dart';
+import 'package:urban_cafe/features/menu/domain/entities/menu_item.dart';
+import 'package:urban_cafe/features/menu/presentation/providers/category_manager_provider.dart';
+import 'package:urban_cafe/features/menu/presentation/providers/menu_provider.dart';
+import 'package:urban_cafe/features/menu/presentation/screens/main_menu_screen.dart';
+import 'package:urban_cafe/features/menu/presentation/screens/menu_detail_screen.dart';
+import 'package:urban_cafe/features/menu/presentation/screens/menu_screen.dart';
+import 'package:urban_cafe/features/orders/presentation/providers/order_provider.dart';
+import 'package:urban_cafe/features/orders/presentation/screens/client_orders_screen.dart';
+import 'package:urban_cafe/features/orders/presentation/screens/staff/staff_orders_screen.dart';
+// Profile Feature
+import 'package:urban_cafe/features/profile/presentation/screens/favorites_screen.dart';
+import 'package:urban_cafe/features/profile/presentation/screens/language_screen.dart';
+import 'package:urban_cafe/features/profile/presentation/screens/profile_screen.dart';
+import 'package:urban_cafe/features/profile/presentation/screens/theme_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -64,30 +51,8 @@ Future<void> main() async {
   }
   await SupabaseClientProvider.initialize(url: Env.supabaseUrl, anonKey: Env.supabaseAnonKey);
 
-  // Core Dependencies
-  final authRepository = AuthRepositoryImpl(supabaseClient: SupabaseClientProvider.client);
-
-  // UseCases
-  final signInUseCase = SignInUseCase(authRepository);
-  final signOutUseCase = SignOutUseCase(authRepository);
-  final getCurrentUserRoleUseCase = GetCurrentUserRoleUseCase(authRepository);
-  final getUserProfileUseCase = GetUserProfileUseCase(authRepository);
-  final signInWithGoogleUseCase = SignInWithGoogleUseCase(authRepository);
-
-  final menuRepository = MenuRepositoryImpl();
-  final getMainCategoriesUseCase = GetMainCategories(menuRepository);
-  final getSubCategoriesUseCase = GetSubCategories(menuRepository);
-  final getMenuItemsUseCase = GetMenuItems(menuRepository);
-  final getCategoryByNameUseCase = GetCategoryByName(menuRepository);
-  final getFavoritesUseCase = GetFavorites(menuRepository);
-  final getFavoriteItemsUseCase = GetFavoriteItems(menuRepository);
-  final toggleFavoriteUseCase = ToggleFavorite(menuRepository);
-
-  final orderRepository = OrderRepositoryImpl();
-  final getOrdersUseCase = GetOrders(orderRepository);
-  final updateOrderStatusUseCase = UpdateOrderStatus(orderRepository);
-  final createOrderUseCase = CreateOrder(orderRepository);
-  final getAdminAnalyticsUseCase = GetAdminAnalytics(orderRepository);
+  // Configure all dependencies with get_it
+  await configureDependencies(SupabaseClientProvider.client);
 
   runApp(
     EasyLocalization(
@@ -96,21 +61,13 @@ Future<void> main() async {
       fallbackLocale: const Locale('en'),
       child: MultiProvider(
         providers: [
-          ChangeNotifierProvider(
-            create: (_) => AuthProvider(signInUseCase: signInUseCase, signOutUseCase: signOutUseCase, getCurrentUserRoleUseCase: getCurrentUserRoleUseCase, getUserProfileUseCase: getUserProfileUseCase, signInWithGoogleUseCase: signInWithGoogleUseCase),
-          ),
-          ChangeNotifierProvider(create: (_) => CartProvider(createOrderUseCase: createOrderUseCase)),
-          ChangeNotifierProvider(
-            create: (_) => MenuProvider(getMainCategoriesUseCase: getMainCategoriesUseCase, getSubCategoriesUseCase: getSubCategoriesUseCase, getMenuItemsUseCase: getMenuItemsUseCase, getCategoryByNameUseCase: getCategoryByNameUseCase, getFavoritesUseCase: getFavoritesUseCase, getFavoriteItemsUseCase: getFavoriteItemsUseCase, toggleFavoriteUseCase: toggleFavoriteUseCase),
-          ),
-          ChangeNotifierProvider(
-            create: (_) => CategoryManagerProvider(getMainCategoriesUseCase: getMainCategoriesUseCase, getSubCategoriesUseCase: getSubCategoriesUseCase),
-          ),
-          ChangeNotifierProvider(create: (_) => AdminProvider(getAdminAnalyticsUseCase: getAdminAnalyticsUseCase)),
+          ChangeNotifierProvider(create: (_) => sl<AuthProvider>()),
+          ChangeNotifierProvider(create: (_) => sl<CartProvider>()),
+          ChangeNotifierProvider(create: (_) => sl<MenuProvider>()),
+          ChangeNotifierProvider(create: (_) => sl<CategoryManagerProvider>()),
+          ChangeNotifierProvider(create: (_) => sl<AdminProvider>()),
           ChangeNotifierProvider(create: (_) => ThemeProvider()),
-          ChangeNotifierProvider(
-            create: (_) => OrderProvider(getOrdersUseCase: getOrdersUseCase, updateOrderStatusUseCase: updateOrderStatusUseCase),
-          ),
+          ChangeNotifierProvider(create: (_) => sl<OrderProvider>()),
         ],
         child: const UrbanCafeApp(),
       ),
@@ -298,7 +255,7 @@ class _UrbanCafeAppState extends State<UrbanCafeApp> {
       },
       routes: [
         GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
-        GoRoute(path: '/admin/login', builder: (context, state) => const AdminLoginScreen()),
+        GoRoute(path: '/admin/login', builder: (context, state) => const admin.AdminLoginScreen()),
 
         // SHELL ROUTE FOR BOTTOM NAV
         StatefulShellRoute.indexedStack(

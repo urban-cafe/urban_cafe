@@ -36,6 +36,7 @@ dependencies:
   timeago: ^3.7.1
   easy_localization: ^3.0.8
   fl_chart: ^1.1.1
+  get_it: ^9.2.0
 
 dev_dependencies:
   flutter_test:

@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:urban_cafe/domain/entities/menu_item.dart';
-import 'package:urban_cafe/domain/repositories/menu_repository.dart';
-import 'package:urban_cafe/domain/usecases/create_menu_item.dart';
+import 'package:urban_cafe/features/menu/domain/entities/menu_item.dart';
+import 'package:urban_cafe/features/menu/domain/repositories/menu_repository.dart';
+import 'package:urban_cafe/features/menu/domain/usecases/create_menu_item.dart';
 
 class _MockRepo extends Mock implements MenuRepository {}
 

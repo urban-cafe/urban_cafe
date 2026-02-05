@@ -68,5 +68,7 @@
   "categories": "Categories",
   "kitchen": "Kitchen",
   "order_management": "Order Management",
-  "items_count": "{} items"
+  "items_count": "{} items",
+  "order_history": "Order History",
+  "theme": "Theme"
 }
