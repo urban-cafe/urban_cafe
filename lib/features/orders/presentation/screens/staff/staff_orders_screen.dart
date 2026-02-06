@@ -111,9 +111,9 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Printer Status'),
-        content: const Text('Kitchen Printer: Connected\nReceipt Printer: Connected'),
-        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('OK'))],
+        title: Text('printer_status'.tr()),
+        content: Text('printer_connected'.tr()),
+        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text('ok'.tr()))],
       ),
     );
   }

@@ -165,7 +165,11 @@ class _UrbanCafeAppState extends State<UrbanCafeApp> {
               routes: [
                 GoRoute(
                   path: 'menu', // /menu
-                  builder: (context, state) => MenuScreen(initialMainCategory: state.uri.queryParameters['initialMainCategory'], focusSearch: state.uri.queryParameters['focusSearch'] == 'true'),
+                  builder: (context, state) => MenuScreen(
+                    initialMainCategory: state.uri.queryParameters['initialMainCategory'],
+                    filter: state.uri.queryParameters['filter'],
+                    focusSearch: state.uri.queryParameters['focusSearch'] == 'true',
+                  ),
                 ),
               ],
             ),

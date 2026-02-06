@@ -1,6 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:urban_cafe/core/env.dart';
+import 'package:urban_cafe/core/error/app_exception.dart';
 import 'package:urban_cafe/core/error/failures.dart';
 import 'package:urban_cafe/features/cart/domain/entities/cart_item.dart';
 import 'package:urban_cafe/features/orders/data/dtos/order_dto.dart';
@@ -19,9 +20,9 @@ class OrderRepositoryImpl implements OrderRepository {
 
   @override
   Future<Either<Failure, String>> createOrder({required List<CartItem> items, required double totalAmount, required OrderType type, int pointsRedeemed = 0}) async {
-    if (!Env.isConfigured) return const Left(AuthFailure('Supabase not configured'));
+    if (!Env.isConfigured) return const Left(ServerFailure('App not configured.', code: 'env_not_configured'));
     final user = _client.auth.currentUser;
-    if (user == null) return const Left(AuthFailure('User not logged in'));
+    if (user == null) return const Left(AuthFailure('Please sign in to continue.', code: 'auth_not_logged_in'));
 
     try {
       // 1. Create Order Record
@@ -55,7 +56,7 @@ class OrderRepositoryImpl implements OrderRepository {
 
       return Right(orderId);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(AppException.mapToFailure(e));
     }
   }
 
@@ -107,7 +108,7 @@ class OrderRepositoryImpl implements OrderRepository {
 
   @override
   Future<Either<Failure, List<OrderEntity>>> getOrders({OrderStatus? status}) async {
-    if (!Env.isConfigured) return const Left(AuthFailure('Supabase not configured'));
+    if (!Env.isConfigured) return const Left(ServerFailure('App not configured.', code: 'env_not_configured'));
 
     try {
       var query = _client.from(table).select('''
@@ -128,25 +129,25 @@ class OrderRepositoryImpl implements OrderRepository {
 
       return Right(orders);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(AppException.mapToFailure(e));
     }
   }
 
   @override
   Future<Either<Failure, void>> updateOrderStatus(String orderId, OrderStatus status) async {
-    if (!Env.isConfigured) return const Left(AuthFailure('Supabase not configured'));
+    if (!Env.isConfigured) return const Left(ServerFailure('App not configured.', code: 'env_not_configured'));
 
     try {
       await _client.from(table).update({'status': status.name}).eq('id', orderId);
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(AppException.mapToFailure(e));
     }
   }
 
   @override
   Future<Either<Failure, void>> updateOrderNotes(String orderId, String notes) async {
-    if (!Env.isConfigured) return const Left(AuthFailure('Supabase not configured'));
+    if (!Env.isConfigured) return const Left(ServerFailure('App not configured.', code: 'env_not_configured'));
 
     try {
       // Assuming there is a 'staff_notes' column in the orders table
@@ -157,18 +158,18 @@ class OrderRepositoryImpl implements OrderRepository {
       return const Right(null);
     } catch (e) {
       // If column doesn't exist, this will fail.
-      return Left(ServerFailure(e.toString()));
+      return Left(AppException.mapToFailure(e));
     }
   }
 
   @override
   Future<Either<Failure, Map<String, dynamic>>> getAdminAnalytics() async {
-    if (!Env.isConfigured) return const Left(AuthFailure('Supabase not configured'));
+    if (!Env.isConfigured) return const Left(ServerFailure('App not configured.', code: 'env_not_configured'));
     try {
       final res = await _client.rpc('get_admin_analytics');
       return Right(res as Map<String, dynamic>);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(AppException.mapToFailure(e));
     }
   }
 }

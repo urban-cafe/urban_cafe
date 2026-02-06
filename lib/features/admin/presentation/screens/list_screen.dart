@@ -1,8 +1,10 @@
 // presentation/screens/admin/list_screen.dart
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
+import 'package:urban_cafe/core/theme.dart';
 import 'package:urban_cafe/features/_common/widgets/inputs/custom_search_bar.dart';
 import 'package:urban_cafe/features/_common/widgets/tiles/admin_item_tile.dart';
 import 'package:urban_cafe/features/admin/presentation/providers/admin_provider.dart';
@@ -54,7 +56,19 @@ class _AdminListScreenState extends State<AdminListScreen> {
   }
 
   // --- Dummy Data for Skeleton ---
-  MenuItemEntity get _dummyItem => MenuItemEntity(id: 'dummy', name: 'Loading Item Name ...', description: null, price: 0, categoryId: null, categoryName: 'Category', imagePath: null, imageUrl: null, isAvailable: true, createdAt: DateTime.now(), updatedAt: DateTime.now());
+  MenuItemEntity get _dummyItem => MenuItemEntity(
+    id: 'dummy',
+    name: 'Loading Item Name ...',
+    description: null,
+    price: 0,
+    categoryId: null,
+    categoryName: 'Category',
+    imagePath: null,
+    imageUrl: null,
+    isAvailable: true,
+    createdAt: DateTime.now(),
+    updatedAt: DateTime.now(),
+  );
 
   List<MenuItemEntity> get _loadingItems {
     return List.generate(8, (index) => _dummyItem);
@@ -75,7 +89,7 @@ class _AdminListScreenState extends State<AdminListScreen> {
       child: Scaffold(
         backgroundColor: colorScheme.surface,
         appBar: AppBar(
-          leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.go('/')),
+          automaticallyImplyLeading: false,
           title: Text(
             'Admin Dashboard',
             style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, letterSpacing: 0.5, color: colorScheme.onSurface),
@@ -108,7 +122,12 @@ class _AdminListScreenState extends State<AdminListScreen> {
                   children: [
                     // Search Bar
                     Expanded(
-                      child: CustomSearchBar(controller: _searchCtrl, hintText: 'Search menu items...', onChanged: (v) => menuProvider.setSearch(v), onSubmitted: (v) => FocusScope.of(context).unfocus()),
+                      child: CustomSearchBar(
+                        controller: _searchCtrl,
+                        hintText: 'Search menu items...',
+                        onChanged: (v) => menuProvider.setSearch(v),
+                        onSubmitted: (v) => FocusScope.of(context).unfocus(),
+                      ),
                     ),
                     const SizedBox(width: 12),
                     // Count Chip
@@ -119,7 +138,7 @@ class _AdminListScreenState extends State<AdminListScreen> {
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
                           height: 48,
                           alignment: Alignment.center,
-                          decoration: BoxDecoration(color: colorScheme.primaryContainer, borderRadius: BorderRadius.circular(12)),
+                          decoration: BoxDecoration(color: colorScheme.primaryContainer, borderRadius: AppRadius.mdAll),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -200,14 +219,14 @@ class _AdminListScreenState extends State<AdminListScreen> {
                                           final confirm = await showDialog<bool>(
                                             context: context,
                                             builder: (ctx) => AlertDialog(
-                                              title: const Text('Delete item?'),
+                                              title: Text('delete_item'.tr()),
                                               content: Text('Are you sure you want to delete "${item.name}"?'),
                                               actions: [
-                                                TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                                                TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('cancel'.tr())),
                                                 FilledButton(
                                                   style: FilledButton.styleFrom(backgroundColor: colorScheme.error),
                                                   onPressed: () => Navigator.pop(ctx, true),
-                                                  child: const Text('Delete'),
+                                                  child: Text('delete'.tr()),
                                                 ),
                                               ],
                                             ),

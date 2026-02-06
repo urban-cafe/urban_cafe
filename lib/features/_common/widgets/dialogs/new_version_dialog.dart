@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:urban_cafe/core/utils/web_reloader.dart';
 
@@ -14,25 +15,23 @@ class NewVersionDialog extends StatelessWidget {
         children: [
           Icon(Icons.system_update, color: colorScheme.primary),
           const SizedBox(width: 12),
-          const Text('Update Available'),
+          Text('update_available'.tr()),
         ],
       ),
-      content: const Text(
-        'A new version of the app is available. Please refresh to get the latest features and improvements.',
-      ),
+      content: const Text('A new version of the app is available. Please refresh to get the latest features and improvements.'),
       actions: [
         TextButton(
           onPressed: () {
             Navigator.of(context).pop();
           },
-          child: const Text('Later'),
+          child: Text('later'.tr()),
         ),
         FilledButton.icon(
           onPressed: () {
             reloadWebPage();
           },
           icon: const Icon(Icons.refresh),
-          label: const Text('Refresh Now'),
+          label: Text('refresh_now'.tr()),
         ),
       ],
     );

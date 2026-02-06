@@ -37,8 +37,7 @@ class StaggeredAnimation extends StatefulWidget {
   State<StaggeredAnimation> createState() => _StaggeredAnimationState();
 }
 
-class _StaggeredAnimationState extends State<StaggeredAnimation>
-    with SingleTickerProviderStateMixin {
+class _StaggeredAnimationState extends State<StaggeredAnimation> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _opacity;
   late Animation<Offset> _slide;
@@ -47,13 +46,8 @@ class _StaggeredAnimationState extends State<StaggeredAnimation>
   void initState() {
     super.initState();
     _controller = AnimationController(vsync: this, duration: widget.duration);
-    _opacity = Tween<double>(
-      begin: 0,
-      end: 1,
-    ).animate(CurvedAnimation(parent: _controller, curve: AppCurves.smooth));
-    _slide = Tween<Offset>(begin: widget.offset, end: Offset.zero).animate(
-      CurvedAnimation(parent: _controller, curve: AppCurves.emphasized),
-    );
+    _opacity = Tween<double>(begin: 0, end: 1).animate(CurvedAnimation(parent: _controller, curve: AppCurves.smooth));
+    _slide = Tween<Offset>(begin: widget.offset, end: Offset.zero).animate(CurvedAnimation(parent: _controller, curve: AppCurves.emphasized));
 
     Future.delayed(widget.delay * widget.index, () {
       if (mounted) _controller.forward();
@@ -79,6 +73,40 @@ class _StaggeredAnimationState extends State<StaggeredAnimation>
   }
 }
 
+/// Simple fade+slide animation using TweenAnimationBuilder (stateless, DRY)
+class FadeSlideAnimation extends StatelessWidget {
+  final Widget child;
+  final int index;
+  final Duration baseDuration;
+  final Offset slideOffset;
+  final Curve curve;
+
+  const FadeSlideAnimation({
+    required this.child,
+    this.index = 0,
+    this.baseDuration = const Duration(milliseconds: 400),
+    this.slideOffset = const Offset(20, 0),
+    this.curve = Curves.easeOutCubic,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: baseDuration + Duration(milliseconds: index * 80),
+      curve: curve,
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value,
+          child: Transform.translate(offset: Offset(slideOffset.dx * (1 - value), slideOffset.dy * (1 - value)), child: child),
+        );
+      },
+      child: child,
+    );
+  }
+}
+
 /// Scale on press animation wrapper
 class ScaleTapWidget extends StatefulWidget {
   final Widget child;
@@ -86,20 +114,13 @@ class ScaleTapWidget extends StatefulWidget {
   final double scaleDown;
   final Duration duration;
 
-  const ScaleTapWidget({
-    super.key,
-    required this.child,
-    this.onTap,
-    this.scaleDown = 0.96,
-    this.duration = const Duration(milliseconds: 100),
-  });
+  const ScaleTapWidget({super.key, required this.child, this.onTap, this.scaleDown = 0.96, this.duration = const Duration(milliseconds: 100)});
 
   @override
   State<ScaleTapWidget> createState() => _ScaleTapWidgetState();
 }
 
-class _ScaleTapWidgetState extends State<ScaleTapWidget>
-    with SingleTickerProviderStateMixin {
+class _ScaleTapWidgetState extends State<ScaleTapWidget> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scale;
 
@@ -107,10 +128,7 @@ class _ScaleTapWidgetState extends State<ScaleTapWidget>
   void initState() {
     super.initState();
     _controller = AnimationController(vsync: this, duration: widget.duration);
-    _scale = Tween<double>(
-      begin: 1.0,
-      end: widget.scaleDown,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+    _scale = Tween<double>(begin: 1.0, end: widget.scaleDown).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -140,8 +158,7 @@ class _ScaleTapWidgetState extends State<ScaleTapWidget>
       onTapCancel: _onTapCancel,
       child: AnimatedBuilder(
         animation: _scale,
-        builder: (context, child) =>
-            Transform.scale(scale: _scale.value, child: child),
+        builder: (context, child) => Transform.scale(scale: _scale.value, child: child),
         child: widget.child,
       ),
     );
@@ -156,31 +173,20 @@ class AnimatedHeartButton extends StatefulWidget {
   final Color? activeColor;
   final Color? inactiveColor;
 
-  const AnimatedHeartButton({
-    super.key,
-    required this.isFavorite,
-    required this.onTap,
-    this.size = 24,
-    this.activeColor,
-    this.inactiveColor,
-  });
+  const AnimatedHeartButton({super.key, required this.isFavorite, required this.onTap, this.size = 24, this.activeColor, this.inactiveColor});
 
   @override
   State<AnimatedHeartButton> createState() => _AnimatedHeartButtonState();
 }
 
-class _AnimatedHeartButtonState extends State<AnimatedHeartButton>
-    with SingleTickerProviderStateMixin {
+class _AnimatedHeartButtonState extends State<AnimatedHeartButton> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scale;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-    );
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 300));
     _scale = TweenSequence<double>([
       TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.3), weight: 50),
       TweenSequenceItem(tween: Tween(begin: 1.3, end: 1.0), weight: 50),
@@ -213,9 +219,7 @@ class _AnimatedHeartButtonState extends State<AnimatedHeartButton>
           child: Icon(
             widget.isFavorite ? Icons.favorite : Icons.favorite_border,
             size: widget.size,
-            color: widget.isFavorite
-                ? (widget.activeColor ?? Colors.red)
-                : (widget.inactiveColor ?? cs.onSurfaceVariant),
+            color: widget.isFavorite ? (widget.activeColor ?? Colors.red) : (widget.inactiveColor ?? cs.onSurfaceVariant),
           ),
         ),
       ),
@@ -230,27 +234,19 @@ class ShimmerEffect extends StatefulWidget {
   final Color? highlightColor;
   final Duration duration;
 
-  const ShimmerEffect({
-    super.key,
-    required this.child,
-    this.baseColor,
-    this.highlightColor,
-    this.duration = const Duration(milliseconds: 1500),
-  });
+  const ShimmerEffect({super.key, required this.child, this.baseColor, this.highlightColor, this.duration = const Duration(milliseconds: 1500)});
 
   @override
   State<ShimmerEffect> createState() => _ShimmerEffectState();
 }
 
-class _ShimmerEffectState extends State<ShimmerEffect>
-    with SingleTickerProviderStateMixin {
+class _ShimmerEffectState extends State<ShimmerEffect> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: widget.duration)
-      ..repeat();
+    _controller = AnimationController(vsync: this, duration: widget.duration)..repeat();
   }
 
   @override
@@ -269,16 +265,8 @@ class _ShimmerEffectState extends State<ShimmerEffect>
           return LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              widget.baseColor ?? cs.surfaceContainerHighest,
-              widget.highlightColor ?? cs.surface,
-              widget.baseColor ?? cs.surfaceContainerHighest,
-            ],
-            stops: [
-              _controller.value - 0.3,
-              _controller.value,
-              _controller.value + 0.3,
-            ].map((s) => s.clamp(0.0, 1.0)).toList(),
+            colors: [widget.baseColor ?? cs.surfaceContainerHighest, widget.highlightColor ?? cs.surface, widget.baseColor ?? cs.surfaceContainerHighest],
+            stops: [_controller.value - 0.3, _controller.value, _controller.value + 0.3].map((s) => s.clamp(0.0, 1.0)).toList(),
           ).createShader(bounds);
         },
         blendMode: BlendMode.srcATop,
@@ -296,32 +284,21 @@ class PulseAnimation extends StatefulWidget {
   final double minScale;
   final double maxScale;
 
-  const PulseAnimation({
-    super.key,
-    required this.child,
-    this.duration = const Duration(milliseconds: 1000),
-    this.minScale = 0.95,
-    this.maxScale = 1.05,
-  });
+  const PulseAnimation({super.key, required this.child, this.duration = const Duration(milliseconds: 1000), this.minScale = 0.95, this.maxScale = 1.05});
 
   @override
   State<PulseAnimation> createState() => _PulseAnimationState();
 }
 
-class _PulseAnimationState extends State<PulseAnimation>
-    with SingleTickerProviderStateMixin {
+class _PulseAnimationState extends State<PulseAnimation> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scale;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: widget.duration)
-      ..repeat(reverse: true);
-    _scale = Tween<double>(
-      begin: widget.minScale,
-      end: widget.maxScale,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+    _controller = AnimationController(vsync: this, duration: widget.duration)..repeat(reverse: true);
+    _scale = Tween<double>(begin: widget.minScale, end: widget.maxScale).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -334,8 +311,7 @@ class _PulseAnimationState extends State<PulseAnimation>
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: _scale,
-      builder: (context, child) =>
-          Transform.scale(scale: _scale.value, child: child),
+      builder: (context, child) => Transform.scale(scale: _scale.value, child: child),
       child: widget.child,
     );
   }
@@ -353,18 +329,12 @@ class SlideUpPageRoute<T> extends PageRouteBuilder<T> {
           const end = Offset.zero;
           const curve = Curves.easeOutCubic;
 
-          var tween = Tween(
-            begin: begin,
-            end: end,
-          ).chain(CurveTween(curve: curve));
+          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
           var fadeTween = Tween<double>(begin: 0.0, end: 1.0);
 
           return SlideTransition(
             position: animation.drive(tween),
-            child: FadeTransition(
-              opacity: animation.drive(fadeTween),
-              child: child,
-            ),
+            child: FadeTransition(opacity: animation.drive(fadeTween), child: child),
           );
         },
         transitionDuration: const Duration(milliseconds: 300),

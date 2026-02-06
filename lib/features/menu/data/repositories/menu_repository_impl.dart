@@ -1,6 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:urban_cafe/core/env.dart';
+import 'package:urban_cafe/core/error/app_exception.dart';
 import 'package:urban_cafe/core/error/failures.dart';
 import 'package:urban_cafe/features/menu/data/dtos/menu_item_dto.dart';
 import 'package:urban_cafe/features/menu/domain/entities/category.dart';
@@ -25,7 +26,7 @@ class MenuRepositoryImpl implements MenuRepository {
     bool? isMostPopular,
     bool? isWeekendSpecial,
   }) async {
-    if (!Env.isConfigured) return const Left(AuthFailure('Supabase not configured'));
+    if (!Env.isConfigured) return const Left(ServerFailure('App not configured.', code: 'env_not_configured'));
 
     try {
       // JOIN categories, variants, and addons
@@ -56,7 +57,7 @@ class MenuRepositoryImpl implements MenuRepository {
 
       return Right(items);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(AppException.mapToFailure(e));
     }
   }
 
@@ -69,7 +70,7 @@ class MenuRepositoryImpl implements MenuRepository {
       final categories = (data as List<dynamic>).map((e) => Category(id: e['id'] as String, name: e['name'] as String)).toList();
       return Right(categories);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(AppException.mapToFailure(e));
     }
   }
 
@@ -82,7 +83,7 @@ class MenuRepositoryImpl implements MenuRepository {
       final categories = (data as List<dynamic>).map((e) => Category(id: e['id'] as String, name: e['name'] as String)).toList();
       return Right(categories);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(AppException.mapToFailure(e));
     }
   }
 
@@ -95,7 +96,7 @@ class MenuRepositoryImpl implements MenuRepository {
       if (res == null) return const Right(null);
       return Right(Category(id: res['id'] as String, name: res['name'] as String));
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(AppException.mapToFailure(e));
     }
   }
 
@@ -108,7 +109,7 @@ class MenuRepositoryImpl implements MenuRepository {
       final categories = (data as List<dynamic>).map((e) => Category(id: e['id'] as String, name: e['name'] as String)).toList();
       return Right(categories);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(AppException.mapToFailure(e));
     }
   }
 
@@ -119,7 +120,7 @@ class MenuRepositoryImpl implements MenuRepository {
       final res = await _client.from(catTable).insert({'name': name, 'parent_id': parentId}).select('id').single();
       return Right(res['id'] as String);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(AppException.mapToFailure(e));
     }
   }
 
@@ -130,7 +131,7 @@ class MenuRepositoryImpl implements MenuRepository {
       await _client.from(catTable).delete().eq('id', id);
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(AppException.mapToFailure(e));
     }
   }
 
@@ -141,7 +142,7 @@ class MenuRepositoryImpl implements MenuRepository {
       await _client.from(catTable).update({'name': newName}).eq('id', id);
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(AppException.mapToFailure(e));
     }
   }
 
@@ -178,7 +179,7 @@ class MenuRepositoryImpl implements MenuRepository {
 
       return Right(MenuItemDto.fromMap(inserted).toEntity());
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(AppException.mapToFailure(e));
     }
   }
 
@@ -217,7 +218,7 @@ class MenuRepositoryImpl implements MenuRepository {
 
       return Right(MenuItemDto.fromMap(updated).toEntity());
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(AppException.mapToFailure(e));
     }
   }
 
@@ -228,7 +229,7 @@ class MenuRepositoryImpl implements MenuRepository {
       await _client.from(table).delete().eq('id', id);
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(AppException.mapToFailure(e));
     }
   }
 
@@ -237,13 +238,13 @@ class MenuRepositoryImpl implements MenuRepository {
     if (!Env.isConfigured) return const Left(AuthFailure('Supabase not configured'));
     try {
       final user = _client.auth.currentUser;
-      if (user == null) return const Left(AuthFailure('User not logged in'));
+      if (user == null) return const Left(AuthFailure('Please sign in to continue.', code: 'auth_not_logged_in'));
 
       final data = await _client.from('favorites').select('menu_item_id').eq('user_id', user.id);
       final ids = (data as List<dynamic>).map((e) => e['menu_item_id'] as String).toList();
       return Right(ids);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(AppException.mapToFailure(e));
     }
   }
 
@@ -252,7 +253,7 @@ class MenuRepositoryImpl implements MenuRepository {
     if (!Env.isConfigured) return const Left(AuthFailure('Supabase not configured'));
     try {
       final user = _client.auth.currentUser;
-      if (user == null) return const Left(AuthFailure('User not logged in'));
+      if (user == null) return const Left(AuthFailure('Please sign in to continue.', code: 'auth_not_logged_in'));
 
       // 1. Get IDs
       final favRes = await _client.from('favorites').select('menu_item_id').eq('user_id', user.id);
@@ -266,7 +267,7 @@ class MenuRepositoryImpl implements MenuRepository {
       final items = (itemsRes as List<dynamic>).map((e) => MenuItemDto.fromMap(e as Map<String, dynamic>).toEntity()).toList();
       return Right(items);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(AppException.mapToFailure(e));
     }
   }
 
@@ -275,7 +276,7 @@ class MenuRepositoryImpl implements MenuRepository {
     if (!Env.isConfigured) return const Left(AuthFailure('Supabase not configured'));
     try {
       final user = _client.auth.currentUser;
-      if (user == null) return const Left(AuthFailure('User not logged in'));
+      if (user == null) return const Left(AuthFailure('Please sign in to continue.', code: 'auth_not_logged_in'));
 
       // Check if exists
       final exists = await _client.from('favorites').select().eq('user_id', user.id).eq('menu_item_id', menuItemId).maybeSingle();
@@ -289,7 +290,7 @@ class MenuRepositoryImpl implements MenuRepository {
       }
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(AppException.mapToFailure(e));
     }
   }
 }

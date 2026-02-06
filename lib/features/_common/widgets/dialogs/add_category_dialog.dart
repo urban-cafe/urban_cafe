@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:urban_cafe/core/validators.dart';
@@ -51,11 +52,7 @@ Future<String?> showAddCategoryDialog(BuildContext context, {String? parentId}) 
                       autofocus: true,
                       textCapitalization: TextCapitalization.words,
                       enabled: !admin.loading, // Disable input while loading
-                      decoration: const InputDecoration(
-                        labelText: 'Name',
-                        border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      ),
+                      decoration: const InputDecoration(labelText: 'Name', border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16)),
                       validator: (value) => AppValidators.required(value, 'Name'),
                     ),
                   ),
@@ -71,10 +68,7 @@ Future<String?> showAddCategoryDialog(BuildContext context, {String? parentId}) 
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      TextButton(
-                        onPressed: admin.loading ? null : () => Navigator.pop(ctx, null),
-                        child: const Text('Cancel'),
-                      ),
+                      TextButton(onPressed: admin.loading ? null : () => Navigator.pop(ctx, null), child: Text('cancel'.tr())),
                       const SizedBox(width: 16),
                       FilledButton(
                         onPressed: admin.loading
@@ -89,9 +83,7 @@ Future<String?> showAddCategoryDialog(BuildContext context, {String? parentId}) 
                                   Navigator.pop(ctx, id);
                                 }
                               },
-                        child: admin.loading
-                            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                            : const Text('Create'),
+                        child: admin.loading ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : Text('create'.tr()),
                       ),
                     ],
                   ),

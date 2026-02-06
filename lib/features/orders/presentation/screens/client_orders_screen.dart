@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:timeago/timeago.dart' as timeago;
+import 'package:urban_cafe/core/theme.dart';
 import 'package:urban_cafe/features/auth/presentation/providers/auth_provider.dart';
 import 'package:urban_cafe/features/orders/domain/entities/order_entity.dart';
 import 'package:urban_cafe/features/orders/domain/entities/order_status.dart';
@@ -51,7 +52,7 @@ class _ClientOrdersScreenState extends State<ClientOrdersScreen> {
                   separatorBuilder: (_, _) => const SizedBox(height: 16),
                   itemBuilder: (_, _) => Container(
                     height: 120,
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: AppRadius.lgAll),
                   ),
                 ),
               );
@@ -137,7 +138,7 @@ class _ClientOrderCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: theme.cardTheme.color,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppRadius.lgAll,
         boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))],
       ),
       child: Padding(
@@ -160,7 +161,7 @@ class _ClientOrderCard extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: statusColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: AppRadius.xlAll,
                     border: Border.all(color: statusColor.withValues(alpha: 0.2)),
                   ),
                   child: Text(
@@ -183,7 +184,7 @@ class _ClientOrderCard extends StatelessWidget {
                       children: [
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(color: colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(4)),
+                          decoration: BoxDecoration(color: colorScheme.surfaceContainerHighest, borderRadius: AppRadius.xsAll),
                           child: Text('${item.quantity}x', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                         ),
                         const SizedBox(width: 8),

@@ -11,12 +11,9 @@ import 'package:urban_cafe/features/menu/presentation/providers/menu_provider.da
 
 class MenuScreen extends StatefulWidget {
   final String? initialMainCategory;
+  final String? filter; // 'popular' or 'special'
   final bool focusSearch;
-  const MenuScreen({
-    super.key,
-    this.initialMainCategory,
-    this.focusSearch = false,
-  });
+  const MenuScreen({super.key, this.initialMainCategory, this.filter, this.focusSearch = false});
 
   @override
   State<MenuScreen> createState() => _MenuScreenState();
@@ -33,18 +30,19 @@ class _MenuScreenState extends State<MenuScreen> {
       final provider = context.read<MenuProvider>();
       _searchCtrl.clear();
 
-      if (widget.initialMainCategory != null) {
+      if (widget.filter != null) {
+        await provider.initForFilter(widget.filter!);
+      } else if (widget.initialMainCategory != null) {
         await provider.initForMainCategory(widget.initialMainCategory!);
       } else {
-        if (provider.items.isEmpty) {
+        if (provider.items.isEmpty || provider.searchQuery.isNotEmpty) {
           await provider.fetchAdminList();
         }
       }
     });
 
     _scrollCtrl.addListener(() {
-      if (_scrollCtrl.position.pixels >=
-          _scrollCtrl.position.maxScrollExtent - 200) {
+      if (_scrollCtrl.position.pixels >= _scrollCtrl.position.maxScrollExtent - 200) {
         context.read<MenuProvider>().loadMore();
       }
     });
@@ -73,6 +71,12 @@ class _MenuScreenState extends State<MenuScreen> {
     updatedAt: DateTime.now(),
   );
 
+  String get _title {
+    if (widget.filter == 'popular') return 'popular_items'.tr();
+    if (widget.filter == 'special') return 'weekend_specials'.tr();
+    return widget.initialMainCategory ?? 'menu'.tr();
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -89,12 +93,8 @@ class _MenuScreenState extends State<MenuScreen> {
         appBar: AppBar(
           centerTitle: true,
           title: Text(
-            widget.initialMainCategory ?? 'menu'.tr(),
-            style: textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.0,
-              color: colorScheme.onSurface,
-            ),
+            _title,
+            style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.0, color: colorScheme.onSurface),
           ),
           scrolledUnderElevation: 0,
           backgroundColor: colorScheme.surface,
@@ -114,100 +114,69 @@ class _MenuScreenState extends State<MenuScreen> {
             ),
 
             // 2. HORIZONTAL CATEGORY CHIPS (Replacing the Modal)
-            SizedBox(
-              height: 50,
-              child: Consumer<MenuProvider>(
-                builder: (context, provider, child) {
-                  final isLoadingCats =
-                      provider.loading && provider.subCategories.isEmpty;
+            Consumer<MenuProvider>(
+              builder: (context, provider, child) {
+                final isLoadingCats = provider.loading && provider.subCategories.isEmpty;
 
-                  // If purely empty (no data, not loading), hide
-                  if (provider.subCategories.isEmpty && !isLoadingCats) {
-                    return const SizedBox.shrink();
-                  }
+                // If purely empty (no data, not loading), hide
+                if (provider.subCategories.isEmpty && !isLoadingCats) {
+                  return const SizedBox.shrink();
+                }
 
-                  return Skeletonizer(
+                return SizedBox(
+                  height: 50,
+                  child: Skeletonizer(
                     enabled: isLoadingCats,
-                    effect: ShimmerEffect(
-                      baseColor: colorScheme.surfaceContainerHighest.withValues(
-                        alpha: 0.5,
-                      ),
-                      highlightColor: colorScheme.surface,
-                    ),
+                    effect: ShimmerEffect(baseColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5), highlightColor: colorScheme.surface),
                     child: ListView.separated(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       scrollDirection: Axis.horizontal,
                       // Show 5 dummy chips if loading, otherwise real count + "All"
-                      itemCount: isLoadingCats
-                          ? 5
-                          : provider.subCategories.length + 1,
+                      itemCount: isLoadingCats ? 5 : provider.subCategories.length + 1,
                       separatorBuilder: (_, _) => const SizedBox(width: 8),
                       itemBuilder: (context, index) {
                         // SKELETON CHIP
                         if (isLoadingCats) {
                           return ChoiceChip(
-                            label: const Text(
-                              "Loading Cat",
-                            ), // Placeholder text for width
+                            label: const Text("Loading Cat"), // Placeholder text for width
                             selected: false,
                             showCheckmark: false,
                             labelStyle: textTheme.bodyMedium,
                             backgroundColor: colorScheme.surface,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(24),
-                            ),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                             onSelected: (_) {},
                           );
                         }
 
                         // REAL DATA
                         final isAll = index == 0;
-                        final cat = isAll
-                            ? null
-                            : provider.subCategories[index - 1];
+                        final cat = isAll ? null : provider.subCategories[index - 1];
                         // Use Provider state directly
-                        final isSelected = isAll
-                            ? provider.currentCategoryId == null
-                            : provider.currentCategoryId == cat!.id;
+                        final isSelected = isAll ? provider.currentCategoryId == null : provider.currentCategoryId == cat!.id;
 
                         return ChoiceChip(
                           label: Text(isAll ? "all".tr() : cat!.name),
                           selected: isSelected,
                           showCheckmark: false,
                           selectedColor: colorScheme.primary,
-                          labelStyle: TextStyle(
-                            color: isSelected
-                                ? colorScheme.onPrimary
-                                : colorScheme.onSurface,
-                            fontWeight: isSelected
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                          ),
+                          labelStyle: TextStyle(color: isSelected ? colorScheme.onPrimary : colorScheme.onSurface, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal),
                           backgroundColor: colorScheme.surface,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(24),
-                            side: BorderSide(
-                              color: isSelected
-                                  ? Colors.transparent
-                                  : colorScheme.outlineVariant.withValues(
-                                      alpha: 0.5,
-                                    ),
-                            ),
+                            side: BorderSide(color: isSelected ? Colors.transparent : colorScheme.outlineVariant.withValues(alpha: 0.5)),
                           ),
                           onSelected: (bool selected) {
                             if (selected) {
                               // NO setState here! Provider notifies listeners.
-                              provider.filterBySubCategory(
-                                isAll ? null : cat!.id,
-                              );
+                              provider.filterBySubCategory(isAll ? null : cat!.id);
                             }
                           },
                         );
                       },
                     ),
-                  );
-                },
-              ),
+                  ),
+                );
+              },
             ),
 
             //const Divider(height: 1, indent: 16, endIndent: 16),
@@ -216,88 +185,53 @@ class _MenuScreenState extends State<MenuScreen> {
             Expanded(
               child: Consumer<MenuProvider>(
                 builder: (context, provider, child) {
-                  final isLoadingInitial =
-                      provider.loading && provider.items.isEmpty;
-                  final displayItems = isLoadingInitial
-                      ? List.generate(6, (index) => _dummyItem)
-                      : provider.items;
+                  final isLoadingInitial = provider.loading && provider.items.isEmpty;
+                  final displayItems = isLoadingInitial ? List.generate(6, (index) => _dummyItem) : provider.items;
 
                   return RefreshIndicator(
                     onRefresh: () async {
                       if (widget.initialMainCategory != null) {
-                        await provider.initForMainCategory(
-                          widget.initialMainCategory!,
-                        );
+                        await provider.initForMainCategory(widget.initialMainCategory!);
                       } else {
                         await provider.fetchAdminList();
                       }
                     },
                     child: Skeletonizer(
                       enabled: isLoadingInitial,
-                      effect: ShimmerEffect(
-                        baseColor: colorScheme.surfaceContainerHighest
-                            .withValues(alpha: 0.5),
-                        highlightColor: colorScheme.surface,
-                      ),
+                      effect: ShimmerEffect(baseColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5), highlightColor: colorScheme.surface),
                       child: provider.items.isEmpty && !isLoadingInitial
                           ? Center(
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(
-                                    Icons.restaurant_menu,
-                                    size: 64,
-                                    color: colorScheme.outlineVariant,
-                                  ),
+                                  Icon(Icons.restaurant_menu, size: 64, color: colorScheme.outlineVariant),
                                   const SizedBox(height: 16),
-                                  Text(
-                                    'no_items_found'.tr(),
-                                    style: textTheme.bodyLarge,
-                                  ),
+                                  Text('no_items_found'.tr(), style: textTheme.bodyLarge),
                                 ],
                               ),
                             )
                           : ListView.separated(
                               controller: _scrollCtrl,
-                              cacheExtent:
-                                  2000, // Keep more items in memory to prevent smooth scrolling issues
-                              padding: const EdgeInsets.only(
-                                top: 8,
-                                bottom: 32,
-                              ),
-                              itemCount:
-                                  displayItems.length +
-                                  (provider.loadingMore ? 1 : 0),
-                              separatorBuilder: (_, _) => Divider(
-                                height: 1,
-                                indent: 16,
-                                endIndent: 16,
-                                color: colorScheme.outlineVariant.withValues(
-                                  alpha: 0.3,
-                                ),
-                              ),
+                              cacheExtent: 2000, // Keep more items in memory to prevent smooth scrolling issues
+                              padding: const EdgeInsets.only(top: 8, bottom: 32),
+                              itemCount: displayItems.length + (provider.loadingMore ? 1 : 0),
+                              separatorBuilder: (_, _) => Divider(height: 1, indent: 16, endIndent: 16, color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
                               itemBuilder: (context, index) {
                                 if (index == displayItems.length) {
-                                  return Skeletonizer(
-                                    enabled: true,
-                                    child: MenuCard(
-                                      item: _dummyItem,
-                                      onTap: null,
-                                    ),
-                                  );
+                                  return Skeletonizer(enabled: true, child: MenuCard(item: _dummyItem, onTap: null));
                                 }
 
                                 final item = displayItems[index];
                                 return MenuCard(
                                   item: item,
-                                  index:
-                                      index, // Pass index for staggered animation
+                                  index: index, // Pass index for staggered animation
                                   onTap: isLoadingInitial
                                       ? null
                                       : () {
                                           FocusScope.of(context).unfocus();
                                           context.push('/detail', extra: item);
                                         },
+                                  onAddToCart: isLoadingInitial || !item.isAvailable ? null : () => context.read<CartProvider>().addToCart(item),
                                 );
                               },
                             ),

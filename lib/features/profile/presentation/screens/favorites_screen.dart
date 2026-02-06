@@ -1,8 +1,10 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:urban_cafe/features/_common/widgets/cards/menu_card.dart';
+import 'package:urban_cafe/features/cart/presentation/providers/cart_provider.dart';
 import 'package:urban_cafe/features/menu/presentation/providers/menu_provider.dart';
 
 class FavoritesScreen extends StatefulWidget {
@@ -30,7 +32,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     final provider = context.watch<MenuProvider>();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Favorites')),
+      appBar: AppBar(title: Text('favorites'.tr())),
       body: RefreshIndicator(
         onRefresh: () async => context.read<MenuProvider>().loadFavorites(),
         child: Builder(
@@ -58,7 +60,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                         children: [
                           Icon(Icons.favorite_border, size: 80, color: theme.colorScheme.outlineVariant),
                           const SizedBox(height: 16),
-                          Text('No favorites yet', style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                          Text('no_favorites_yet'.tr(), style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
                         ],
                       ),
                     ),
@@ -74,7 +76,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               padding: const EdgeInsets.symmetric(vertical: 16),
               itemBuilder: (context, index) {
                 final item = provider.favoriteItems[index];
-                return MenuCard(item: item, onTap: () => _openDetail(context, item));
+                return MenuCard(item: item, onTap: () => _openDetail(context, item), onAddToCart: item.isAvailable ? () => context.read<CartProvider>().addToCart(item) : null);
               },
             );
           },

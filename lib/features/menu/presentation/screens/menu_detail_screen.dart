@@ -3,6 +3,8 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:urban_cafe/core/animations.dart';
+import 'package:urban_cafe/core/theme.dart';
 import 'package:urban_cafe/core/utils.dart';
 import 'package:urban_cafe/features/_common/widgets/badges/menu_item_badges.dart';
 import 'package:urban_cafe/features/cart/presentation/providers/cart_provider.dart';
@@ -17,14 +19,9 @@ class MenuDetailScreen extends StatefulWidget {
   State<MenuDetailScreen> createState() => _MenuDetailScreenState();
 }
 
-class _MenuDetailScreenState extends State<MenuDetailScreen>
-    with TickerProviderStateMixin {
+class _MenuDetailScreenState extends State<MenuDetailScreen> {
   final ValueNotifier<int> _quantity = ValueNotifier(1);
   final TextEditingController _notesController = TextEditingController();
-  late AnimationController _heartController;
-  late Animation<double> _heartScale;
-  late AnimationController _quantityController;
-  late Animation<double> _quantityScale;
 
   // Customization State
   MenuItemVariant? _selectedVariant;
@@ -35,51 +32,25 @@ class _MenuDetailScreenState extends State<MenuDetailScreen>
     super.initState();
     // Select default variant if available
     if (widget.item.variants.isNotEmpty) {
-      final defaultVar = widget.item.variants
-          .where((v) => v.isDefault)
-          .firstOrNull;
+      final defaultVar = widget.item.variants.where((v) => v.isDefault).firstOrNull;
       _selectedVariant = defaultVar ?? widget.item.variants.first;
     }
-
-    _heartController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-    );
-    _heartScale =
-        TweenSequence<double>([
-          TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.4), weight: 50),
-          TweenSequenceItem(tween: Tween(begin: 1.4, end: 1.0), weight: 50),
-        ]).animate(
-          CurvedAnimation(parent: _heartController, curve: Curves.easeInOut),
-        );
-
-    _quantityController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 150),
-    );
-    _quantityScale = Tween<double>(begin: 1.0, end: 1.2).animate(
-      CurvedAnimation(parent: _quantityController, curve: Curves.elasticOut),
-    );
   }
 
   @override
   void dispose() {
     _quantity.dispose();
     _notesController.dispose();
-    _heartController.dispose();
-    _quantityController.dispose();
     super.dispose();
   }
 
   void _incrementQuantity() {
     _quantity.value++;
-    _quantityController.forward(from: 0);
   }
 
   void _decrementQuantity() {
     if (_quantity.value > 1) {
       _quantity.value--;
-      _quantityController.forward(from: 0);
     }
   }
 
@@ -115,9 +86,7 @@ class _MenuDetailScreenState extends State<MenuDetailScreen>
     cart.addToCart(
       widget.item,
       quantity: _quantity.value,
-      notes: _notesController.text.trim().isEmpty
-          ? null
-          : _notesController.text.trim(),
+      notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
       selectedVariant: _selectedVariant,
       selectedAddons: _selectedAddons.toList(),
     );
@@ -150,10 +119,7 @@ class _MenuDetailScreenState extends State<MenuDetailScreen>
                 backgroundColor: cs.surface,
                 leading: Container(
                   margin: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: cs.surface.withValues(alpha: 0.8),
-                    shape: BoxShape.circle,
-                  ),
+                  decoration: BoxDecoration(color: cs.surface.withValues(alpha: 0.8), shape: BoxShape.circle),
                   child: IconButton(
                     icon: Icon(Icons.arrow_back, color: cs.onSurface),
                     onPressed: () => context.pop(),
@@ -162,28 +128,8 @@ class _MenuDetailScreenState extends State<MenuDetailScreen>
                 actions: [
                   Container(
                     margin: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: cs.surface.withValues(alpha: 0.8),
-                      shape: BoxShape.circle,
-                    ),
-                    child: AnimatedBuilder(
-                      animation: _heartScale,
-                      builder: (context, child) => Transform.scale(
-                        scale: _heartScale.value,
-                        child: IconButton(
-                          icon: Icon(
-                            isFavorite ? Icons.favorite : Icons.favorite_border,
-                            color: isFavorite ? Colors.red : cs.onSurface,
-                          ),
-                          onPressed: () {
-                            menuProvider.toggleFavorite(widget.item.id);
-                            if (!isFavorite) {
-                              _heartController.forward(from: 0);
-                            }
-                          },
-                        ),
-                      ),
-                    ),
+                    decoration: BoxDecoration(color: cs.surface.withValues(alpha: 0.8), shape: BoxShape.circle),
+                    child: AnimatedHeartButton(isFavorite: isFavorite, size: 24, onTap: () => menuProvider.toggleFavorite(widget.item.id)),
                   ),
                 ],
                 flexibleSpace: FlexibleSpaceBar(
@@ -191,17 +137,12 @@ class _MenuDetailScreenState extends State<MenuDetailScreen>
                   background: widget.item.imageUrl == null
                       ? Container(
                           color: cs.surfaceContainerHighest,
-                          child: Icon(
-                            Icons.fastfood,
-                            size: 80,
-                            color: cs.onSurfaceVariant,
-                          ),
+                          child: Icon(Icons.fastfood, size: 80, color: cs.onSurfaceVariant),
                         )
                       : CachedNetworkImage(
                           imageUrl: widget.item.imageUrl!,
                           fit: BoxFit.cover,
-                          placeholder: (_, _) =>
-                              Container(color: cs.surfaceContainerHighest),
+                          placeholder: (_, _) => Container(color: cs.surfaceContainerHighest),
                           errorWidget: (_, _, _) => const Icon(Icons.error),
                         ),
                 ),
@@ -212,15 +153,9 @@ class _MenuDetailScreenState extends State<MenuDetailScreen>
                 child: Container(
                   decoration: BoxDecoration(
                     color: cs.surface,
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(24),
-                    ),
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.xxl)),
                   ),
-                  transform: Matrix4.translationValues(
-                    0,
-                    -24,
-                    0,
-                  ), // Overlap effect
+                  transform: Matrix4.translationValues(0, -24, 0), // Overlap effect
                   child: Padding(
                     padding: const EdgeInsets.all(24),
                     child: Column(
@@ -231,10 +166,7 @@ class _MenuDetailScreenState extends State<MenuDetailScreen>
                             width: 40,
                             height: 4,
                             margin: const EdgeInsets.only(bottom: 20),
-                            decoration: BoxDecoration(
-                              color: cs.outlineVariant,
-                              borderRadius: BorderRadius.circular(2),
-                            ),
+                            decoration: BoxDecoration(color: cs.outlineVariant, borderRadius: BorderRadius.circular(2)),
                           ),
                         ),
                         // Title + Price
@@ -244,19 +176,13 @@ class _MenuDetailScreenState extends State<MenuDetailScreen>
                             Expanded(
                               child: Text(
                                 widget.item.name,
-                                style: theme.textTheme.headlineMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: cs.onSurface,
-                                ),
+                                style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold, color: cs.onSurface),
                               ),
                             ),
                             const SizedBox(width: 16),
                             Text(
                               priceFormat.format(widget.item.price),
-                              style: theme.textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: cs.primary,
-                              ),
+                              style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: cs.primary),
                             ),
                           ],
                         ),
@@ -264,35 +190,17 @@ class _MenuDetailScreenState extends State<MenuDetailScreen>
                         const SizedBox(height: 16),
 
                         // Badges
-                        MenuItemBadges(
-                          isMostPopular: widget.item.isMostPopular,
-                          isWeekendSpecial: widget.item.isWeekendSpecial,
-                        ),
+                        MenuItemBadges(isMostPopular: widget.item.isMostPopular, isWeekendSpecial: widget.item.isWeekendSpecial),
                         const SizedBox(height: 16),
 
                         // Tags
                         Wrap(
                           spacing: 8,
                           children: [
-                            if (widget.item.categoryName != null)
-                              _buildTag(
-                                context,
-                                widget.item.categoryName!,
-                                Icons.category_outlined,
-                              ),
+                            if (widget.item.categoryName != null) _buildTag(context, widget.item.categoryName!, Icons.category_outlined),
                             widget.item.isAvailable
-                                ? _buildTag(
-                                    context,
-                                    "Available",
-                                    Icons.check_circle_outline,
-                                    color: cs.secondary,
-                                  ) // Use secondary (greenish gold) or success color
-                                : _buildTag(
-                                    context,
-                                    "Unavailable",
-                                    Icons.cancel_outlined,
-                                    color: cs.error,
-                                  ),
+                                ? _buildTag(context, "Available", Icons.check_circle_outline, color: cs.secondary) // Use secondary (greenish gold) or success color
+                                : _buildTag(context, "Unavailable", Icons.cancel_outlined, color: cs.error),
                           ],
                         ),
 
@@ -303,13 +211,8 @@ class _MenuDetailScreenState extends State<MenuDetailScreen>
                         Text("Description", style: theme.textTheme.titleMedium),
                         const SizedBox(height: 12),
                         Text(
-                          (widget.item.description?.isNotEmpty ?? false)
-                              ? widget.item.description!
-                              : "No description available.",
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            color: cs.onSurfaceVariant,
-                            height: 1.6,
-                          ),
+                          (widget.item.description?.isNotEmpty ?? false) ? widget.item.description! : "No description available.",
+                          style: theme.textTheme.bodyLarge?.copyWith(color: cs.onSurfaceVariant, height: 1.6),
                         ),
 
                         const SizedBox(height: 32),
@@ -317,23 +220,15 @@ class _MenuDetailScreenState extends State<MenuDetailScreen>
                         // CUSTOMIZATION
                         if (widget.item.variants.isNotEmpty) ...[
                           const SizedBox(height: 24),
-                          Text(
-                            'Size',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          Text('Size', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                           const SizedBox(height: 12),
                           Wrap(
                             spacing: 12,
                             runSpacing: 12,
                             children: widget.item.variants.map((variant) {
-                              final isSelected =
-                                  _selectedVariant?.id == variant.id;
+                              final isSelected = _selectedVariant?.id == variant.id;
                               return FilterChip(
-                                label: Text(
-                                  '${variant.name} ${variant.priceAdjustment > 0 ? "+${priceFormat.format(variant.priceAdjustment)}" : ""}',
-                                ),
+                                label: Text('${variant.name} ${variant.priceAdjustment > 0 ? "+${priceFormat.format(variant.priceAdjustment)}" : ""}'),
                                 selected: isSelected,
                                 onSelected: (selected) {
                                   if (selected) _selectVariant(variant);
@@ -348,32 +243,21 @@ class _MenuDetailScreenState extends State<MenuDetailScreen>
 
                         if (widget.item.addons.isNotEmpty) ...[
                           const SizedBox(height: 24),
-                          Text(
-                            'Add-ons',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          Text('Add-ons', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                           const SizedBox(height: 12),
                           Column(
                             children: widget.item.addons.map((addon) {
-                              final isSelected = _selectedAddons.contains(
-                                addon,
-                              );
+                              final isSelected = _selectedAddons.contains(addon);
                               return CheckboxListTile(
                                 value: isSelected,
                                 onChanged: (val) => _toggleAddon(addon),
                                 title: Text(addon.name),
                                 secondary: Text(
                                   '+${priceFormat.format(addon.price)}',
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: cs.primary,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                  style: theme.textTheme.bodyMedium?.copyWith(color: cs.primary, fontWeight: FontWeight.bold),
                                 ),
                                 contentPadding: EdgeInsets.zero,
-                                controlAffinity:
-                                    ListTileControlAffinity.leading,
+                                controlAffinity: ListTileControlAffinity.leading,
                                 activeColor: cs.primary,
                               );
                             }).toList(),
@@ -386,47 +270,37 @@ class _MenuDetailScreenState extends State<MenuDetailScreen>
                         if (widget.item.isAvailable) ...[
                           Row(
                             children: [
-                              Text(
-                                "quantity".tr(),
-                                style: theme.textTheme.titleMedium,
-                              ),
+                              Text("quantity".tr(), style: theme.textTheme.titleMedium),
                               const Spacer(),
                               Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 4,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: cs.surfaceContainerHighest,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
+                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                                decoration: BoxDecoration(color: cs.surfaceContainerHighest, borderRadius: BorderRadius.circular(12)),
                                 child: ValueListenableBuilder<int>(
                                   valueListenable: _quantity,
                                   builder: (context, qty, child) {
                                     return Row(
                                       children: [
-                                        IconButton(
-                                          onPressed: _decrementQuantity,
-                                          icon: const Icon(Icons.remove),
-                                          color: qty > 1
-                                              ? cs.primary
-                                              : cs.outline,
+                                        ScaleTapWidget(
+                                          onTap: _decrementQuantity,
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Icon(Icons.remove, color: qty > 1 ? cs.primary : cs.outline),
+                                          ),
                                         ),
                                         SizedBox(
                                           width: 40,
                                           child: Text(
                                             '$qty',
                                             textAlign: TextAlign.center,
-                                            style: theme.textTheme.titleLarge
-                                                ?.copyWith(
-                                                  fontWeight: FontWeight.bold,
-                                                ),
+                                            style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                                           ),
                                         ),
-                                        IconButton(
-                                          onPressed: _incrementQuantity,
-                                          icon: const Icon(Icons.add),
-                                          color: cs.primary,
+                                        ScaleTapWidget(
+                                          onTap: _incrementQuantity,
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Icon(Icons.add, color: cs.primary),
+                                          ),
                                         ),
                                       ],
                                     );
@@ -442,9 +316,7 @@ class _MenuDetailScreenState extends State<MenuDetailScreen>
                               labelText: 'special_instructions'.tr(),
                               hintText: 'e.g., No sugar, Extra hot',
                               alignLabelWithHint: true,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                             ),
                             maxLines: 3,
                           ),
@@ -464,30 +336,14 @@ class _MenuDetailScreenState extends State<MenuDetailScreen>
               bottom: 0,
               left: 0,
               right: 0,
-              child: TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0.0, end: 1.0),
-                duration: const Duration(milliseconds: 500),
-                curve: Curves.easeOutCubic,
-                builder: (context, value, child) {
-                  return Transform.translate(
-                    offset: Offset(0, 50 * (1 - value)),
-                    child: Opacity(opacity: value, child: child),
-                  );
-                },
+              child: FadeSlideAnimation(
+                slideOffset: const Offset(0, 50),
                 child: Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     color: cs.surface,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.08),
-                        blurRadius: 20,
-                        offset: const Offset(0, -5),
-                      ),
-                    ],
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(28),
-                    ),
+                    boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 20, offset: const Offset(0, -5))],
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
                   ),
                   child: SafeArea(
                     top: false,
@@ -499,33 +355,14 @@ class _MenuDetailScreenState extends State<MenuDetailScreen>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text(
-                                'total_price'.tr(),
-                                style: theme.textTheme.labelMedium?.copyWith(
-                                  color: cs.onSurfaceVariant,
-                                ),
-                              ),
+                              Text('total_price'.tr(), style: theme.textTheme.labelMedium?.copyWith(color: cs.onSurfaceVariant)),
                               const SizedBox(height: 4),
                               ValueListenableBuilder<int>(
                                 valueListenable: _quantity,
                                 builder: (context, qty, child) {
-                                  return AnimatedBuilder(
-                                    animation: _quantityScale,
-                                    builder: (context, child) =>
-                                        Transform.scale(
-                                          scale: _quantityScale.value,
-                                          alignment: Alignment.centerLeft,
-                                          child: Text(
-                                            priceFormat.format(
-                                              _currentUnitPrice * qty,
-                                            ),
-                                            style: theme.textTheme.headlineSmall
-                                                ?.copyWith(
-                                                  fontWeight: FontWeight.bold,
-                                                  color: cs.primary,
-                                                ),
-                                          ),
-                                        ),
+                                  return Text(
+                                    priceFormat.format(_currentUnitPrice * qty),
+                                    style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: cs.primary),
                                   );
                                 },
                               ),
@@ -536,53 +373,26 @@ class _MenuDetailScreenState extends State<MenuDetailScreen>
                         // Add to Cart Button with gradient
                         Expanded(
                           flex: 2,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  cs.primary,
-                                  cs.primary.withValues(alpha: 0.85),
-                                ],
+                          child: ScaleTapWidget(
+                            onTap: _addToCart,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                gradient: AppTheme.primaryGradient,
+                                borderRadius: AppRadius.lgAll,
+                                boxShadow: [BoxShadow(color: cs.primary.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 6))],
                               ),
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: cs.primary.withValues(alpha: 0.3),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 6),
-                                ),
-                              ],
-                            ),
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(16),
-                                onTap: _addToCart,
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 16,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              alignment: Alignment.center,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.shopping_cart_outlined, color: Colors.white),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'add_to_cart'.tr(),
+                                    style: theme.textTheme.titleMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
                                   ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      const Icon(
-                                        Icons.shopping_cart_outlined,
-                                        color: Colors.white,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        'add_to_cart'.tr(),
-                                        style: theme.textTheme.titleMedium
-                                            ?.copyWith(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                                ],
                               ),
                             ),
                           ),
@@ -598,12 +408,7 @@ class _MenuDetailScreenState extends State<MenuDetailScreen>
     );
   }
 
-  Widget _buildTag(
-    BuildContext context,
-    String label,
-    IconData icon, {
-    Color? color,
-  }) {
+  Widget _buildTag(BuildContext context, String label, IconData icon, {Color? color}) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final finalColor = color ?? cs.primary;
@@ -612,7 +417,7 @@ class _MenuDetailScreenState extends State<MenuDetailScreen>
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: finalColor.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: AppRadius.xlAll,
         border: Border.all(color: finalColor.withValues(alpha: 0.2)),
       ),
       child: Row(
@@ -622,10 +427,7 @@ class _MenuDetailScreenState extends State<MenuDetailScreen>
           const SizedBox(width: 8),
           Text(
             label,
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: finalColor,
-              fontWeight: FontWeight.w700,
-            ),
+            style: theme.textTheme.labelMedium?.copyWith(color: finalColor, fontWeight: FontWeight.w700),
           ),
         ],
       ),

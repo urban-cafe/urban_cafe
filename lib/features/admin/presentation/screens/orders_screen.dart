@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:timeago/timeago.dart' as timeago;
+import 'package:urban_cafe/core/theme.dart';
 import 'package:urban_cafe/features/orders/domain/entities/order_entity.dart';
 import 'package:urban_cafe/features/orders/domain/entities/order_status.dart';
 import 'package:urban_cafe/features/orders/presentation/providers/order_provider.dart';
@@ -218,7 +219,7 @@ class _FilterChip extends StatelessWidget {
       checkmarkColor: baseColor,
       labelStyle: TextStyle(color: isSelected ? baseColor : colorScheme.onSurface, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: AppRadius.xlAll,
         side: BorderSide(color: isSelected ? baseColor : colorScheme.outlineVariant),
       ),
     );
@@ -238,7 +239,7 @@ class _OrderCard extends StatelessWidget {
 
     return Card(
       elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: AppRadius.lgAll),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -267,7 +268,7 @@ class _OrderCard extends StatelessWidget {
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(color: colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(4)),
+                      decoration: BoxDecoration(color: colorScheme.surfaceContainerHighest, borderRadius: AppRadius.xsAll),
                       child: Text('${item.quantity}x', style: const TextStyle(fontWeight: FontWeight.bold)),
                     ),
                     const SizedBox(width: 12),
@@ -340,7 +341,7 @@ class _StatusBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: AppRadius.xlAll,
         border: Border.all(color: color.withValues(alpha: 0.5)),
       ),
       child: Row(

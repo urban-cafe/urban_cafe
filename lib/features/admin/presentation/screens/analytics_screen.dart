@@ -1,9 +1,10 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
+import 'package:urban_cafe/core/theme.dart';
 import 'package:urban_cafe/features/admin/presentation/providers/admin_provider.dart';
 
 class AdminAnalyticsScreen extends StatefulWidget {
@@ -35,7 +36,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Analytics Dashboard'),
+        title: Text('analytics_dashboard'.tr()),
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop()),
       ),
       body: Builder(
@@ -80,7 +81,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
                 Container(
                   height: 300,
                   padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(color: cs.surfaceContainerLow, borderRadius: BorderRadius.circular(16)),
+                  decoration: BoxDecoration(color: cs.surfaceContainerLow, borderRadius: AppRadius.lgAll),
                   child: topItems.isEmpty
                       ? const Center(child: Text("No sales data yet"))
                       : BarChart(
@@ -140,7 +141,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
                 Container(
                   height: 300,
                   padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(color: cs.surfaceContainerLow, borderRadius: BorderRadius.circular(16)),
+                  decoration: BoxDecoration(color: cs.surfaceContainerLow, borderRadius: AppRadius.lgAll),
                   child: hourlySales.isEmpty
                       ? const Center(child: Text("No orders today"))
                       : LineChart(
@@ -207,21 +208,11 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
     return Row(
       children: [
         Expanded(
-          child: _SummaryCard(
-            title: 'Today\'s Sales',
-            value: priceFormat.format(sales),
-            icon: Icons.attach_money,
-            color: Colors.green,
-          ),
+          child: _SummaryCard(title: 'Today\'s Sales', value: priceFormat.format(sales), icon: Icons.attach_money, color: Colors.green),
         ),
         const SizedBox(width: 16),
         Expanded(
-          child: _SummaryCard(
-            title: 'Orders Today',
-            value: orders.toString(),
-            icon: Icons.receipt_long,
-            color: Colors.orange,
-          ),
+          child: _SummaryCard(title: 'Orders Today', value: orders.toString(), icon: Icons.receipt_long, color: Colors.orange),
         ),
       ],
     );
@@ -240,10 +231,7 @@ class _SummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainer,
-        borderRadius: BorderRadius.circular(16),
-      ),
+      decoration: BoxDecoration(color: Theme.of(context).colorScheme.surfaceContainer, borderRadius: AppRadius.lgAll),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -255,7 +243,9 @@ class _SummaryCard extends StatelessWidget {
                 child: Icon(icon, color: color, size: 20),
               ),
               const SizedBox(width: 12),
-              Expanded(child: Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500))),
+              Expanded(
+                child: Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+              ),
             ],
           ),
           const SizedBox(height: 16),

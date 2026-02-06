@@ -1,10 +1,14 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
+import 'package:urban_cafe/core/animations.dart';
+import 'package:urban_cafe/core/responsive.dart';
 import 'package:urban_cafe/features/_common/widgets/cards/grid_menu_card.dart';
 import 'package:urban_cafe/features/_common/widgets/cards/home_promo_banner.dart';
 import 'package:urban_cafe/features/_common/widgets/inputs/custom_search_bar.dart';
+import 'package:urban_cafe/features/_common/widgets/main_scaffold.dart';
 import 'package:urban_cafe/features/auth/presentation/providers/auth_provider.dart';
 import 'package:urban_cafe/features/menu/presentation/providers/menu_provider.dart';
 
@@ -15,25 +19,12 @@ class MainMenuScreen extends StatefulWidget {
   State<MainMenuScreen> createState() => _MainMenuScreenState();
 }
 
-class _MainMenuScreenState extends State<MainMenuScreen>
-    with SingleTickerProviderStateMixin {
+class _MainMenuScreenState extends State<MainMenuScreen> {
   final TextEditingController _searchCtrl = TextEditingController();
-  late AnimationController _fadeController;
-  late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
-    _fadeController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    );
-    _fadeAnimation = CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeOutCubic,
-    );
-    _fadeController.forward();
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = context.read<MenuProvider>();
       if (provider.popularItems.isEmpty || provider.specialItems.isEmpty) {
@@ -45,7 +36,6 @@ class _MainMenuScreenState extends State<MainMenuScreen>
   @override
   void dispose() {
     _searchCtrl.dispose();
-    _fadeController.dispose();
     super.dispose();
   }
 
@@ -72,6 +62,10 @@ class _MainMenuScreenState extends State<MainMenuScreen>
     final user = auth.currentUser;
     final userName = user?.userMetadata?['full_name']?.split(' ').first;
 
+    // Get scroll controller from MainScaffold if available
+    final scrollScope = ScrollControllerScope.of(context);
+    final scrollController = scrollScope?.scrollController;
+
     return Scaffold(
       backgroundColor: cs.surface,
       body: SafeArea(
@@ -79,48 +73,29 @@ class _MainMenuScreenState extends State<MainMenuScreen>
           onRefresh: () => provider.loadHomeData(),
           color: cs.primary,
           child: CustomScrollView(
+            controller: scrollController,
             slivers: [
               // 1. GREETING HEADER with animation
               SliverToBoxAdapter(
-                child: FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(0, -0.1),
-                      end: Offset.zero,
-                    ).animate(_fadeAnimation),
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                _getGreetingEmoji(),
-                                style: const TextStyle(fontSize: 28),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                _getGreeting(),
-                                style: theme.textTheme.headlineSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: cs.onSurface,
-                                ),
-                              ),
-                            ],
-                          ),
-                          if (userName != null) ...[
-                            const SizedBox(height: 4),
+                child: FadeSlideAnimation(
+                  index: 0,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(_getGreetingEmoji(), style: const TextStyle(fontSize: 28)),
+                            const SizedBox(width: 8),
                             Text(
-                              'Welcome back, $userName!',
-                              style: theme.textTheme.bodyLarge?.copyWith(
-                                color: cs.onSurfaceVariant,
-                              ),
+                              _getGreeting(),
+                              style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: cs.onSurface),
                             ),
                           ],
-                        ],
-                      ),
+                        ),
+                        if (userName != null) ...[const SizedBox(height: 4), Text('welcome_back'.tr(args: [userName!]), style: theme.textTheme.bodyLarge?.copyWith(color: cs.onSurfaceVariant))],
+                      ],
                     ),
                   ),
                 ),
@@ -128,35 +103,15 @@ class _MainMenuScreenState extends State<MainMenuScreen>
 
               // 2. SEARCH BAR with stagger delay
               SliverToBoxAdapter(
-                child: TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0.0, end: 1.0),
-                  duration: const Duration(milliseconds: 500),
-                  curve: Curves.easeOutCubic,
-                  builder: (context, value, child) {
-                    return Opacity(
-                      opacity: value,
-                      child: Transform.translate(
-                        offset: Offset(0, 20 * (1 - value)),
-                        child: child,
-                      ),
-                    );
-                  },
+                child: FadeSlideAnimation(
+                  index: 1,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 8,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                     child: Hero(
                       tag: 'search-bar-hero',
                       child: Material(
                         type: MaterialType.transparency,
-                        child: CustomSearchBar(
-                          controller: _searchCtrl,
-                          hintText: 'Search coffee, drinks...',
-                          readOnly: true,
-                          onTap: () => context.push('/menu?focusSearch=true'),
-                          showFilter: true,
-                        ),
+                        child: CustomSearchBar(controller: _searchCtrl, hintText: 'search_coffee_drinks'.tr(), readOnly: true, onTap: () => context.push('/menu?focusSearch=true'), showFilter: true),
                       ),
                     ),
                   ),
@@ -167,22 +122,32 @@ class _MainMenuScreenState extends State<MainMenuScreen>
 
               // 3. PROMO BANNER with stagger delay
               SliverToBoxAdapter(
-                child: TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0.0, end: 1.0),
-                  duration: const Duration(milliseconds: 600),
-                  curve: Curves.easeOutCubic,
-                  builder: (context, value, child) {
-                    return Opacity(
-                      opacity: value,
-                      child: Transform.translate(
-                        offset: Offset(0, 30 * (1 - value)),
-                        child: child,
+                child: FadeSlideAnimation(
+                  index: 2,
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text("weekend_specials".tr(), style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                            ScaleTapWidget(
+                              onTap: () => context.push('/menu?filter=special'),
+                              child: Text(
+                                "see_all".tr(),
+                                style: TextStyle(color: cs.primary, fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    );
-                  },
-                  child: Skeletonizer(
-                    enabled: provider.loading,
-                    child: HomePromoBanner(items: provider.specialItems),
+                      const SizedBox(height: 8),
+                      Skeletonizer(
+                        enabled: provider.loading,
+                        child: HomePromoBanner(items: provider.specialItems),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -191,30 +156,14 @@ class _MainMenuScreenState extends State<MainMenuScreen>
 
               // 4. CATEGORIES with stagger delay
               SliverToBoxAdapter(
-                child: TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0.0, end: 1.0),
-                  duration: const Duration(milliseconds: 700),
-                  curve: Curves.easeOutCubic,
-                  builder: (context, value, child) {
-                    return Opacity(
-                      opacity: value,
-                      child: Transform.translate(
-                        offset: Offset(0, 20 * (1 - value)),
-                        child: child,
-                      ),
-                    );
-                  },
+                child: FadeSlideAnimation(
+                  index: 3,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Text(
-                          "Categories",
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        child: Text("categories".tr(), style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
                       ),
                       const SizedBox(height: 16),
                       SizedBox(
@@ -224,28 +173,14 @@ class _MainMenuScreenState extends State<MainMenuScreen>
                           child: ListView.separated(
                             padding: const EdgeInsets.symmetric(horizontal: 20),
                             scrollDirection: Axis.horizontal,
-                            itemCount: provider.mainCategories.isEmpty
-                                ? 5
-                                : provider.mainCategories.length,
-                            separatorBuilder: (_, _) =>
-                                const SizedBox(width: 12),
+                            itemCount: provider.mainCategories.isEmpty ? 5 : provider.mainCategories.length,
+                            separatorBuilder: (context, index) => const SizedBox(width: 12),
                             itemBuilder: (context, index) {
                               if (provider.mainCategories.isEmpty) {
-                                return const _CategoryChip(
-                                  label: 'Loading...',
-                                  isSelected: false,
-                                  index: 0,
-                                );
+                                return const _ShimmerCategoryChip();
                               }
                               final cat = provider.mainCategories[index];
-                              return _CategoryChip(
-                                label: cat.name,
-                                isSelected: false,
-                                index: index,
-                                onTap: () => context.push(
-                                  '/menu?initialMainCategory=${Uri.encodeComponent(cat.name)}',
-                                ),
-                              );
+                              return _CategoryChip(label: cat.name, isSelected: false, index: index, onTap: () => context.go('/menu?initialMainCategory=${Uri.encodeComponent(cat.name)}'));
                             },
                           ),
                         ),
@@ -273,39 +208,20 @@ class _MainMenuScreenState extends State<MainMenuScreen>
                       children: [
                         Row(
                           children: [
-                            Text(
-                              "Popular Now",
-                              style: theme.textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                            Text("most_popular".tr(), style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
                             const SizedBox(width: 8),
                             Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 3,
-                              ),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [cs.primary, cs.tertiary],
-                                ),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Text(
-                                '🔥',
-                                style: TextStyle(fontSize: 12),
-                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(color: cs.primaryContainer.withValues(alpha: 0.3)),
+                              child: const Text('🔥', style: TextStyle(fontSize: 12)),
                             ),
                           ],
                         ),
                         TextButton(
-                          onPressed: () => context.go('/menu'),
+                          onPressed: () => context.push('/menu?filter=popular'),
                           child: Text(
-                            "View All",
-                            style: TextStyle(
-                              color: cs.primary,
-                              fontWeight: FontWeight.w600,
-                            ),
+                            "view_all".tr(),
+                            style: TextStyle(color: cs.primary, fontWeight: FontWeight.w600),
                           ),
                         ),
                       ],
@@ -322,32 +238,18 @@ class _MainMenuScreenState extends State<MainMenuScreen>
                 sliver: Skeletonizer.sliver(
                   enabled: provider.loading,
                   child: SliverGrid(
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          mainAxisSpacing: 16,
-                          crossAxisSpacing: 16,
-                          childAspectRatio: 0.72,
-                        ),
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        if (provider.popularItems.isEmpty) {
-                          return Container(
-                            decoration: BoxDecoration(
-                              color: cs.surfaceContainerHighest,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                          );
-                        }
-                        return GridMenuCard(
-                          item: provider.popularItems[index],
-                          index: index, // Pass index for staggered animation
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: Responsive.gridColumns(context), mainAxisSpacing: 16, crossAxisSpacing: 16, childAspectRatio: 0.72),
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      if (provider.popularItems.isEmpty) {
+                        return Container(
+                          decoration: BoxDecoration(color: cs.surfaceContainerHighest, borderRadius: BorderRadius.circular(20)),
                         );
-                      },
-                      childCount: provider.popularItems.isEmpty
-                          ? 4
-                          : provider.popularItems.length,
-                    ),
+                      }
+                      return GridMenuCard(
+                        item: provider.popularItems[index],
+                        index: index, // Pass index for staggered animation
+                      );
+                    }, childCount: provider.popularItems.isEmpty ? 4 : provider.popularItems.length),
                   ),
                 ),
               ),
@@ -365,19 +267,13 @@ class _CategoryChip extends StatefulWidget {
   final VoidCallback? onTap;
   final int index;
 
-  const _CategoryChip({
-    required this.label,
-    required this.isSelected,
-    this.onTap,
-    this.index = 0,
-  });
+  const _CategoryChip({required this.label, required this.isSelected, this.onTap, this.index = 0});
 
   @override
   State<_CategoryChip> createState() => _CategoryChipState();
 }
 
-class _CategoryChipState extends State<_CategoryChip>
-    with SingleTickerProviderStateMixin {
+class _CategoryChipState extends State<_CategoryChip> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scale;
   bool _isPressed = false;
@@ -385,14 +281,8 @@ class _CategoryChipState extends State<_CategoryChip>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 100),
-    );
-    _scale = Tween<double>(
-      begin: 1.0,
-      end: 0.95,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 100));
+    _scale = Tween<double>(begin: 1.0, end: 0.95).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -420,7 +310,6 @@ class _CategoryChipState extends State<_CategoryChip>
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
@@ -434,8 +323,7 @@ class _CategoryChipState extends State<_CategoryChip>
       },
       child: AnimatedBuilder(
         animation: _scale,
-        builder: (context, child) =>
-            Transform.scale(scale: _scale.value, child: child),
+        builder: (context, child) => Transform.scale(scale: _scale.value, child: child),
         child: GestureDetector(
           onTapDown: _onTapDown,
           onTapUp: _onTapUp,
@@ -444,51 +332,37 @@ class _CategoryChipState extends State<_CategoryChip>
             duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             decoration: BoxDecoration(
-              gradient: widget.isSelected
-                  ? LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [cs.primary, cs.primary.withValues(alpha: 0.8)],
-                    )
-                  : null,
-              color: widget.isSelected
-                  ? null
-                  : (isDark ? cs.surfaceContainerHighest : cs.surface),
-              borderRadius: BorderRadius.circular(16),
-              border: widget.isSelected
-                  ? null
-                  : Border.all(
-                      color: _isPressed
-                          ? cs.primary.withValues(alpha: 0.5)
-                          : cs.outlineVariant.withValues(alpha: 0.5),
-                      width: 1.5,
-                    ),
+              gradient: widget.isSelected ? LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [cs.primary, cs.primary.withValues(alpha: 0.8)]) : null,
+              color: widget.isSelected ? null : cs.primaryContainer.withValues(alpha: 0.25),
+              borderRadius: BorderRadius.circular(24),
+              border: widget.isSelected ? null : Border.all(color: _isPressed ? cs.primary.withValues(alpha: 0.5) : cs.outlineVariant.withValues(alpha: 0.5), width: 1.5),
               boxShadow: [
                 if (widget.isSelected)
-                  BoxShadow(
-                    color: cs.primary.withValues(alpha: 0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 6),
-                  )
+                  BoxShadow(color: cs.primary.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 6))
                 else if (_isPressed)
-                  BoxShadow(
-                    color: cs.primary.withValues(alpha: 0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
+                  BoxShadow(color: cs.primary.withValues(alpha: 0.1), blurRadius: 8, offset: const Offset(0, 4)),
               ],
             ),
             child: Text(
               widget.label,
-              style: TextStyle(
-                color: widget.isSelected ? Colors.white : cs.onSurfaceVariant,
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-              ),
+              style: TextStyle(color: widget.isSelected ? Colors.white : cs.onSurfaceVariant, fontWeight: FontWeight.bold, fontSize: 14),
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+class _ShimmerCategoryChip extends StatelessWidget {
+  const _ShimmerCategoryChip();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 80,
+      height: 40,
+      decoration: BoxDecoration(color: Theme.of(context).colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(24)),
     );
   }
 }

@@ -2,6 +2,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:urban_cafe/core/theme.dart';
 import 'package:urban_cafe/features/_common/widgets/badges/menu_item_badges.dart';
 import 'package:urban_cafe/features/menu/domain/entities/menu_item.dart';
 
@@ -23,13 +24,13 @@ class AdminItemTile extends StatelessWidget {
       elevation: 0,
       color: colorScheme.surfaceContainerLow, // Subtle contrast against background
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppRadius.lgAll,
         side: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onEdit,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppRadius.lgAll,
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Row(
@@ -38,7 +39,7 @@ class AdminItemTile extends StatelessWidget {
               // 1. IMAGE THUMBNAIL
               if (item.id == 'dummy')
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: AppRadius.mdAll,
                   child: Container(
                     width: 88,
                     height: 88,
@@ -50,7 +51,7 @@ class AdminItemTile extends StatelessWidget {
                 Hero(
                   tag: 'admin_img_${item.id}',
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: AppRadius.mdAll,
                     child: Container(
                       width: 88,
                       height: 88,
@@ -163,7 +164,7 @@ class _AvailabilityBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: AppRadius.smAll,
         border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Row(

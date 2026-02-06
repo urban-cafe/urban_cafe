@@ -1,6 +1,7 @@
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:urban_cafe/core/services/cache_service.dart';
+import 'package:urban_cafe/core/services/storage_service.dart';
 // Cart & Admin Features
 import 'package:urban_cafe/features/admin/presentation/providers/admin_provider.dart';
 // Auth Feature
@@ -44,6 +45,7 @@ Future<void> configureDependencies(SupabaseClient client) async {
   // ─────────────────────────────────────────────────────────────────
   sl.registerLazySingleton<SupabaseClient>(() => client);
   sl.registerLazySingleton<CacheService>(() => CacheService());
+  sl.registerLazySingleton<StorageService>(() => StorageService());
 
   // ─────────────────────────────────────────────────────────────────
   // REPOSITORIES
@@ -105,5 +107,5 @@ Future<void> configureDependencies(SupabaseClient client) async {
 
   sl.registerFactory<OrderProvider>(() => OrderProvider(getOrdersUseCase: sl(), updateOrderStatusUseCase: sl()));
 
-  sl.registerFactory<AdminProvider>(() => AdminProvider(getAdminAnalyticsUseCase: sl()));
+  sl.registerFactory<AdminProvider>(() => AdminProvider(getAdminAnalyticsUseCase: sl(), storageService: sl()));
 }

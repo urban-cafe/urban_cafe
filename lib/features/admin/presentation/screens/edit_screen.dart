@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
@@ -6,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:urban_cafe/core/theme.dart';
 import 'package:urban_cafe/core/utils.dart';
 import 'package:urban_cafe/core/validators.dart';
 import 'package:urban_cafe/features/_common/widgets/dialogs/add_category_dialog.dart';
@@ -185,7 +187,7 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
                           child: Container(
                             width: 150,
                             height: 150,
-                            decoration: BoxDecoration(color: Colors.grey.shade200, borderRadius: BorderRadius.circular(12)),
+                            decoration: BoxDecoration(color: Colors.grey.shade200, borderRadius: AppRadius.mdAll),
                             clipBehavior: Clip.antiAlias,
                             child: _imageFile != null
                                 ? Image.memory(_imageFile!.bytes!, fit: BoxFit.cover)
@@ -267,9 +269,9 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
                       ),
 
                       const SizedBox(height: 24),
-                      SwitchListTile(title: const Text('Available for sale'), value: _available, onChanged: (v) => setState(() => _available = v), contentPadding: EdgeInsets.zero),
-                      SwitchListTile(title: const Text('Most Popular'), value: _isMostPopular, onChanged: (v) => setState(() => _isMostPopular = v), contentPadding: EdgeInsets.zero),
-                      SwitchListTile(title: const Text('Weekend Special'), value: _isWeekendSpecial, onChanged: (v) => setState(() => _isWeekendSpecial = v), contentPadding: EdgeInsets.zero),
+                      SwitchListTile(title: Text('available_for_sale'.tr()), value: _available, onChanged: (v) => setState(() => _available = v), contentPadding: EdgeInsets.zero),
+                      SwitchListTile(title: Text('most_popular'.tr()), value: _isMostPopular, onChanged: (v) => setState(() => _isMostPopular = v), contentPadding: EdgeInsets.zero),
+                      SwitchListTile(title: Text('weekend_special'.tr()), value: _isWeekendSpecial, onChanged: (v) => setState(() => _isWeekendSpecial = v), contentPadding: EdgeInsets.zero),
 
                       const SizedBox(height: 32),
                       SizedBox(
@@ -316,7 +318,7 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
                                     context.pop(true); // Return true to indicate change
                                   }
                                 },
-                          child: admin.loading ? SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: theme.colorScheme.onPrimary, strokeWidth: 2.5)) : const Text('Save Item'),
+                          child: admin.loading ? SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: theme.colorScheme.onPrimary, strokeWidth: 2.5)) : Text('save_item'.tr()),
                         ),
                       ),
 

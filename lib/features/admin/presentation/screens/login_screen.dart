@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:urban_cafe/core/theme.dart';
 import 'package:urban_cafe/core/utils.dart';
 import 'package:urban_cafe/core/validators.dart';
 import 'package:urban_cafe/features/auth/presentation/providers/auth_provider.dart';
@@ -59,7 +60,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                         margin: const EdgeInsets.only(bottom: 16),
                         decoration: BoxDecoration(
                           color: Colors.amber.shade100,
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: AppRadius.smAll,
                           border: Border.all(color: Colors.amber.shade300),
                         ),
                         child: const Row(

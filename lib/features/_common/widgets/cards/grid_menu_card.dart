@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:urban_cafe/core/theme.dart';
 import 'package:urban_cafe/features/menu/domain/entities/menu_item.dart';
 
 class GridMenuCard extends StatefulWidget {
@@ -66,7 +67,7 @@ class _GridMenuCardState extends State<GridMenuCard> with SingleTickerProviderSt
           duration: const Duration(milliseconds: 200),
           decoration: BoxDecoration(
             color: isDark ? cs.surfaceContainerHighest : Colors.white,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: AppRadius.xlAll,
             boxShadow: [
               BoxShadow(
                 color: _isPressed ? cs.primary.withValues(alpha: 0.15) : Colors.black.withValues(alpha: 0.08),
@@ -77,7 +78,7 @@ class _GridMenuCardState extends State<GridMenuCard> with SingleTickerProviderSt
             ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: AppRadius.xlAll,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -131,7 +132,7 @@ class _GridMenuCardState extends State<GridMenuCard> with SingleTickerProviderSt
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
                             color: Colors.black.withValues(alpha: 0.5),
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: AppRadius.mdAll,
                             border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                           ),
                           child: const Row(
@@ -157,7 +158,7 @@ class _GridMenuCardState extends State<GridMenuCard> with SingleTickerProviderSt
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
                               gradient: LinearGradient(colors: [cs.primary, cs.tertiary]),
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: AppRadius.mdAll,
                             ),
                             child: const Text(
                               '🔥 HOT',
@@ -199,25 +200,6 @@ class _GridMenuCardState extends State<GridMenuCard> with SingleTickerProviderSt
                             Text(
                               priceFormat.format(widget.item.price),
                               style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: cs.primary, fontSize: 16),
-                            ),
-                            // Animated Add Button
-                            TweenAnimationBuilder<double>(
-                              tween: Tween(begin: 0.0, end: 1.0),
-                              duration: Duration(milliseconds: 300 + (widget.index * 50)),
-                              curve: Curves.elasticOut,
-                              builder: (context, value, child) {
-                                return Transform.scale(scale: value, child: child);
-                              },
-                              child: Container(
-                                width: 34,
-                                height: 34,
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [cs.primary, cs.primary.withValues(alpha: 0.8)]),
-                                  borderRadius: BorderRadius.circular(10),
-                                  boxShadow: [BoxShadow(color: cs.primary.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 4))],
-                                ),
-                                child: const Icon(Icons.add, color: Colors.white, size: 20),
-                              ),
                             ),
                           ],
                         ),

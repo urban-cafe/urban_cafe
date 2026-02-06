@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:urban_cafe/core/env.dart';
+import 'package:urban_cafe/core/error/app_exception.dart';
 import 'package:urban_cafe/core/error/failures.dart';
 import 'package:urban_cafe/features/auth/domain/entities/user_profile.dart';
 import 'package:urban_cafe/features/auth/domain/entities/user_role.dart';
@@ -16,7 +17,7 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Either<Failure, UserRole>> getCurrentUserRole() async {
     try {
       if (supabaseClient.auth.currentUser == null) {
-        return const Left(AuthFailure('User not logged in'));
+        return const Left(AuthFailure('Please sign in to continue.', code: 'auth_not_logged_in'));
       }
 
       final userId = supabaseClient.auth.currentUser!.id;
@@ -33,7 +34,7 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Either<Failure, UserProfile>> getUserProfile() async {
     try {
       if (supabaseClient.auth.currentUser == null) {
-        return const Left(AuthFailure('User not logged in'));
+        return const Left(AuthFailure('Please sign in to continue.', code: 'auth_not_logged_in'));
       }
 
       final userId = supabaseClient.auth.currentUser!.id;
@@ -41,7 +42,7 @@ class AuthRepositoryImpl implements AuthRepository {
       final profile = UserProfile.fromJson(response);
       return Right(profile);
     } catch (e) {
-      return Left(AuthFailure(e.toString()));
+      return Left(AppException.mapToFailure(e));
     }
   }
 
@@ -52,39 +53,43 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<Either<Failure, UserRole>> signIn(String email, String password) async {
-    if (!Env.isConfigured) return const Left(AuthFailure('Supabase not configured'));
+    if (!Env.isConfigured) {
+      return const Left(AuthFailure('App not configured. Please contact support.', code: 'env_not_configured'));
+    }
 
     try {
       await supabaseClient.auth.signInWithPassword(email: email, password: password);
       return getCurrentUserRole();
-    } on AuthException catch (e) {
-      return Left(AuthFailure(e.message));
     } catch (e) {
-      return Left(AuthFailure(e.toString()));
+      return Left(AppException.mapToFailure(e));
     }
   }
 
   @override
   Future<Either<Failure, bool>> signInWithGoogle() async {
-    if (!Env.isConfigured) return const Left(AuthFailure('Supabase not configured'));
+    if (!Env.isConfigured) {
+      return const Left(AuthFailure('App not configured. Please contact support.', code: 'env_not_configured'));
+    }
 
     try {
       final bool result = await supabaseClient.auth.signInWithOAuth(OAuthProvider.google, redirectTo: kIsWeb ? null : 'io.supabase.urbancafe://login-callback/');
       return Right(result);
     } catch (e) {
-      return Left(AuthFailure(e.toString()));
+      return Left(AppException.mapToFailure(e));
     }
   }
 
   @override
   Future<Either<Failure, void>> signOut() async {
-    if (!Env.isConfigured) return const Left(AuthFailure('Supabase not configured'));
+    if (!Env.isConfigured) {
+      return const Left(AuthFailure('App not configured. Please contact support.', code: 'env_not_configured'));
+    }
 
     try {
       await supabaseClient.auth.signOut();
       return const Right(null);
     } catch (e) {
-      return Left(AuthFailure(e.toString()));
+      return Left(AppException.mapToFailure(e));
     }
   }
 }

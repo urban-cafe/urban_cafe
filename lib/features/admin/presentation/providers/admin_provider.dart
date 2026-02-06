@@ -1,18 +1,21 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:fpdart/fpdart.dart';
 import 'package:get_it/get_it.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:urban_cafe/core/env.dart';
+import 'package:urban_cafe/core/error/failures.dart';
+import 'package:urban_cafe/core/services/storage_service.dart';
 import 'package:urban_cafe/core/usecases/usecase.dart';
 import 'package:urban_cafe/features/menu/domain/repositories/menu_repository.dart';
 import 'package:urban_cafe/features/orders/domain/usecases/get_admin_analytics.dart';
 
 class AdminProvider extends ChangeNotifier {
   final MenuRepository _repo;
+  final StorageService _storage;
   final GetAdminAnalytics? getAdminAnalyticsUseCase;
 
-  AdminProvider({MenuRepository? menuRepository, this.getAdminAnalyticsUseCase}) : _repo = menuRepository ?? GetIt.I<MenuRepository>();
+  AdminProvider({MenuRepository? menuRepository, StorageService? storageService, this.getAdminAnalyticsUseCase})
+    : _repo = menuRepository ?? GetIt.I<MenuRepository>(),
+      _storage = storageService ?? GetIt.I<StorageService>();
 
   bool loading = false;
   String? error;
@@ -20,124 +23,96 @@ class AdminProvider extends ChangeNotifier {
   // Analytics State
   Map<String, dynamic>? analytics;
 
+  // ─────────────────────────────────────────────────────────────────
+  // HELPER: Unified loading/error handling
+  // ─────────────────────────────────────────────────────────────────
+  Future<T?> _execute<T>(Future<Either<Failure, T>> Function() action, {bool notify = true}) async {
+    loading = true;
+    error = null;
+    if (notify) notifyListeners();
+
+    try {
+      final result = await action();
+      return result.fold((failure) {
+        error = failure.message;
+        return null;
+      }, (data) => data);
+    } catch (e) {
+      error = e.toString();
+      return null;
+    } finally {
+      loading = false;
+      if (notify) notifyListeners();
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  // ANALYTICS
+  // ─────────────────────────────────────────────────────────────────
   Future<void> loadAnalytics() async {
     if (getAdminAnalyticsUseCase == null) return;
 
-    loading = true;
-    notifyListeners();
-
-    final result = await getAdminAnalyticsUseCase!(NoParams());
-    result.fold(
-      (failure) {
-        error = failure.message;
-        loading = false;
-        notifyListeners();
-      },
-      (data) {
-        analytics = data;
-        loading = false;
-        notifyListeners();
-      },
-    );
+    final data = await _execute(() => getAdminAnalyticsUseCase!(NoParams()));
+    if (data != null) analytics = data;
   }
 
-  Future<PlatformFile?> pickImage() async {
-    final result = await FilePicker.platform.pickFiles(type: FileType.image, withData: true);
-    if (result == null) return null;
-    return result.files.first;
-  }
+  // ─────────────────────────────────────────────────────────────────
+  // IMAGE HANDLING (delegated to StorageService)
+  // ─────────────────────────────────────────────────────────────────
+  Future<PlatformFile?> pickImage() => _storage.pickImage();
 
-  Future<(String path, String url)?> uploadImage(PlatformFile file) async {
-    if (!Env.isConfigured) return null;
-    final client = GetIt.I<SupabaseClient>();
+  Future<(String path, String url)?> uploadImage(PlatformFile file) => _storage.uploadImage(file);
 
-    // Compress to WebP (smaller, modern format supported by 98%+ browsers)
-    Uint8List compressedBytes;
-    String ext = 'webp';
-    try {
-      compressedBytes = await FlutterImageCompress.compressWithList(
-        file.bytes!,
-        minWidth: 1200, // Max width for full image
-        minHeight: 1200,
-        quality: 85, // Balance quality/size
-        format: CompressFormat.webp,
-      );
-    } catch (e) {
-      // Fallback if compression fails (rare)
-      compressedBytes = file.bytes!;
-      ext = (file.extension ?? 'jpg').toLowerCase();
-    }
-
-    // Optional: If compressed is larger (unlikely), use original
-    if (compressedBytes.length > file.bytes!.length) {
-      compressedBytes = file.bytes!;
-      ext = (file.extension ?? 'jpg').toLowerCase();
-    }
-
-    final path = '${DateTime.now().millisecondsSinceEpoch}.$ext';
-    await client.storage.from(Env.storageBucket).uploadBinary(path, compressedBytes, fileOptions: FileOptions(contentType: 'image/$ext', upsert: true));
-
-    final url = client.storage.from(Env.storageBucket).getPublicUrl(path);
-    return (path, url);
-  }
-
+  // ─────────────────────────────────────────────────────────────────
+  // CATEGORY MANAGEMENT
+  // ─────────────────────────────────────────────────────────────────
   Future<String?> addCategory(String name, {String? parentId}) async {
-    loading = true;
-    notifyListeners();
-    final result = await _repo.createCategory(name, parentId: parentId);
-    return result.fold(
-      (failure) {
-        error = failure.message;
-        loading = false;
-        notifyListeners();
-        return null;
-      },
-      (id) {
-        loading = false;
-        notifyListeners();
-        return id;
-      },
-    );
+    return _execute(() => _repo.createCategory(name, parentId: parentId));
   }
 
   Future<bool> renameCategory(String id, String newName) async {
     loading = true;
+    error = null;
     notifyListeners();
-    final result = await _repo.updateCategory(id, newName);
-    return result.fold(
-      (failure) {
+
+    try {
+      final result = await _repo.updateCategory(id, newName);
+      return result.fold((failure) {
         error = failure.message;
-        loading = false;
-        notifyListeners();
         return false;
-      },
-      (_) {
-        loading = false;
-        notifyListeners();
-        return true;
-      },
-    );
+      }, (_) => true);
+    } catch (e) {
+      error = e.toString();
+      return false;
+    } finally {
+      loading = false;
+      notifyListeners();
+    }
   }
 
   Future<bool> deleteCategory(String id) async {
     loading = true;
+    error = null;
     notifyListeners();
-    final result = await _repo.deleteCategory(id);
-    return result.fold(
-      (failure) {
+
+    try {
+      final result = await _repo.deleteCategory(id);
+      return result.fold((failure) {
         error = failure.message;
-        loading = false;
-        notifyListeners();
         return false;
-      },
-      (_) {
-        loading = false;
-        notifyListeners();
-        return true;
-      },
-    );
+      }, (_) => true);
+    } catch (e) {
+      error = e.toString();
+      return false;
+    } finally {
+      loading = false;
+      notifyListeners();
+    }
   }
 
+  // ─────────────────────────────────────────────────────────────────
+  // MENU ITEM CRUD
+  // ─────────────────────────────────────────────────────────────────
   Future<bool> create({
     required String name,
     String? description,
@@ -151,15 +126,17 @@ class AdminProvider extends ChangeNotifier {
     loading = true;
     error = null;
     notifyListeners();
+
     try {
       String? imagePath, imageUrl;
       if (imageFile != null) {
-        final up = await uploadImage(imageFile);
-        if (up != null) {
-          imagePath = up.$1;
-          imageUrl = up.$2;
+        final upload = await _storage.uploadImage(imageFile);
+        if (upload != null) {
+          imagePath = upload.$1;
+          imageUrl = upload.$2;
         }
       }
+
       final result = await _repo.createMenuItem(
         name: name,
         description: description,
@@ -180,7 +157,6 @@ class AdminProvider extends ChangeNotifier {
       error = e.toString();
       return false;
     } finally {
-      await Future.delayed(const Duration(milliseconds: 800));
       loading = false;
       notifyListeners();
     }
@@ -200,15 +176,17 @@ class AdminProvider extends ChangeNotifier {
     loading = true;
     error = null;
     notifyListeners();
+
     try {
       String? imagePath, imageUrl;
       if (imageFile != null) {
-        final up = await uploadImage(imageFile);
-        if (up != null) {
-          imagePath = up.$1;
-          imageUrl = up.$2;
+        final upload = await _storage.uploadImage(imageFile);
+        if (upload != null) {
+          imagePath = upload.$1;
+          imageUrl = upload.$2;
         }
       }
+
       final result = await _repo.updateMenuItem(
         id: id,
         name: name,
@@ -230,7 +208,6 @@ class AdminProvider extends ChangeNotifier {
       error = e.toString();
       return false;
     } finally {
-      await Future.delayed(const Duration(milliseconds: 800));
       loading = false;
       notifyListeners();
     }
@@ -238,7 +215,9 @@ class AdminProvider extends ChangeNotifier {
 
   Future<bool> delete(String id) async {
     loading = true;
+    error = null;
     notifyListeners();
+
     try {
       final result = await _repo.deleteMenuItem(id);
       return result.fold((failure) {

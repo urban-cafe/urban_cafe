@@ -5,6 +5,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:urban_cafe/core/env.dart';
+import 'package:urban_cafe/core/theme.dart';
 import 'package:urban_cafe/core/validators.dart';
 import 'package:urban_cafe/features/auth/presentation/providers/auth_provider.dart';
 
@@ -63,14 +64,14 @@ class _LoginScreenState extends State<LoginScreen> {
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 420),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: AppRadius.xxlAll,
                   child: BackdropFilter(
                     filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                     child: Container(
                       padding: const EdgeInsets.all(32),
                       decoration: BoxDecoration(
                         color: theme.cardTheme.color?.withValues(alpha: 0.85) ?? Colors.white.withValues(alpha: 0.85),
-                        borderRadius: BorderRadius.circular(24),
+                        borderRadius: AppRadius.xxlAll,
                         border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
                         boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 20, offset: const Offset(0, 10))],
                       ),
@@ -109,7 +110,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 width: double.infinity,
                                 padding: const EdgeInsets.all(12),
                                 margin: const EdgeInsets.only(bottom: 16),
-                                decoration: BoxDecoration(color: colorScheme.errorContainer.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+                                decoration: BoxDecoration(color: colorScheme.errorContainer.withValues(alpha: 0.1), borderRadius: AppRadius.smAll),
                                 child: Text(
                                   auth.error!,
                                   style: TextStyle(color: colorScheme.onErrorContainer),
@@ -123,7 +124,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 margin: const EdgeInsets.only(bottom: 16),
                                 decoration: BoxDecoration(
                                   color: colorScheme.errorContainer.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: AppRadius.smAll,
                                   border: Border.all(color: colorScheme.errorContainer),
                                 ),
                                 child: Row(
@@ -144,17 +145,17 @@ class _LoginScreenState extends State<LoginScreen> {
                                 prefixIcon: const Icon(Icons.email_outlined),
                                 filled: true,
                                 fillColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                                border: OutlineInputBorder(borderRadius: AppRadius.lgAll, borderSide: BorderSide.none),
                                 enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(16),
+                                  borderRadius: AppRadius.lgAll,
                                   borderSide: BorderSide(color: theme.colorScheme.outline.withValues(alpha: 0.3)),
                                 ),
                                 focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(16),
+                                  borderRadius: AppRadius.lgAll,
                                   borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
                                 ),
                                 errorBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(16),
+                                  borderRadius: AppRadius.lgAll,
                                   borderSide: BorderSide(color: theme.colorScheme.error),
                                 ),
                                 contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -172,17 +173,17 @@ class _LoginScreenState extends State<LoginScreen> {
                                 prefixIcon: const Icon(Icons.lock_outline),
                                 filled: true,
                                 fillColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                                border: OutlineInputBorder(borderRadius: AppRadius.lgAll, borderSide: BorderSide.none),
                                 enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(16),
+                                  borderRadius: AppRadius.lgAll,
                                   borderSide: BorderSide(color: theme.colorScheme.outline.withValues(alpha: 0.3)),
                                 ),
                                 focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(16),
+                                  borderRadius: AppRadius.lgAll,
                                   borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
                                 ),
                                 errorBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(16),
+                                  borderRadius: AppRadius.lgAll,
                                   borderSide: BorderSide(color: theme.colorScheme.error),
                                 ),
                                 contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),

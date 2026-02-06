@@ -8,22 +8,30 @@ class BrandColors extends ThemeExtension<BrandColors> {
   final Color danger;
 
   @override
-  BrandColors copyWith({Color? success, Color? danger}) => BrandColors(
-    success: success ?? this.success,
-    danger: danger ?? this.danger,
-  );
+  BrandColors copyWith({Color? success, Color? danger}) => BrandColors(success: success ?? this.success, danger: danger ?? this.danger);
 
   @override
-  ThemeExtension<BrandColors> lerp(
-    ThemeExtension<BrandColors>? other,
-    double t,
-  ) {
+  ThemeExtension<BrandColors> lerp(ThemeExtension<BrandColors>? other, double t) {
     if (other is! BrandColors) return this;
-    return BrandColors(
-      success: Color.lerp(success, other.success, t)!,
-      danger: Color.lerp(danger, other.danger, t)!,
-    );
+    return BrandColors(success: Color.lerp(success, other.success, t)!, danger: Color.lerp(danger, other.danger, t)!);
   }
+}
+
+/// Standardized border radius values (DRY principle)
+class AppRadius {
+  static const double xs = 4;
+  static const double sm = 8;
+  static const double md = 12;
+  static const double lg = 16;
+  static const double xl = 20;
+  static const double xxl = 24;
+
+  static BorderRadius get xsAll => BorderRadius.circular(xs);
+  static BorderRadius get smAll => BorderRadius.circular(sm);
+  static BorderRadius get mdAll => BorderRadius.circular(md);
+  static BorderRadius get lgAll => BorderRadius.circular(lg);
+  static BorderRadius get xlAll => BorderRadius.circular(xl);
+  static BorderRadius get xxlAll => BorderRadius.circular(xxl);
 }
 
 class AppTheme {
@@ -81,17 +89,9 @@ class AppTheme {
   // ---------------------------------------------------------------------------
   // GRADIENT HELPERS
   // ---------------------------------------------------------------------------
-  static LinearGradient get primaryGradient => const LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [primary, tertiary],
-  );
+  static LinearGradient get primaryGradient => const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [primary, tertiary]);
 
-  static LinearGradient get cardGradient => LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [Colors.white, Colors.white.withValues(alpha: 0.95)],
-  );
+  static LinearGradient get cardGradient => LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Colors.white, Colors.white.withValues(alpha: 0.95)]);
 
   // ---------------------------------------------------------------------------
   // DYNAMIC FONT CONFIGURATION
@@ -106,10 +106,7 @@ class AppTheme {
       displayMedium: _appFont(base.displayMedium, fontWeight: FontWeight.bold),
       displaySmall: _appFont(base.displaySmall, fontWeight: FontWeight.w600),
       headlineLarge: _appFont(base.headlineLarge, fontWeight: FontWeight.bold),
-      headlineMedium: _appFont(
-        base.headlineMedium,
-        fontWeight: FontWeight.w600,
-      ),
+      headlineMedium: _appFont(base.headlineMedium, fontWeight: FontWeight.w600),
       headlineSmall: _appFont(base.headlineSmall, fontWeight: FontWeight.w600),
       titleLarge: _appFont(base.titleLarge, fontWeight: FontWeight.bold),
       titleMedium: _appFont(base.titleMedium, fontWeight: FontWeight.bold),
@@ -158,11 +155,7 @@ class AppTheme {
     return base.copyWith(
       colorScheme: lightColorScheme,
       scaffoldBackgroundColor: background,
-      textTheme: _buildTextTheme(base.textTheme).apply(
-        displayColor: onSurface,
-        bodyColor: onSurface,
-        fontFamilyFallback: ['Roboto'],
-      ),
+      textTheme: _buildTextTheme(base.textTheme).apply(displayColor: onSurface, bodyColor: onSurface, fontFamilyFallback: ['Roboto']),
 
       // Card Theme with premium shadows
       cardTheme: CardThemeData(
@@ -178,13 +171,8 @@ class AppTheme {
           backgroundColor: primary,
           foregroundColor: onPrimary,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          textStyle: _appFont(
-            null,
-            fontWeight: FontWeight.bold,
-          ).copyWith(fontSize: 16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          textStyle: _appFont(null, fontWeight: FontWeight.bold).copyWith(fontSize: 16),
           elevation: 0,
         ),
       ),
@@ -194,14 +182,9 @@ class AppTheme {
         style: OutlinedButton.styleFrom(
           foregroundColor: primary,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           side: const BorderSide(color: outlineVariant, width: 1.5),
-          textStyle: _appFont(
-            null,
-            fontWeight: FontWeight.bold,
-          ).copyWith(fontSize: 16),
+          textStyle: _appFont(null, fontWeight: FontWeight.bold).copyWith(fontSize: 16),
         ),
       ),
 
@@ -210,10 +193,7 @@ class AppTheme {
         backgroundColor: surface,
         selectedColor: primary,
         disabledColor: surfaceVariant,
-        labelStyle: _appFont(
-          null,
-          fontWeight: FontWeight.w600,
-        ).copyWith(fontSize: 14),
+        labelStyle: _appFont(null, fontWeight: FontWeight.w600).copyWith(fontSize: 14),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         side: BorderSide(color: outlineVariant.withValues(alpha: 0.5)),
@@ -225,10 +205,7 @@ class AppTheme {
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: true,
-        titleTextStyle: _appFont(
-          null,
-          fontWeight: FontWeight.bold,
-        ).copyWith(fontSize: 18, color: onSurface),
+        titleTextStyle: _appFont(null, fontWeight: FontWeight.bold).copyWith(fontSize: 18, color: onSurface),
         iconTheme: const IconThemeData(color: onSurface),
       ),
 
@@ -242,10 +219,7 @@ class AppTheme {
       ),
 
       // Divider Theme
-      dividerTheme: DividerThemeData(
-        color: outlineVariant.withValues(alpha: 0.3),
-        thickness: 1,
-      ),
+      dividerTheme: DividerThemeData(color: outlineVariant.withValues(alpha: 0.3), thickness: 1),
 
       extensions: const [BrandColors(success: accentGreen, danger: accentRed)],
     );
@@ -295,13 +269,8 @@ class AppTheme {
           backgroundColor: darkPrimary,
           foregroundColor: darkOnPrimary,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          textStyle: _appFont(
-            null,
-            fontWeight: FontWeight.bold,
-          ).copyWith(fontSize: 16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          textStyle: _appFont(null, fontWeight: FontWeight.bold).copyWith(fontSize: 16),
           elevation: 0,
         ),
       ),
@@ -311,14 +280,9 @@ class AppTheme {
         style: OutlinedButton.styleFrom(
           foregroundColor: darkPrimary,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           side: const BorderSide(color: Color(0xFF4A3F3A), width: 1.5),
-          textStyle: _appFont(
-            null,
-            fontWeight: FontWeight.bold,
-          ).copyWith(fontSize: 16),
+          textStyle: _appFont(null, fontWeight: FontWeight.bold).copyWith(fontSize: 16),
         ),
       ),
 
@@ -327,10 +291,7 @@ class AppTheme {
         backgroundColor: darkSurface,
         selectedColor: darkPrimary,
         disabledColor: darkCard,
-        labelStyle: _appFont(
-          null,
-          fontWeight: FontWeight.w600,
-        ).copyWith(fontSize: 14),
+        labelStyle: _appFont(null, fontWeight: FontWeight.w600).copyWith(fontSize: 14),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         side: const BorderSide(color: Color(0xFF4A3F3A)),
@@ -342,10 +303,7 @@ class AppTheme {
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: true,
-        titleTextStyle: _appFont(
-          null,
-          fontWeight: FontWeight.bold,
-        ).copyWith(fontSize: 18, color: const Color(0xFFF5EDE8)),
+        titleTextStyle: _appFont(null, fontWeight: FontWeight.bold).copyWith(fontSize: 18, color: const Color(0xFFF5EDE8)),
         iconTheme: const IconThemeData(color: Color(0xFFF5EDE8)),
       ),
 
@@ -359,16 +317,9 @@ class AppTheme {
       ),
 
       // Divider for dark mode
-      dividerTheme: const DividerThemeData(
-        color: Color(0xFF3A322E),
-        thickness: 1,
-      ),
+      dividerTheme: const DividerThemeData(color: Color(0xFF3A322E), thickness: 1),
 
-      textTheme: _buildTextTheme(base.textTheme).apply(
-        displayColor: const Color(0xFFF5EDE8),
-        bodyColor: const Color(0xFFEDE0DE),
-        fontFamilyFallback: ['Roboto'],
-      ),
+      textTheme: _buildTextTheme(base.textTheme).apply(displayColor: const Color(0xFFF5EDE8), bodyColor: const Color(0xFFEDE0DE), fontFamilyFallback: ['Roboto']),
 
       extensions: const [BrandColors(success: accentGreen, danger: accentRed)],
     );

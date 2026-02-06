@@ -46,6 +46,7 @@ class MenuProvider extends ChangeNotifier {
 
   List<String>? _currentCategoryIds;
   String _searchQuery = '';
+  String get searchQuery => _searchQuery;
 
   int _page = 1;
   final int _pageSize = 10;
@@ -212,6 +213,7 @@ class MenuProvider extends ChangeNotifier {
     subCategories = [];
     _currentCategoryId = null;
     _currentCategoryIds = null;
+    _searchQuery = ''; // Reset search query
     error = null;
     loading = true;
 
@@ -255,6 +257,7 @@ class MenuProvider extends ChangeNotifier {
           loading = false;
           notifyListeners();
         },
+
         (subs) async {
           subCategories = subs;
           // Set filter to allow ALL sub-categories by default
@@ -266,6 +269,48 @@ class MenuProvider extends ChangeNotifier {
       );
     } catch (e) {
       error = e.toString();
+      loading = false;
+      notifyListeners();
+    }
+  }
+
+  // Initializer for Filtered Views (Popular / Special)
+  Future<void> initForFilter(String filterType) async {
+    items = [];
+    subCategories = [];
+    _currentCategoryId = null;
+    _currentCategoryIds = null;
+    _searchQuery = '';
+    error = null;
+    loading = true;
+    notifyListeners();
+
+    try {
+      final isPopular = filterType == 'popular';
+      final isSpecial = filterType == 'special';
+
+      final result = await getMenuItemsUseCase(
+        GetMenuItemsParams(
+          page: 1,
+          pageSize: 20, // Load more for filtered views
+          isMostPopular: isPopular,
+          isWeekendSpecial: isSpecial,
+        ),
+      );
+
+      result.fold(
+        (failure) {
+          error = failure.message;
+        },
+        (newItems) {
+          items = newItems;
+          hasMore = newItems.length == 20;
+          if (hasMore) _page++;
+        },
+      );
+    } catch (e) {
+      error = e.toString();
+    } finally {
       loading = false;
       notifyListeners();
     }
