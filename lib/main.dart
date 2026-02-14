@@ -13,6 +13,7 @@ import 'package:urban_cafe/core/theme.dart';
 import 'package:urban_cafe/features/_common/theme_provider.dart';
 import 'package:urban_cafe/features/_common/widgets/upgrade_listener.dart';
 import 'package:urban_cafe/features/admin/presentation/providers/admin_provider.dart';
+import 'package:urban_cafe/features/loyalty/presentation/providers/loyalty_provider.dart';
 import 'package:urban_cafe/features/auth/presentation/providers/auth_provider.dart';
 import 'package:urban_cafe/features/cart/presentation/providers/cart_provider.dart';
 import 'package:urban_cafe/features/menu/presentation/providers/category_manager_provider.dart';
@@ -46,6 +47,7 @@ Future<void> main() async {
           ChangeNotifierProvider(create: (_) => sl<AdminProvider>()),
           ChangeNotifierProvider(create: (_) => ThemeProvider()),
           ChangeNotifierProvider(create: (_) => sl<OrderProvider>()),
+          ChangeNotifierProvider(create: (_) => sl<LoyaltyProvider>()),
         ],
         child: const UrbanCafeApp(),
       ),

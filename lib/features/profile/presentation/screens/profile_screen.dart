@@ -4,10 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:urban_cafe/core/responsive.dart';
-import 'package:urban_cafe/core/theme.dart';
-import 'package:urban_cafe/features/_common/widgets/cards/loyalty_card.dart';
-import 'package:urban_cafe/features/_common/widgets/cards/profile_header.dart';
+import 'package:urban_cafe/core/routing/routes.dart';
+import 'package:urban_cafe/features/_common/widgets/buttons/primary_button.dart';
 import 'package:urban_cafe/features/_common/widgets/cards/profile_section_card.dart';
+import 'package:urban_cafe/features/_common/widgets/dialogs/confirmation_dialog.dart';
 import 'package:urban_cafe/features/_common/widgets/tiles/profile_action_tile.dart';
 import 'package:urban_cafe/features/auth/presentation/providers/auth_provider.dart';
 
@@ -39,13 +39,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final auth = context.watch<AuthProvider>();
     final isGuest = auth.isGuest;
-    final email = isGuest ? 'Guest' : (auth.currentUserEmail ?? 'Guest');
-    final initial = email.isNotEmpty ? email[0].toUpperCase() : 'G';
-    final role = isGuest ? 'GUEST' : auth.role.name.toUpperCase();
+    final user = auth.currentUser;
+    final profile = auth.profile;
 
-    // Responsive padding based on window size
+    final email = isGuest ? 'Guest' : (user?.email ?? 'Guest');
+    final name = isGuest ? 'Guest User' : (profile?.fullName ?? email.split('@').first);
+    final initial = name.isNotEmpty ? name[0].toUpperCase() : 'G';
+
+    // Responsive padding
     final sizeClass = Responsive.windowSizeClass(context);
     final horizontalPadding = switch (sizeClass) {
       WindowSizeClass.compact => 16.0,
@@ -57,7 +61,49 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: theme.colorScheme.surface,
       body: CustomScrollView(
         slivers: [
-          SliverAppBar(title: Text('profile'.tr()), centerTitle: true),
+          SliverAppBar(
+            expandedHeight: 220,
+            pinned: true,
+            stretch: true,
+            backgroundColor: colorScheme.surface,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(colors: [colorScheme.primaryContainer, colorScheme.surface], begin: Alignment.topCenter, end: Alignment.bottomCenter),
+                ),
+                child: SafeArea(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: colorScheme.surface, width: 4),
+                          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, 5))],
+                        ),
+                        child: CircleAvatar(
+                          radius: 40,
+                          backgroundColor: colorScheme.primary,
+                          child: Text(
+                            initial,
+                            style: theme.textTheme.displaySmall?.copyWith(color: colorScheme.onPrimary, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        name,
+                        style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: colorScheme.onSurface),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
           SliverToBoxAdapter(
             child: Center(
               child: ConstrainedBox(
@@ -66,22 +112,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
                   child: Column(
                     children: [
-                      ProfileHeader(email: email, role: role, initial: initial),
+                      const SizedBox(height: 8),
 
-                      // Loyalty card only for logged-in clients
-                      if (auth.isClient && !isGuest) ...[const SizedBox(height: 20), LoyaltyCard(points: auth.loyaltyPoints, onTap: () {})],
-
-                      const SizedBox(height: 24),
-
-                      // Account section only for logged-in clients
-                      if (auth.isClient && !isGuest)
+                      // Account section
+                      if (auth.isClient && !isGuest) ...[
                         ProfileSectionCard(
                           title: 'account'.tr(),
                           children: [
-                            ProfileActionTile(icon: Icons.edit_rounded, title: 'edit_profile'.tr(), subtitle: 'Update your name and details', onTap: () => context.push('/profile/edit')),
-                            ProfileActionTile(icon: Icons.history_rounded, title: 'order_history'.tr(), subtitle: 'View past orders', onTap: () => context.push('/profile/orders')),
+                            ProfileActionTile(icon: Icons.edit_outlined, title: 'edit_profile'.tr(), subtitle: 'Update your name and details', onTap: () => context.push('/profile/edit')),
+                            ProfileActionTile(icon: Icons.receipt_long_outlined, title: 'order_history'.tr(), subtitle: 'View past orders', onTap: () => context.push('/profile/orders')),
                             ProfileActionTile(
-                              icon: Icons.favorite_rounded,
+                              icon: Icons.favorite_border_rounded,
                               title: 'favorites'.tr(),
                               subtitle: 'Your saved items',
                               iconColor: Colors.redAccent,
@@ -89,77 +130,82 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ],
                         ),
+                        const SizedBox(height: 16),
+                      ],
 
-                      if (auth.isStaff || auth.isAdmin)
+                      // Staff/Admin Management Section
+                      if (auth.isStaff || auth.isAdmin) ...[
                         ProfileSectionCard(
                           title: 'management'.tr(),
                           children: [
                             if (auth.isStaff)
                               ProfileActionTile(
-                                icon: Icons.kitchen_rounded,
+                                icon: Icons.soup_kitchen_outlined,
                                 title: 'kitchen_display'.tr(),
                                 subtitle: 'Manage active orders',
                                 iconColor: Colors.orange,
-                                onTap: () => context.push('/staff'),
+                                onTap: () => context.push(AppRoutes.staff),
                               ),
                             if (auth.isAdmin) ...[
                               ProfileActionTile(
-                                icon: Icons.dashboard_rounded,
+                                icon: Icons.dashboard_outlined,
                                 title: 'admin_dashboard'.tr(),
                                 subtitle: 'Manage menu items',
                                 iconColor: Colors.purple,
-                                onTap: () => context.push('/admin'),
+                                onTap: () => context.push(AppRoutes.admin),
                               ),
+                              if (auth.isAdmin)
+                                ProfileActionTile(
+                                  // Separate check just in case logic changes
+                                  icon: Icons.analytics_outlined,
+                                  title: 'Analytics',
+                                  subtitle: 'View sales performance',
+                                  iconColor: Colors.blue,
+                                  onTap: () => context.push('${AppRoutes.admin}/analytics'),
+                                ),
                               ProfileActionTile(
-                                icon: Icons.analytics_outlined,
-                                title: 'Analytics',
-                                subtitle: 'View sales performance',
-                                iconColor: Colors.blue,
-                                onTap: () => context.push('/admin/analytics'),
+                                icon: Icons.settings_input_component_outlined,
+                                title: 'point_settings'.tr(),
+                                subtitle: 'Configure loyalty points',
+                                iconColor: Colors.teal,
+                                onTap: () => context.push(AppRoutes.adminPointSettings),
                               ),
                             ],
                           ],
                         ),
+                        const SizedBox(height: 16),
+                      ],
 
+                      // Settings Section
                       ProfileSectionCard(
                         title: 'settings'.tr(),
                         children: [
                           ProfileActionTile(
-                            icon: Icons.language_rounded,
+                            icon: Icons.language,
                             title: 'language'.tr(),
                             subtitle: context.locale.languageCode == 'en' ? 'English' : 'Myanmar',
                             onTap: () => context.push('/profile/language'),
                           ),
-                          ProfileActionTile(icon: Icons.brightness_6_rounded, title: 'theme'.tr(), subtitle: 'Change app appearance', onTap: () => context.push('/profile/theme')),
+                          ProfileActionTile(icon: Icons.brightness_6_outlined, title: 'theme'.tr(), subtitle: 'Change app appearance', onTap: () => context.push('/profile/theme')),
                         ],
                       ),
+                      const SizedBox(height: 16),
 
+                      // About Section
                       ProfileSectionCard(
                         title: 'about'.tr(),
                         children: [
                           ProfileActionTile(icon: Icons.info_outline, title: 'version'.tr(), subtitle: 'v$_version', trailing: const SizedBox.shrink()),
-                          ProfileActionTile(icon: Icons.system_update, title: 'check_for_updates'.tr(), subtitle: 'check_for_updates_subtitle'.tr(), onTap: () => _checkForUpdates(context)),
+                          ProfileActionTile(icon: Icons.system_update_outlined, title: 'check_for_updates'.tr(), subtitle: 'check_for_updates_subtitle'.tr(), onTap: () => _checkForUpdates(context)),
                         ],
                       ),
 
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
 
-                      SizedBox(
-                        width: double.infinity,
-                        child: OutlinedButton.icon(
-                          icon: const Icon(Icons.logout),
-                          label: Text('sign_out'.tr()),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            side: BorderSide(color: theme.colorScheme.outline),
-                            foregroundColor: theme.colorScheme.primary,
-                            shape: RoundedRectangleBorder(borderRadius: AppRadius.lgAll),
-                          ),
-                          onPressed: () => _confirmSignOut(context),
-                        ),
-                      ),
+                      // Logout Button
+                      PrimaryButton(text: 'sign_out'.tr(), onPressed: () => _confirmSignOut(context)),
 
-                      const SizedBox(height: 150),
+                      const SizedBox(height: 100), // Bottom padding for navigation bar
                     ],
                   ),
                 ),
@@ -191,18 +237,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _confirmSignOut(BuildContext context) async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('sign_out'.tr()),
-        content: Text('sign_out_confirm'.tr()),
-        actions: [
-          OutlinedButton(onPressed: () => Navigator.pop(ctx, false), child: Text('cancel'.tr())),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary),
-            child: Text('sign_out'.tr()),
-          ),
-        ],
-      ),
+      builder: (ctx) =>
+          ConfirmationDialog(title: 'sign_out'.tr(), message: 'sign_out_confirm'.tr(), confirmText: 'sign_out'.tr(), cancelText: 'cancel'.tr(), onConfirm: () => Navigator.pop(ctx, true)),
     );
 
     if (confirm == true && context.mounted) {

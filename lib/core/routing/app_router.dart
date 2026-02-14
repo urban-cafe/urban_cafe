@@ -19,6 +19,9 @@ import 'package:urban_cafe/features/menu/presentation/screens/main_menu_screen.d
 import 'package:urban_cafe/features/menu/presentation/screens/menu_detail_screen.dart';
 import 'package:urban_cafe/features/menu/presentation/screens/menu_screen.dart';
 import 'package:urban_cafe/features/orders/presentation/screens/client_orders_screen.dart';
+import 'package:urban_cafe/features/loyalty/presentation/screens/point_settings_screen.dart';
+import 'package:urban_cafe/features/loyalty/presentation/screens/qr_display_screen.dart';
+import 'package:urban_cafe/features/loyalty/presentation/screens/qr_scanner_screen.dart';
 import 'package:urban_cafe/features/orders/presentation/screens/staff/staff_orders_screen.dart';
 import 'package:urban_cafe/features/profile/presentation/screens/edit_profile_screen.dart';
 import 'package:urban_cafe/features/profile/presentation/screens/favorites_screen.dart';
@@ -54,7 +57,7 @@ class AppRouter {
           return MainScaffold(navigationShell: navigationShell);
         },
         branches: [
-          // ── Client branches (index 0-3) ─────────────────────
+          // ── Client branches (index 0-4) ─────────────────────
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -77,9 +80,12 @@ class AppRouter {
             routes: [GoRoute(path: AppRoutes.cart, builder: (context, state) => const CartScreen())],
           ),
           StatefulShellBranch(
+            routes: [GoRoute(path: AppRoutes.qr, builder: (context, state) => const QrDisplayScreen())],
+          ),
+          StatefulShellBranch(
             routes: [GoRoute(path: AppRoutes.orders, builder: (context, state) => const ClientOrdersScreen())],
           ),
-          // ── Profile (shared, index 3 for client / last for admin & staff) ──
+          // ── Profile (shared, index 4 for client / last for admin & staff) ──
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -95,7 +101,7 @@ class AppRouter {
               ),
             ],
           ),
-          // ── Admin branches (index 4-6) ──────────────────────
+          // ── Admin branches (index 5-7) ──────────────────────
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -111,7 +117,11 @@ class AppRouter {
           StatefulShellBranch(
             routes: [GoRoute(path: AppRoutes.adminCategories, builder: (context, state) => const AdminCategoryManagerScreen())],
           ),
-          // ── Staff branch (index 7) ──────────────────────────
+          // ── QR Scanner for admin (index 8) ──────────────────
+          StatefulShellBranch(
+            routes: [GoRoute(path: AppRoutes.qrScanner, builder: (context, state) => const QrScannerScreen())],
+          ),
+          // ── Staff branch (index 9) ──────────────────────────
           StatefulShellBranch(
             routes: [GoRoute(path: AppRoutes.staff, builder: (context, state) => const StaffOrdersScreen())],
           ),
@@ -138,6 +148,7 @@ class AppRouter {
           return AdminEditScreen(id: state.uri.queryParameters['id'], item: item);
         },
       ),
+      GoRoute(path: AppRoutes.adminPointSettings, parentNavigatorKey: _navigatorKey, builder: (context, state) => const PointSettingsScreen()),
     ],
   );
 

@@ -97,7 +97,7 @@ class AppTheme {
   // DYNAMIC FONT CONFIGURATION
   // ---------------------------------------------------------------------------
   static TextStyle _appFont(TextStyle? textStyle, {FontWeight? fontWeight}) {
-    return GoogleFonts.openSans(textStyle: textStyle, fontWeight: fontWeight);
+    return GoogleFonts.inter(textStyle: textStyle, fontWeight: fontWeight);
   }
 
   static TextTheme _buildTextTheme(TextTheme base) {
@@ -118,36 +118,7 @@ class AppTheme {
     );
   }
 
-  static ColorScheme get lightColorScheme => const ColorScheme(
-    brightness: Brightness.light,
-    primary: primary,
-    onPrimary: onPrimary,
-    primaryContainer: primaryContainer,
-    onPrimaryContainer: onPrimaryContainer,
-    secondary: secondary,
-    onSecondary: onSecondary,
-    secondaryContainer: secondaryContainer,
-    onSecondaryContainer: onSecondaryContainer,
-    tertiary: tertiary,
-    onTertiary: onTertiary,
-    tertiaryContainer: tertiaryContainer,
-    onTertiaryContainer: onTertiaryContainer,
-    error: error,
-    onError: onError,
-    errorContainer: errorContainer,
-    onErrorContainer: onErrorContainer,
-    surface: surface,
-    onSurface: onSurface,
-    surfaceContainerHighest: surfaceVariant,
-    onSurfaceVariant: onSurfaceVariant,
-    outline: outline,
-    outlineVariant: outlineVariant,
-    shadow: shadow,
-    scrim: scrim,
-    inverseSurface: inverseSurface,
-    onInverseSurface: onInverseSurface,
-    inversePrimary: inversePrimary,
-  );
+  static ColorScheme get lightColorScheme => const ColorScheme(brightness: Brightness.light, primary: primary, onPrimary: onPrimary, primaryContainer: primaryContainer, onPrimaryContainer: onPrimaryContainer, secondary: secondary, onSecondary: onSecondary, secondaryContainer: secondaryContainer, onSecondaryContainer: onSecondaryContainer, tertiary: tertiary, onTertiary: onTertiary, tertiaryContainer: tertiaryContainer, onTertiaryContainer: onTertiaryContainer, error: error, onError: onError, errorContainer: errorContainer, onErrorContainer: onErrorContainer, surface: surface, onSurface: onSurface, surfaceContainerHighest: surfaceVariant, onSurfaceVariant: onSurfaceVariant, outline: outline, outlineVariant: outlineVariant, shadow: shadow, scrim: scrim, inverseSurface: inverseSurface, onInverseSurface: onInverseSurface, inversePrimary: inversePrimary);
 
   static ThemeData get theme {
     final base = ThemeData.light();
@@ -210,13 +181,7 @@ class AppTheme {
       ),
 
       // Bottom Navigation
-      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: surface,
-        selectedItemColor: primary,
-        unselectedItemColor: onSurfaceVariant,
-        type: BottomNavigationBarType.fixed,
-        elevation: 0,
-      ),
+      bottomNavigationBarTheme: const BottomNavigationBarThemeData(backgroundColor: surface, selectedItemColor: primary, unselectedItemColor: onSurfaceVariant, type: BottomNavigationBarType.fixed, elevation: 0),
 
       // Divider Theme
       dividerTheme: DividerThemeData(color: outlineVariant.withValues(alpha: 0.3), thickness: 1),
@@ -237,22 +202,7 @@ class AppTheme {
     const darkTertiary = Color(0xFFFBE4C8);
 
     return base.copyWith(
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: primary,
-        brightness: Brightness.dark,
-        primary: darkPrimary,
-        onPrimary: darkOnPrimary,
-        secondary: darkSecondary,
-        onSecondary: const Color(0xFF3E2723),
-        tertiary: darkTertiary,
-        onTertiary: const Color(0xFF3C2F04),
-        surface: darkSurface,
-        onSurface: const Color(0xFFF5EDE8),
-        surfaceContainerHighest: darkCard,
-        onSurfaceVariant: const Color(0xFFD7C3B9),
-        outline: const Color(0xFF9C8579),
-        outlineVariant: const Color(0xFF4A3F3A),
-      ),
+      colorScheme: ColorScheme.fromSeed(seedColor: primary, brightness: Brightness.dark, primary: darkPrimary, onPrimary: darkOnPrimary, secondary: darkSecondary, onSecondary: const Color(0xFF3E2723), tertiary: darkTertiary, onTertiary: const Color(0xFF3C2F04), surface: darkSurface, onSurface: const Color(0xFFF5EDE8), surfaceContainerHighest: darkCard, onSurfaceVariant: const Color(0xFFD7C3B9), outline: const Color(0xFF9C8579), outlineVariant: const Color(0xFF4A3F3A)),
       scaffoldBackgroundColor: darkBg,
 
       // Card Theme for dark mode
@@ -308,13 +258,7 @@ class AppTheme {
       ),
 
       // Bottom Navigation for dark mode
-      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: darkSurface,
-        selectedItemColor: darkPrimary,
-        unselectedItemColor: Color(0xFF9C8579),
-        type: BottomNavigationBarType.fixed,
-        elevation: 0,
-      ),
+      bottomNavigationBarTheme: const BottomNavigationBarThemeData(backgroundColor: darkSurface, selectedItemColor: darkPrimary, unselectedItemColor: Color(0xFF9C8579), type: BottomNavigationBarType.fixed, elevation: 0),
 
       // Divider for dark mode
       dividerTheme: const DividerThemeData(color: Color(0xFF3A322E), thickness: 1),

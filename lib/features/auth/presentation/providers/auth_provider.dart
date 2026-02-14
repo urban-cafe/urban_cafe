@@ -267,7 +267,7 @@ class AuthProvider extends ChangeNotifier {
 
   // ─── Update Profile ───────────────────────────────────────────
 
-  Future<bool> updateProfile({String? fullName}) async {
+  Future<bool> updateProfile({String? fullName, String? phoneNumber, String? address}) async {
     if (!Env.isConfigured) return false;
     if (_profile == null) return false;
 
@@ -275,7 +275,7 @@ class AuthProvider extends ChangeNotifier {
     error = null;
     notifyListeners();
 
-    final updatedProfile = _profile!.copyWith(fullName: fullName);
+    final updatedProfile = _profile!.copyWith(fullName: fullName, phoneNumber: phoneNumber, address: address);
     final result = await updateProfileUseCase(updatedProfile);
 
     return result.fold(

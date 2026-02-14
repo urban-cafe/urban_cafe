@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:http/http.dart' as http;
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:urban_cafe/core/error/failures.dart';
 
@@ -16,6 +18,10 @@ class AppException {
     // Network errors
     if (error is SocketException) {
       return const NetworkFailure('No internet connection. Please check your network.', code: 'network_socket_error');
+    }
+
+    if (error is http.ClientException) {
+      return const NetworkFailure('Network error. Please check your internet or try disabling VPN.', code: 'network_client_error');
     }
 
     if (error is TimeoutException) {

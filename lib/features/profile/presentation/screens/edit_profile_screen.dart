@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:urban_cafe/features/_common/widgets/buttons/primary_button.dart';
 import 'package:urban_cafe/features/auth/presentation/providers/auth_provider.dart';
 
 class EditProfileScreen extends StatefulWidget {
@@ -14,6 +15,8 @@ class EditProfileScreen extends StatefulWidget {
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _addressController = TextEditingController();
   bool _isLoading = false;
 
   @override
@@ -21,11 +24,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.initState();
     final auth = context.read<AuthProvider>();
     _nameController.text = auth.profile?.fullName ?? '';
+    _phoneController.text = auth.profile?.phoneNumber ?? '';
+    _addressController.text = auth.profile?.address ?? '';
   }
 
   @override
   void dispose() {
     _nameController.dispose();
+    _phoneController.dispose();
+    _addressController.dispose();
     super.dispose();
   }
 
@@ -35,7 +42,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     setState(() => _isLoading = true);
 
     final auth = context.read<AuthProvider>();
-    final success = await auth.updateProfile(fullName: _nameController.text.trim());
+    final success = await auth.updateProfile(fullName: _nameController.text.trim(), phoneNumber: _phoneController.text.trim(), address: _addressController.text.trim());
 
     if (!mounted) return;
 
@@ -90,56 +97,71 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _nameController,
-                      decoration: InputDecoration(
-                        hintText: 'enter_your_full_name'.tr(),
-                        prefixIcon: Icon(Icons.person_outline, color: cs.primary),
-                        filled: true,
-                        fillColor: cs.surfaceContainerHighest.withOpacity(0.5),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: cs.outline.withOpacity(0.2)),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: cs.primary, width: 2),
-                        ),
-                        errorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: cs.error),
-                        ),
-                      ),
+                      decoration: _inputDecoration(cs, 'enter_your_full_name'.tr(), Icons.person_outline),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
                           return 'please_enter_your_name'.tr();
-                        }
-                        if (value.trim().length < 2) {
-                          return 'name_too_short'.tr();
                         }
                         return null;
                       },
                       textCapitalization: TextCapitalization.words,
                       keyboardType: TextInputType.name,
                     ),
+                    const SizedBox(height: 24),
+
+                    // Phone Number Field
+                    Text(
+                      'Phone Number',
+                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600, color: cs.onSurface),
+                    ),
+                    const SizedBox(height: 8),
+                    TextFormField(controller: _phoneController, decoration: _inputDecoration(cs, 'Enter your phone number', Icons.phone_outlined), keyboardType: TextInputType.phone),
+                    const SizedBox(height: 24),
+
+                    // Address Field
+                    Text(
+                      'Address',
+                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600, color: cs.onSurface),
+                    ),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: _addressController,
+                      decoration: _inputDecoration(cs, 'Enter your address', Icons.location_on_outlined),
+                      maxLines: 3,
+                      keyboardType: TextInputType.streetAddress,
+                    ),
                     const SizedBox(height: 32),
 
                     // Save Button
-                    FilledButton(
-                      onPressed: _isLoading ? null : _saveProfile,
-                      style: FilledButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      child: _isLoading
-                          ? SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(cs.onPrimary)))
-                          : Text('save_changes'.tr(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                    ),
+                    PrimaryButton(text: 'save_changes'.tr(), onPressed: _saveProfile, isLoading: _isLoading),
                   ],
                 ),
               ),
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  InputDecoration _inputDecoration(ColorScheme cs, String hint, IconData icon) {
+    return InputDecoration(
+      hintText: hint,
+      prefixIcon: Icon(icon, color: cs.primary),
+      filled: true,
+      fillColor: cs.surfaceContainerHighest.withValues(alpha: 0.5),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: cs.outline.withValues(alpha: 0.2)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: cs.primary, width: 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: cs.error),
       ),
     );
   }

@@ -2,6 +2,13 @@ import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:urban_cafe/core/services/cache_service.dart';
 import 'package:urban_cafe/core/services/storage_service.dart';
+import 'package:urban_cafe/features/loyalty/data/repositories/loyalty_repository_impl.dart';
+import 'package:urban_cafe/features/loyalty/domain/repositories/loyalty_repository.dart';
+import 'package:urban_cafe/features/loyalty/domain/usecases/generate_point_token.dart';
+import 'package:urban_cafe/features/loyalty/domain/usecases/get_point_settings.dart';
+import 'package:urban_cafe/features/loyalty/domain/usecases/redeem_point_token.dart';
+import 'package:urban_cafe/features/loyalty/domain/usecases/update_point_settings.dart';
+import 'package:urban_cafe/features/loyalty/presentation/providers/loyalty_provider.dart';
 // Cart & Admin Features
 import 'package:urban_cafe/features/admin/presentation/providers/admin_provider.dart';
 // Auth Feature
@@ -125,4 +132,22 @@ Future<void> configureDependencies(SupabaseClient client) async {
   sl.registerFactory<OrderProvider>(() => OrderProvider(getOrdersUseCase: sl(), updateOrderStatusUseCase: sl()));
 
   sl.registerFactory<AdminProvider>(() => AdminProvider(getAdminAnalyticsUseCase: sl(), storageService: sl()));
+
+  // ─────────────────────────────────────────────────────────────────
+  // LOYALTY REPOSITORY
+  // ─────────────────────────────────────────────────────────────────
+  sl.registerLazySingleton<LoyaltyRepository>(() => LoyaltyRepositoryImpl(sl<SupabaseClient>()));
+
+  // ─────────────────────────────────────────────────────────────────
+  // LOYALTY USECASES
+  // ─────────────────────────────────────────────────────────────────
+  sl.registerLazySingleton(() => GeneratePointToken(sl<LoyaltyRepository>()));
+  sl.registerLazySingleton(() => RedeemPointToken(sl<LoyaltyRepository>()));
+  sl.registerLazySingleton(() => GetPointSettings(sl<LoyaltyRepository>()));
+  sl.registerLazySingleton(() => UpdatePointSettings(sl<LoyaltyRepository>()));
+
+  // ─────────────────────────────────────────────────────────────────
+  // LOYALTY PROVIDER
+  // ─────────────────────────────────────────────────────────────────
+  sl.registerFactory<LoyaltyProvider>(() => LoyaltyProvider(generatePointToken: sl(), redeemPointToken: sl(), getPointSettings: sl(), updatePointSettings: sl()));
 }

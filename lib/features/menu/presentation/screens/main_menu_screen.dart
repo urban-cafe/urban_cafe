@@ -132,7 +132,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 20),
                       Skeletonizer(
                         enabled: provider.loading,
                         child: HomePromoBanner(items: provider.specialItems),
@@ -142,7 +142,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                 ),
               ),
 
-              const SliverToBoxAdapter(child: SizedBox(height: 28)),
+              const SliverToBoxAdapter(child: SizedBox(height: 20)),
 
               // 4. CATEGORIES with stagger delay
               SliverToBoxAdapter(
@@ -180,7 +180,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                 ),
               ),
 
-              const SliverToBoxAdapter(child: SizedBox(height: 28)),
+              const SliverToBoxAdapter(child: SizedBox(height: 20)),
 
               // 5. POPULAR ITEMS HEADER
               SliverPadding(
@@ -326,12 +326,7 @@ class _CategoryChipState extends State<_CategoryChip> with SingleTickerProviderS
               color: widget.isSelected ? null : cs.primaryContainer.withValues(alpha: 0.25),
               borderRadius: BorderRadius.circular(24),
               border: widget.isSelected ? null : Border.all(color: _isPressed ? cs.primary.withValues(alpha: 0.5) : cs.outlineVariant.withValues(alpha: 0.5), width: 1.5),
-              boxShadow: [
-                if (widget.isSelected)
-                  BoxShadow(color: cs.primary.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 6))
-                else if (_isPressed)
-                  BoxShadow(color: cs.primary.withValues(alpha: 0.1), blurRadius: 8, offset: const Offset(0, 4)),
-              ],
+              boxShadow: [if (widget.isSelected) BoxShadow(color: cs.primary.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 6)) else if (_isPressed) BoxShadow(color: cs.primary.withValues(alpha: 0.1), blurRadius: 8, offset: const Offset(0, 4))],
             ),
             child: Text(
               widget.label,

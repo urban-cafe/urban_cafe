@@ -12,7 +12,7 @@ class ProfileSectionCard extends StatelessWidget {
 
     return Card(
       elevation: 0,
-      margin: const EdgeInsets.only(bottom: 20),
+      margin: const EdgeInsets.only(bottom: 12),
       color: theme.colorScheme.surfaceContainerLow,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(

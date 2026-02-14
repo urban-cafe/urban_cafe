@@ -10,6 +10,7 @@ abstract final class AppRoutes {
   static const home = '/';
   static const menu = '/menu';
   static const cart = '/cart';
+  static const qr = '/qr';
   static const orders = '/orders';
 
   // Profile
@@ -26,6 +27,10 @@ abstract final class AppRoutes {
   static const adminOrders = '/admin/orders';
   static const adminCategories = '/admin/categories';
   static const adminEdit = '/admin/edit';
+  static const adminPointSettings = '/admin/point-settings';
+
+  // QR Scanner (staff/admin)
+  static const qrScanner = '/qr-scanner';
 
   // Staff
   static const staff = '/staff';

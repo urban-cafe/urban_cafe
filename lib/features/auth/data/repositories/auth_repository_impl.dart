@@ -142,7 +142,10 @@ class AuthRepositoryImpl implements AuthRepository {
         return const Left(AuthFailure('Please sign in to continue.', code: 'auth_not_logged_in'));
       }
 
-      await supabaseClient.from('profiles').update({'full_name': profile.fullName, 'updated_at': DateTime.now().toIso8601String()}).eq('id', userId);
+      await supabaseClient
+          .from('profiles')
+          .update({'full_name': profile.fullName, 'phone_number': profile.phoneNumber, 'address': profile.address, 'updated_at': DateTime.now().toIso8601String()})
+          .eq('id', userId);
 
       return Right(profile);
     } catch (e) {
