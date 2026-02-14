@@ -9,9 +9,12 @@ import 'package:urban_cafe/features/auth/data/repositories/auth_repository_impl.
 import 'package:urban_cafe/features/auth/domain/repositories/auth_repository.dart';
 import 'package:urban_cafe/features/auth/domain/usecases/get_current_user_role_usecase.dart';
 import 'package:urban_cafe/features/auth/domain/usecases/get_user_profile_usecase.dart';
+import 'package:urban_cafe/features/auth/domain/usecases/sign_in_anonymously_usecase.dart';
 import 'package:urban_cafe/features/auth/domain/usecases/sign_in_usecase.dart';
 import 'package:urban_cafe/features/auth/domain/usecases/sign_in_with_google_usecase.dart';
 import 'package:urban_cafe/features/auth/domain/usecases/sign_out_usecase.dart';
+import 'package:urban_cafe/features/auth/domain/usecases/sign_up_usecase.dart';
+import 'package:urban_cafe/features/auth/domain/usecases/update_profile_usecase.dart';
 import 'package:urban_cafe/features/auth/presentation/providers/auth_provider.dart';
 import 'package:urban_cafe/features/cart/presentation/providers/cart_provider.dart';
 // Menu Feature
@@ -64,6 +67,9 @@ Future<void> configureDependencies(SupabaseClient client) async {
   sl.registerLazySingleton(() => GetCurrentUserRoleUseCase(sl<AuthRepository>()));
   sl.registerLazySingleton(() => GetUserProfileUseCase(sl<AuthRepository>()));
   sl.registerLazySingleton(() => SignInWithGoogleUseCase(sl<AuthRepository>()));
+  sl.registerLazySingleton(() => SignUpUseCase(sl<AuthRepository>()));
+  sl.registerLazySingleton(() => SignInAnonymouslyUseCase(sl<AuthRepository>()));
+  sl.registerLazySingleton(() => UpdateProfileUseCase(sl<AuthRepository>()));
 
   // ─────────────────────────────────────────────────────────────────
   // MENU USECASES
@@ -87,7 +93,18 @@ Future<void> configureDependencies(SupabaseClient client) async {
   // ─────────────────────────────────────────────────────────────────
   // PROVIDERS (Factory - new instance each time)
   // ─────────────────────────────────────────────────────────────────
-  sl.registerFactory<AuthProvider>(() => AuthProvider(signInUseCase: sl(), signOutUseCase: sl(), getCurrentUserRoleUseCase: sl(), getUserProfileUseCase: sl(), signInWithGoogleUseCase: sl()));
+  sl.registerFactory<AuthProvider>(
+    () => AuthProvider(
+      signInUseCase: sl(),
+      signOutUseCase: sl(),
+      getCurrentUserRoleUseCase: sl(),
+      getUserProfileUseCase: sl(),
+      signInWithGoogleUseCase: sl(),
+      signUpUseCase: sl(),
+      signInAnonymouslyUseCase: sl(),
+      updateProfileUseCase: sl(),
+    ),
+  );
 
   sl.registerFactory<MenuProvider>(
     () => MenuProvider(

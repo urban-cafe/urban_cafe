@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:urban_cafe/core/theme.dart';
 import 'package:urban_cafe/features/_common/widgets/badges/menu_item_badges.dart';
+import 'package:urban_cafe/features/auth/presentation/providers/auth_provider.dart';
 import 'package:urban_cafe/features/menu/domain/entities/menu_item.dart';
 import 'package:urban_cafe/features/menu/presentation/providers/menu_provider.dart';
 
@@ -75,8 +76,10 @@ class _MenuCardState extends State<MenuCard> with TickerProviderStateMixin {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final menuProvider = context.watch<MenuProvider>();
+    final auth = context.watch<AuthProvider>();
     final isFavorite = menuProvider.favoriteIds.contains(widget.item.id);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isGuest = auth.isGuest;
 
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
@@ -219,7 +222,7 @@ class _MenuCardState extends State<MenuCard> with TickerProviderStateMixin {
                                       style: TextStyle(color: colorScheme.onErrorContainer, fontWeight: FontWeight.bold, fontSize: 11),
                                     ),
                                   )
-                                else
+                                else if (!isGuest)
                                   GestureDetector(
                                     onTap: widget.onAddToCart,
                                     child: Container(

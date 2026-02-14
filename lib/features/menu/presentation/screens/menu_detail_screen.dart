@@ -7,6 +7,7 @@ import 'package:urban_cafe/core/animations.dart';
 import 'package:urban_cafe/core/theme.dart';
 import 'package:urban_cafe/core/utils.dart';
 import 'package:urban_cafe/features/_common/widgets/badges/menu_item_badges.dart';
+import 'package:urban_cafe/features/auth/presentation/providers/auth_provider.dart';
 import 'package:urban_cafe/features/cart/presentation/providers/cart_provider.dart';
 import 'package:urban_cafe/features/menu/domain/entities/menu_item.dart';
 import 'package:urban_cafe/features/menu/presentation/providers/menu_provider.dart';
@@ -102,7 +103,9 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
     final cs = theme.colorScheme;
     final priceFormat = NumberFormat.currency(symbol: '', decimalDigits: 0);
     final menuProvider = context.watch<MenuProvider>();
+    final auth = context.watch<AuthProvider>();
     final isFavorite = menuProvider.favoriteIds.contains(widget.item.id);
+    final isGuest = auth.isGuest;
 
     return Scaffold(
       backgroundColor: cs.surface,
@@ -266,8 +269,8 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
 
                         const SizedBox(height: 32),
 
-                        // QUANTITY & NOTES
-                        if (widget.item.isAvailable) ...[
+                        // QUANTITY & NOTES (hidden for guests)
+                        if (widget.item.isAvailable && !isGuest) ...[
                           Row(
                             children: [
                               Text("quantity".tr(), style: theme.textTheme.titleMedium),
@@ -322,6 +325,7 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
                           ),
                           const SizedBox(height: 120), // Space for bottom bar
                         ],
+                        if (isGuest) const SizedBox(height: 40), // Extra space for guests
                       ],
                     ),
                   ),
@@ -330,8 +334,8 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
             ],
           ),
 
-          // 3. BOTTOM ACTION BAR
-          if (widget.item.isAvailable)
+          // 3. BOTTOM ACTION BAR (hidden for guests)
+          if (widget.item.isAvailable && !isGuest)
             Positioned(
               bottom: 0,
               left: 0,

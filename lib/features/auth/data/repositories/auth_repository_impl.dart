@@ -80,6 +80,43 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Either<Failure, UserRole>> signUp(String email, String password) async {
+    if (!Env.isConfigured) {
+      return const Left(AuthFailure('App not configured. Please contact support.', code: 'env_not_configured'));
+    }
+
+    try {
+      final response = await supabaseClient.auth.signUp(email: email, password: password);
+
+      // Check if email confirmation is required
+      if (response.session == null) {
+        // User created but needs to confirm email
+        return const Left(AuthFailure('Account created! Please check your email to verify your account.', code: 'email_confirmation_required'));
+      }
+
+      // User is signed in immediately (email confirmation disabled)
+      return getCurrentUserRole();
+    } catch (e) {
+      return Left(AppException.mapToFailure(e));
+    }
+  }
+
+  @override
+  Future<Either<Failure, UserRole>> signInAnonymously() async {
+    if (!Env.isConfigured) {
+      return const Left(AuthFailure('App not configured. Please contact support.', code: 'env_not_configured'));
+    }
+
+    try {
+      await supabaseClient.auth.signInAnonymously();
+      // Anonymous users don't have a profile — default to client role
+      return const Right(UserRole.client);
+    } catch (e) {
+      return Left(AppException.mapToFailure(e));
+    }
+  }
+
+  @override
   Future<Either<Failure, void>> signOut() async {
     if (!Env.isConfigured) {
       return const Left(AuthFailure('App not configured. Please contact support.', code: 'env_not_configured'));
@@ -88,6 +125,26 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await supabaseClient.auth.signOut();
       return const Right(null);
+    } catch (e) {
+      return Left(AppException.mapToFailure(e));
+    }
+  }
+
+  @override
+  Future<Either<Failure, UserProfile>> updateProfile(UserProfile profile) async {
+    if (!Env.isConfigured) {
+      return const Left(AuthFailure('App not configured. Please contact support.', code: 'env_not_configured'));
+    }
+
+    try {
+      final userId = supabaseClient.auth.currentUser?.id;
+      if (userId == null) {
+        return const Left(AuthFailure('Please sign in to continue.', code: 'auth_not_logged_in'));
+      }
+
+      await supabaseClient.from('profiles').update({'full_name': profile.fullName, 'updated_at': DateTime.now().toIso8601String()}).eq('id', userId);
+
+      return Right(profile);
     } catch (e) {
       return Left(AppException.mapToFailure(e));
     }

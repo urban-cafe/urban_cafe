@@ -79,12 +79,48 @@ class _MainScaffoldState extends State<MainScaffold> {
     if (_isNavVisible) setState(() => _isNavVisible = false);
   }
 
+  // ─── Branch index mapping ────────────────────────────────────────
+  // Shell branches are registered in this order:
+  //   0: Home (client)  1: Cart  2: Orders  3: Profile
+  //   4: Admin           5: Admin Orders    6: Admin Categories
+  //   7: Staff
+  //
+  // Each role maps its nav bar indices → shell branch indices.
+
+  static const _clientBranchIndices = [0, 1, 2, 3]; // Home, Cart, Orders, Profile
+  static const _guestBranchIndices = [0, 3]; // Home, Profile (guests can't access cart/orders)
+  static const _adminBranchIndices = [4, 5, 6, 3]; // Admin, AdminOrders, AdminCategories, Profile
+  static const _staffBranchIndices = [7, 5, 3]; // Staff, AdminOrders, Profile
+
+  List<int> _branchIndices(AuthProvider auth) {
+    if (auth.isAdmin) return _adminBranchIndices;
+    if (auth.isStaff) return _staffBranchIndices;
+    if (auth.isGuest) return _guestBranchIndices;
+    return _clientBranchIndices;
+  }
+
+  /// Convert shell branch index → nav bar index for the current role.
+  int _navIndexFromBranch(AuthProvider auth) {
+    final indices = _branchIndices(auth);
+    final shellIndex = widget.navigationShell.currentIndex;
+    final navIndex = indices.indexOf(shellIndex);
+    return navIndex >= 0 ? navIndex : 0;
+  }
+
+  /// Convert nav bar index → shell branch index.
+  void _onNavTapped(int navIndex, AuthProvider auth) {
+    final indices = _branchIndices(auth);
+    final shellIndex = indices[navIndex];
+    widget.navigationShell.goBranch(shellIndex, initialLocation: shellIndex == widget.navigationShell.currentIndex);
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final cart = context.watch<CartProvider>();
     final sizeClass = Responsive.windowSizeClass(context);
     final destinations = _buildDestinations(auth, cart);
+    final selectedIndex = _navIndexFromBranch(auth);
 
     return ScrollControllerScope(
       scrollController: _scrollController,
@@ -100,8 +136,8 @@ class _MainScaffoldState extends State<MainScaffold> {
                 duration: const Duration(milliseconds: 200),
                 child: NavigationRail(
                   extended: sizeClass == WindowSizeClass.expanded,
-                  selectedIndex: widget.navigationShell.currentIndex,
-                  onDestinationSelected: (index) => widget.navigationShell.goBranch(index, initialLocation: index == widget.navigationShell.currentIndex),
+                  selectedIndex: selectedIndex,
+                  onDestinationSelected: (index) => _onNavTapped(index, auth),
                   destinations: destinations.map((d) => NavigationRailDestination(icon: d.icon, selectedIcon: d.selectedIcon ?? d.icon, label: Text(d.label))).toList(),
                   labelType: sizeClass == WindowSizeClass.expanded ? NavigationRailLabelType.none : NavigationRailLabelType.selected,
                 ),
@@ -120,11 +156,7 @@ class _MainScaffoldState extends State<MainScaffold> {
                 height: _isNavVisible ? null : 0,
                 clipBehavior: Clip.antiAlias,
                 decoration: const BoxDecoration(),
-                child: NavigationBar(
-                  selectedIndex: widget.navigationShell.currentIndex,
-                  onDestinationSelected: (index) => widget.navigationShell.goBranch(index, initialLocation: index == widget.navigationShell.currentIndex),
-                  destinations: destinations,
-                ),
+                child: NavigationBar(selectedIndex: selectedIndex, onDestinationSelected: (index) => _onNavTapped(index, auth), destinations: destinations),
               )
             : null,
       ),
@@ -132,7 +164,9 @@ class _MainScaffoldState extends State<MainScaffold> {
   }
 
   List<NavigationDestination> _buildDestinations(AuthProvider auth, CartProvider cart) {
-    if (auth.isClient) {
+    if (auth.isGuest) {
+      return [NavigationDestination(icon: const Icon(Icons.restaurant_menu), label: 'menu'.tr()), NavigationDestination(icon: const Icon(Icons.person), label: 'profile'.tr())];
+    } else if (auth.isClient) {
       return [
         NavigationDestination(icon: const Icon(Icons.restaurant_menu), label: 'menu'.tr()),
         NavigationDestination(

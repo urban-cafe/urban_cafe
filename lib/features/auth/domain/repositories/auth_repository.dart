@@ -9,5 +9,8 @@ abstract class AuthRepository {
   Future<Either<Failure, UserRole>> getCurrentUserRole();
   Future<Either<Failure, UserProfile>> getUserProfile();
   Future<Either<Failure, bool>> signInWithGoogle();
+  Future<Either<Failure, UserRole>> signUp(String email, String password);
+  Future<Either<Failure, UserRole>> signInAnonymously();
   Future<Either<Failure, bool>> isSignedIn();
+  Future<Either<Failure, UserProfile>> updateProfile(UserProfile profile);
 }

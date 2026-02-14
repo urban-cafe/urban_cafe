@@ -5,6 +5,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:urban_cafe/core/env.dart';
+import 'package:urban_cafe/core/routing/routes.dart';
 import 'package:urban_cafe/core/theme.dart';
 import 'package:urban_cafe/core/validators.dart';
 import 'package:urban_cafe/features/auth/presentation/providers/auth_provider.dart';
@@ -229,6 +230,27 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                               ),
                             ),
+                            const SizedBox(height: 12),
+
+                            // Continue as Guest
+                            SizedBox(
+                              width: double.infinity,
+                              child: TextButton.icon(
+                                onPressed: auth.loading ? null : () => _handleGuestSignIn(auth),
+                                icon: Icon(Icons.person_outline, size: 18, color: colorScheme.onSurfaceVariant),
+                                label: Text('continue_guest'.tr(), style: TextStyle(color: colorScheme.onSurfaceVariant)),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Sign Up link
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text('dont_have_account'.tr(), style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant)),
+                                TextButton(onPressed: () => context.go(AppRoutes.signUp), child: Text('sign_up'.tr())),
+                              ],
+                            ),
                           ],
                         ),
                       ),
@@ -253,7 +275,14 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _handleGoogleSignIn(AuthProvider auth) async {
-    final success = await auth.signInWithGoogle();
+    // Google OAuth opens the browser. State updates are handled
+    // reactively by AuthProvider's onAuthStateChange listener,
+    // which triggers GoRouter's refreshListenable to re-evaluate routes.
+    await auth.signInWithGoogle();
+  }
+
+  Future<void> _handleGuestSignIn(AuthProvider auth) async {
+    final success = await auth.signInAsGuest();
     if (success && mounted) {
       context.go('/');
     }

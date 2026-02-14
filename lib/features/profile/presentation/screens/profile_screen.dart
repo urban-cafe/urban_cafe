@@ -40,9 +40,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final auth = context.watch<AuthProvider>();
-    final email = auth.currentUserEmail ?? 'Guest';
+    final isGuest = auth.isGuest;
+    final email = isGuest ? 'Guest' : (auth.currentUserEmail ?? 'Guest');
     final initial = email.isNotEmpty ? email[0].toUpperCase() : 'G';
-    final role = auth.role.name.toUpperCase();
+    final role = isGuest ? 'GUEST' : auth.role.name.toUpperCase();
 
     // Responsive padding based on window size
     final sizeClass = Responsive.windowSizeClass(context);
@@ -67,14 +68,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     children: [
                       ProfileHeader(email: email, role: role, initial: initial),
 
-                      if (auth.isClient) ...[const SizedBox(height: 20), LoyaltyCard(points: auth.loyaltyPoints, onTap: () {})],
+                      // Loyalty card only for logged-in clients
+                      if (auth.isClient && !isGuest) ...[const SizedBox(height: 20), LoyaltyCard(points: auth.loyaltyPoints, onTap: () {})],
 
                       const SizedBox(height: 24),
 
-                      if (auth.isClient)
+                      // Account section only for logged-in clients
+                      if (auth.isClient && !isGuest)
                         ProfileSectionCard(
                           title: 'account'.tr(),
                           children: [
+                            ProfileActionTile(icon: Icons.edit_rounded, title: 'edit_profile'.tr(), subtitle: 'Update your name and details', onTap: () => context.push('/profile/edit')),
                             ProfileActionTile(icon: Icons.history_rounded, title: 'order_history'.tr(), subtitle: 'View past orders', onTap: () => context.push('/profile/orders')),
                             ProfileActionTile(
                               icon: Icons.favorite_rounded,

@@ -7,7 +7,7 @@ import 'package:urban_cafe/core/animations.dart';
 import 'package:urban_cafe/core/responsive.dart';
 import 'package:urban_cafe/features/_common/widgets/cards/grid_menu_card.dart';
 import 'package:urban_cafe/features/_common/widgets/cards/home_promo_banner.dart';
-import 'package:urban_cafe/features/_common/widgets/inputs/custom_search_bar.dart';
+
 import 'package:urban_cafe/features/_common/widgets/main_scaffold.dart';
 import 'package:urban_cafe/features/auth/presentation/providers/auth_provider.dart';
 import 'package:urban_cafe/features/menu/presentation/providers/menu_provider.dart';
@@ -46,21 +46,14 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     return 'Good Evening';
   }
 
-  String _getGreetingEmoji() {
-    final hour = DateTime.now().hour;
-    if (hour < 12) return '☀️';
-    if (hour < 17) return '🌤️';
-    return '🌙';
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final provider = context.watch<MenuProvider>();
     final auth = context.watch<AuthProvider>();
-    final user = auth.currentUser;
-    final userName = user?.userMetadata?['full_name']?.split(' ').first;
+
+    final userName = auth.profile?.fullName ?? (auth.isGuest ? 'Guest' : 'User');
 
     // Get scroll controller from MainScaffold if available
     final scrollScope = ScrollControllerScope.of(context);
@@ -75,44 +68,41 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
           child: CustomScrollView(
             controller: scrollController,
             slivers: [
-              // 1. GREETING HEADER with animation
+              // 1. GREETING HEADER with logo, user name, and search icon
               SliverToBoxAdapter(
                 child: FadeSlideAnimation(
                   index: 0,
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Row(
                       children: [
-                        Row(
-                          children: [
-                            Text(_getGreetingEmoji(), style: const TextStyle(fontSize: 28)),
-                            const SizedBox(width: 8),
-                            Text(
-                              _getGreeting(),
-                              style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: cs.onSurface),
-                            ),
-                          ],
+                        // Logo
+                        Image.asset('assets/logos/urbancafelogo.png', width: 56, height: 56, fit: BoxFit.contain),
+                        const SizedBox(width: 16),
+                        // Greeting and user name
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _getGreeting(),
+                                style: theme.textTheme.titleMedium?.copyWith(color: cs.onSurfaceVariant, fontWeight: FontWeight.w500),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                userName,
+                                style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold, color: cs.onSurface),
+                              ),
+                            ],
+                          ),
                         ),
-                        if (userName != null) ...[const SizedBox(height: 4), Text('welcome_back'.tr(args: [userName!]), style: theme.textTheme.bodyLarge?.copyWith(color: cs.onSurfaceVariant))],
+                        // Search icon button
+                        IconButton(
+                          onPressed: () => context.push('/menu?focusSearch=true'),
+                          icon: Icon(Icons.search_rounded, color: cs.onSurface),
+                          style: IconButton.styleFrom(backgroundColor: cs.surfaceContainerHighest.withOpacity(0.5), padding: const EdgeInsets.all(12)),
+                        ),
                       ],
-                    ),
-                  ),
-                ),
-              ),
-
-              // 2. SEARCH BAR with stagger delay
-              SliverToBoxAdapter(
-                child: FadeSlideAnimation(
-                  index: 1,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                    child: Hero(
-                      tag: 'search-bar-hero',
-                      child: Material(
-                        type: MaterialType.transparency,
-                        child: CustomSearchBar(controller: _searchCtrl, hintText: 'search_coffee_drinks'.tr(), readOnly: true, onTap: () => context.push('/menu?focusSearch=true'), showFilter: true),
-                      ),
                     ),
                   ),
                 ),
