@@ -44,6 +44,15 @@ import 'package:urban_cafe/features/orders/domain/usecases/get_admin_analytics.d
 import 'package:urban_cafe/features/orders/domain/usecases/get_orders.dart';
 import 'package:urban_cafe/features/orders/domain/usecases/update_order_status.dart';
 import 'package:urban_cafe/features/orders/presentation/providers/order_provider.dart';
+// POS Feature
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:urban_cafe/features/pos/data/datasources/pos_local_datasource.dart';
+import 'package:urban_cafe/features/pos/data/repositories/pos_repository_impl.dart';
+import 'package:urban_cafe/features/pos/domain/repositories/pos_repository.dart';
+import 'package:urban_cafe/features/pos/domain/usecases/create_pos_order.dart';
+import 'package:urban_cafe/features/pos/domain/usecases/get_pos_orders.dart';
+import 'package:urban_cafe/features/pos/domain/usecases/sync_pos_orders.dart';
+import 'package:urban_cafe/features/pos/presentation/providers/pos_provider.dart';
 
 final GetIt sl = GetIt.instance;
 
@@ -150,4 +159,17 @@ Future<void> configureDependencies(SupabaseClient client) async {
   // LOYALTY PROVIDER
   // ─────────────────────────────────────────────────────────────────
   sl.registerFactory<LoyaltyProvider>(() => LoyaltyProvider(generatePointToken: sl(), redeemPointToken: sl(), getPointSettings: sl(), updatePointSettings: sl()));
+
+  // ─────────────────────────────────────────────────────────────────
+  // POS FEATURE
+  // ─────────────────────────────────────────────────────────────────
+  sl.registerLazySingleton<Connectivity>(() => Connectivity());
+  sl.registerLazySingleton<PosLocalDatasource>(() => PosLocalDatasource());
+  sl.registerLazySingleton<PosRepository>(() => PosRepositoryImpl(sl<SupabaseClient>(), sl<PosLocalDatasource>(), sl<Connectivity>()));
+  sl.registerLazySingleton(() => CreatePosOrder(sl<PosRepository>()));
+  sl.registerLazySingleton(() => GetPosOrders(sl<PosRepository>()));
+  sl.registerLazySingleton(() => SyncPosOrders(sl<PosRepository>()));
+  sl.registerFactory<PosProvider>(
+    () => PosProvider(createPosOrderUseCase: sl(), getPosOrdersUseCase: sl(), syncPosOrdersUseCase: sl(), repository: sl<PosRepository>(), connectivity: sl<Connectivity>()),
+  );
 }

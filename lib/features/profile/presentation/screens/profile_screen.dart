@@ -138,6 +138,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ProfileSectionCard(
                           title: 'management'.tr(),
                           children: [
+                            ProfileActionTile(
+                              icon: Icons.point_of_sale,
+                              title: 'Point of Sale',
+                              subtitle: 'Sell items directly',
+                              iconColor: const Color(0xFF2E7D32),
+                              onTap: () => context.push(AppRoutes.pos),
+                            ),
                             if (auth.isStaff)
                               ProfileActionTile(
                                 icon: Icons.soup_kitchen_outlined,

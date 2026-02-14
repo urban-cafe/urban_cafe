@@ -28,6 +28,7 @@ import 'package:urban_cafe/features/profile/presentation/screens/favorites_scree
 import 'package:urban_cafe/features/profile/presentation/screens/language_screen.dart';
 import 'package:urban_cafe/features/profile/presentation/screens/profile_screen.dart';
 import 'package:urban_cafe/features/profile/presentation/screens/theme_screen.dart';
+import 'package:urban_cafe/features/pos/presentation/screens/pos_screen.dart';
 
 /// Builds the [GoRouter] for the app.
 ///
@@ -149,6 +150,8 @@ class AppRouter {
         },
       ),
       GoRoute(path: AppRoutes.adminPointSettings, parentNavigatorKey: _navigatorKey, builder: (context, state) => const PointSettingsScreen()),
+      // POS route (full-screen, no bottom nav)
+      GoRoute(path: AppRoutes.pos, parentNavigatorKey: _navigatorKey, builder: (context, state) => const PosScreen()),
     ],
   );
 
@@ -213,6 +216,11 @@ class AppRouter {
     // 5. Role-based access control for admin area
     if (isGoingToAdminArea) {
       if (isStaff && location == AppRoutes.admin) return AppRoutes.staff;
+      if (!isAdmin && !isStaff) return AppRoutes.home;
+    }
+
+    // 6. POS access control — only staff and admin
+    if (location.startsWith(AppRoutes.pos)) {
       if (!isAdmin && !isStaff) return AppRoutes.home;
     }
 

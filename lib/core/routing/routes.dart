@@ -35,6 +35,10 @@ abstract final class AppRoutes {
   // Staff
   static const staff = '/staff';
 
+  // POS (staff/admin)
+  static const pos = '/pos';
+  static const posHistory = '/pos/history';
+
   // Full-screen (no bottom nav)
   static const detail = '/detail';
 }
