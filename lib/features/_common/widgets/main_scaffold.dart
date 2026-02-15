@@ -85,13 +85,14 @@ class _MainScaffoldState extends State<MainScaffold> {
   //   5: Admin           6: Admin Orders    7: Admin Categories
   //   8: QR Scanner (admin/staff)
   //   9: Staff
+  //   10: POS (staff/admin)
   //
   // Each role maps its nav bar indices → shell branch indices.
 
-  static const _clientBranchIndices = [0, 1, 2, 3, 4]; // Home, Cart, QR, Orders, Profile
+  static const _clientBranchIndices = [0, 2, 4]; // Home, QR, Profile (Cart & Orders hidden for clients)
   static const _guestBranchIndices = [0, 4]; // Home, Profile (guests can't access cart/orders/QR)
-  static const _adminBranchIndices = [5, 6, 7, 8, 4]; // Admin, AdminOrders, AdminCategories, QRScanner, Profile
-  static const _staffBranchIndices = [9, 6, 8, 4]; // Staff, AdminOrders, QRScanner, Profile
+  static const _adminBranchIndices = [5, 10, 7, 8, 4]; // Admin, POS, AdminCategories, QRScanner, Profile
+  static const _staffBranchIndices = [9, 10, 8, 4]; // Staff, POS, QRScanner, Profile
 
   List<int> _branchIndices(AuthProvider auth) {
     if (auth.isAdmin) return _adminBranchIndices;
@@ -170,25 +171,20 @@ class _MainScaffoldState extends State<MainScaffold> {
     } else if (auth.isClient) {
       return [
         NavigationDestination(icon: const Icon(Icons.restaurant_menu), label: 'menu'.tr()),
-        NavigationDestination(
-          icon: Badge(isLabelVisible: cart.itemCount > 0, label: Text('${cart.itemCount}'), child: const Icon(Icons.shopping_cart)),
-          label: 'cart'.tr(),
-        ),
         NavigationDestination(icon: const Icon(Icons.qr_code_rounded), label: 'qr_code'.tr()),
-        NavigationDestination(icon: const Icon(Icons.receipt_long), label: 'orders'.tr()),
         NavigationDestination(icon: const Icon(Icons.person), label: 'profile'.tr()),
       ];
     } else if (auth.isStaff) {
       return [
         NavigationDestination(icon: const Icon(Icons.kitchen), label: 'kitchen'.tr()),
-        NavigationDestination(icon: const Icon(Icons.list_alt), label: 'orders'.tr()),
+        NavigationDestination(icon: const Icon(Icons.point_of_sale), label: 'POS'),
         NavigationDestination(icon: const Icon(Icons.qr_code_scanner_rounded), label: 'qr_scan'.tr()),
         NavigationDestination(icon: const Icon(Icons.person), label: 'profile'.tr()),
       ];
     } else if (auth.isAdmin) {
       return [
         NavigationDestination(icon: const Icon(Icons.dashboard), label: 'items'.tr()),
-        NavigationDestination(icon: const Icon(Icons.list_alt), label: 'orders'.tr()),
+        NavigationDestination(icon: const Icon(Icons.point_of_sale), label: 'POS'),
         NavigationDestination(icon: const Icon(Icons.category), label: 'categories'.tr()),
         NavigationDestination(icon: const Icon(Icons.qr_code_scanner_rounded), label: 'qr_scan'.tr()),
         NavigationDestination(icon: const Icon(Icons.person), label: 'profile'.tr()),

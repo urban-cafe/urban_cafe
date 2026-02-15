@@ -90,6 +90,9 @@ class _AdminListScreenState extends State<AdminListScreen> {
         backgroundColor: colorScheme.surface,
         appBar: AppBar(
           automaticallyImplyLeading: false,
+          centerTitle: true,
+          backgroundColor: colorScheme.surface,
+          scrolledUnderElevation: 0,
           title: Text(
             'Admin Dashboard',
             style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, letterSpacing: 0.5, color: colorScheme.onSurface),

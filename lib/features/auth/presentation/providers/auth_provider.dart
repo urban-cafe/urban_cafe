@@ -15,6 +15,7 @@ import 'package:urban_cafe/features/auth/domain/usecases/sign_in_with_google_use
 import 'package:urban_cafe/features/auth/domain/usecases/sign_out_usecase.dart';
 import 'package:urban_cafe/features/auth/domain/usecases/sign_up_usecase.dart';
 import 'package:urban_cafe/features/auth/domain/usecases/update_profile_usecase.dart';
+import 'package:urban_cafe/features/pos/data/services/menu_sync_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   final SignInUseCase signInUseCase;
@@ -25,6 +26,7 @@ class AuthProvider extends ChangeNotifier {
   final SignUpUseCase signUpUseCase;
   final SignInAnonymouslyUseCase signInAnonymouslyUseCase;
   final UpdateProfileUseCase updateProfileUseCase;
+  final MenuSyncService? menuSyncService;
 
   bool loading = false;
   String? error;
@@ -61,6 +63,7 @@ class AuthProvider extends ChangeNotifier {
     required this.signUpUseCase,
     required this.signInAnonymouslyUseCase,
     required this.updateProfileUseCase,
+    this.menuSyncService,
   }) {
     _loadUserRole();
     _listenToAuthStateChanges();
@@ -81,6 +84,7 @@ class AuthProvider extends ChangeNotifier {
           case AuthChangeEvent.tokenRefreshed:
           case AuthChangeEvent.userUpdated:
             // User signed in (including OAuth callback) or token refreshed
+            _cancelOAuthTimeout(); // Cancel timeout if OAuth completed successfully
             _loadUserRole();
             break;
 
@@ -89,6 +93,7 @@ class AuthProvider extends ChangeNotifier {
             _profile = null;
             loading = false;
             error = null;
+            _cancelOAuthTimeout(); // Cancel timeout on sign out
             notifyListeners();
             break;
 
@@ -98,6 +103,7 @@ class AuthProvider extends ChangeNotifier {
       },
       onError: (error) {
         debugPrint('[AuthProvider] Auth state error: $error');
+        _cancelOAuthTimeout(); // Cancel timeout on error
       },
     );
   }
@@ -105,7 +111,42 @@ class AuthProvider extends ChangeNotifier {
   @override
   void dispose() {
     _authSubscription?.cancel();
+    _oauthTimeout?.cancel();
     super.dispose();
+  }
+
+  // ─── Error Message Mapping ────────────────────────────────────
+
+  /// Converts technical error messages to user-friendly ones
+  String _getUserFriendlyError(String technicalError) {
+    final lowerError = technicalError.toLowerCase();
+
+    if (lowerError.contains('invalid login credentials') || lowerError.contains('invalid email or password')) {
+      return 'Email or password is incorrect. Please try again.';
+    }
+
+    if (lowerError.contains('user not found') || lowerError.contains('no user found')) {
+      return 'No account found with this email address.';
+    }
+
+    if (lowerError.contains('email already') || lowerError.contains('already registered')) {
+      return 'An account with this email already exists.';
+    }
+
+    if (lowerError.contains('weak password') || lowerError.contains('password should be at least')) {
+      return 'Password is too weak. Please use at least 6 characters.';
+    }
+
+    if (lowerError.contains('network') || lowerError.contains('connection') || lowerError.contains('timeout')) {
+      return 'Connection failed. Please check your internet and try again.';
+    }
+
+    if (lowerError.contains('email not confirmed') || lowerError.contains('email_confirmation_required')) {
+      return 'Please check your email and confirm your account first.';
+    }
+
+    // Return original message if no mapping found
+    return technicalError;
   }
 
   // ─── Profile loading ──────────────────────────────────────────
@@ -139,6 +180,22 @@ class AuthProvider extends ChangeNotifier {
       },
     );
     notifyListeners();
+
+    // Auto-download menu data for staff/admin
+    if (isAdmin || isStaff) {
+      _triggerMenuSync();
+    }
+  }
+
+  /// Trigger background menu data download.
+  void _triggerMenuSync() {
+    final sync = menuSyncService;
+    if (sync == null) return;
+    sync.init().then((_) {
+      if (!sync.isSyncing) {
+        sync.downloadAllMenuData();
+      }
+    });
   }
 
   Future<void> refreshProfile() async {
@@ -153,23 +210,31 @@ class AuthProvider extends ChangeNotifier {
     error = null;
     notifyListeners();
 
-    final result = await signInUseCase(SignInParams(email: email, password: password));
+    try {
+      final result = await signInUseCase(SignInParams(email: email, password: password));
 
-    return result.fold(
-      (failure) {
-        error = failure.message;
-        loading = false;
-        notifyListeners();
-        return false;
-      },
-      (role) async {
-        _role = role;
-        await _loadUserRole(); // Fetch full profile (points, name, etc.)
-        loading = false;
-        notifyListeners();
-        return true;
-      },
-    );
+      return result.fold(
+        (failure) {
+          error = _getUserFriendlyError(failure.message);
+          loading = false;
+          notifyListeners();
+          return false;
+        },
+        (role) async {
+          _role = role;
+          await _loadUserRole(); // Fetch full profile (points, name, etc.)
+          loading = false;
+          notifyListeners();
+          return true;
+        },
+      );
+    } catch (e) {
+      error = 'An unexpected error occurred. Please try again.';
+      loading = false;
+      notifyListeners();
+      debugPrint('[AuthProvider] Sign in error: $e');
+      return false;
+    }
   }
 
   // ─── Email/Password Sign Up ───────────────────────────────────
@@ -180,23 +245,31 @@ class AuthProvider extends ChangeNotifier {
     error = null;
     notifyListeners();
 
-    final result = await signUpUseCase(SignUpParams(email: email, password: password));
+    try {
+      final result = await signUpUseCase(SignUpParams(email: email, password: password));
 
-    return result.fold(
-      (failure) {
-        error = failure.message;
-        loading = false;
-        notifyListeners();
-        return false;
-      },
-      (role) async {
-        _role = role;
-        await _loadUserRole();
-        loading = false;
-        notifyListeners();
-        return true;
-      },
-    );
+      return result.fold(
+        (failure) {
+          error = _getUserFriendlyError(failure.message);
+          loading = false;
+          notifyListeners();
+          return false;
+        },
+        (role) async {
+          _role = role;
+          await _loadUserRole();
+          loading = false;
+          notifyListeners();
+          return true;
+        },
+      );
+    } catch (e) {
+      error = 'An unexpected error occurred. Please try again.';
+      loading = false;
+      notifyListeners();
+      debugPrint('[AuthProvider] Sign up error: $e');
+      return false;
+    }
   }
 
   // ─── Google OAuth Sign In ─────────────────────────────────────
@@ -210,22 +283,57 @@ class AuthProvider extends ChangeNotifier {
     error = null;
     notifyListeners();
 
-    final result = await signInWithGoogleUseCase(NoParams());
+    try {
+      final result = await signInWithGoogleUseCase(NoParams());
 
-    return result.fold(
-      (failure) {
-        error = failure.message;
+      return await result.fold(
+        (failure) {
+          error = _getUserFriendlyError(failure.message);
+          loading = false;
+          notifyListeners();
+          return false;
+        },
+        (launched) async {
+          if (!launched) {
+            error = 'Failed to open browser for sign in.';
+            loading = false;
+            notifyListeners();
+            return false;
+          }
+
+          // Browser launched successfully. Set a timeout to reset loading state
+          // if the user cancels or doesn't complete the OAuth flow.
+          _startOAuthTimeout();
+          return true;
+        },
+      );
+    } catch (e) {
+      error = 'An unexpected error occurred. Please try again.';
+      loading = false;
+      notifyListeners();
+      debugPrint('[AuthProvider] Google sign in error: $e');
+      return false;
+    }
+  }
+
+  Timer? _oauthTimeout;
+
+  void _startOAuthTimeout() {
+    _oauthTimeout?.cancel();
+    // Reset loading after 60 seconds if no auth state change occurs
+    _oauthTimeout = Timer(const Duration(seconds: 60), () {
+      if (loading && !isLoggedIn) {
         loading = false;
+        error = 'Sign in was cancelled or timed out.';
         notifyListeners();
-        return false;
-      },
-      (launched) {
-        // `launched` only means the browser was opened successfully.
-        // Actual sign-in state is handled by onAuthStateChange.
-        // Keep loading true until the callback fires.
-        return launched;
-      },
-    );
+        debugPrint('[AuthProvider] OAuth timeout - resetting loading state');
+      }
+    });
+  }
+
+  void _cancelOAuthTimeout() {
+    _oauthTimeout?.cancel();
+    _oauthTimeout = null;
   }
 
   // ─── Anonymous (Guest) Sign In ────────────────────────────────
@@ -236,32 +344,48 @@ class AuthProvider extends ChangeNotifier {
     error = null;
     notifyListeners();
 
-    final result = await signInAnonymouslyUseCase(NoParams());
+    try {
+      final result = await signInAnonymouslyUseCase(NoParams());
 
-    return result.fold(
-      (failure) {
-        error = failure.message;
-        loading = false;
-        notifyListeners();
-        return false;
-      },
-      (role) {
-        _role = role;
-        _profile = null;
-        loading = false;
-        notifyListeners();
-        return true;
-      },
-    );
+      return result.fold(
+        (failure) {
+          error = _getUserFriendlyError(failure.message);
+          loading = false;
+          notifyListeners();
+          return false;
+        },
+        (role) {
+          _role = role;
+          _profile = null;
+          loading = false;
+          notifyListeners();
+          return true;
+        },
+      );
+    } catch (e) {
+      error = 'An unexpected error occurred. Please try again.';
+      loading = false;
+      notifyListeners();
+      debugPrint('[AuthProvider] Guest sign in error: $e');
+      return false;
+    }
   }
 
   // ─── Sign Out ─────────────────────────────────────────────────
 
   Future<void> signOut() async {
     if (!Env.isConfigured) return;
+
+    // Clear local data before signing out
+    try {
+      await menuSyncService?.clearAllLocalData();
+    } catch (e) {
+      debugPrint('Error clearing local data: $e');
+    }
+
     await signOutUseCase(NoParams());
     _role = null;
-    _profile = null; // Clear profile data
+    _profile = null;
     notifyListeners();
   }
 
@@ -275,22 +399,30 @@ class AuthProvider extends ChangeNotifier {
     error = null;
     notifyListeners();
 
-    final updatedProfile = _profile!.copyWith(fullName: fullName, phoneNumber: phoneNumber, address: address);
-    final result = await updateProfileUseCase(updatedProfile);
+    try {
+      final updatedProfile = _profile!.copyWith(fullName: fullName, phoneNumber: phoneNumber, address: address);
+      final result = await updateProfileUseCase(updatedProfile);
 
-    return result.fold(
-      (failure) {
-        error = failure.message;
-        loading = false;
-        notifyListeners();
-        return false;
-      },
-      (profile) {
-        _profile = profile;
-        loading = false;
-        notifyListeners();
-        return true;
-      },
-    );
+      return result.fold(
+        (failure) {
+          error = _getUserFriendlyError(failure.message);
+          loading = false;
+          notifyListeners();
+          return false;
+        },
+        (profile) {
+          _profile = profile;
+          loading = false;
+          notifyListeners();
+          return true;
+        },
+      );
+    } catch (e) {
+      error = 'Failed to update profile. Please try again.';
+      loading = false;
+      notifyListeners();
+      debugPrint('[AuthProvider] Update profile error: $e');
+      return false;
+    }
   }
 }

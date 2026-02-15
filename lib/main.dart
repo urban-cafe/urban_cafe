@@ -15,6 +15,7 @@ import 'package:urban_cafe/features/_common/widgets/upgrade_listener.dart';
 import 'package:urban_cafe/features/admin/presentation/providers/admin_provider.dart';
 import 'package:urban_cafe/features/loyalty/presentation/providers/loyalty_provider.dart';
 import 'package:urban_cafe/features/pos/presentation/providers/pos_provider.dart';
+import 'package:urban_cafe/features/pos/data/services/menu_sync_service.dart';
 import 'package:urban_cafe/features/auth/presentation/providers/auth_provider.dart';
 import 'package:urban_cafe/features/cart/presentation/providers/cart_provider.dart';
 import 'package:urban_cafe/features/menu/presentation/providers/category_manager_provider.dart';
@@ -50,6 +51,7 @@ Future<void> main() async {
           ChangeNotifierProvider(create: (_) => sl<OrderProvider>()),
           ChangeNotifierProvider(create: (_) => sl<LoyaltyProvider>()),
           ChangeNotifierProvider(create: (_) => sl<PosProvider>()),
+          ChangeNotifierProvider.value(value: sl<MenuSyncService>()),
         ],
         child: const UrbanCafeApp(),
       ),

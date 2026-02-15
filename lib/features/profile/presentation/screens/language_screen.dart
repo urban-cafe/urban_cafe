@@ -10,7 +10,8 @@ class LanguageScreen extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text('language'.tr()), centerTitle: true),
+      backgroundColor: theme.colorScheme.surface,
+      appBar: AppBar(title: Text('language'.tr()), centerTitle: true, backgroundColor: theme.colorScheme.surface, scrolledUnderElevation: 0),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -72,7 +73,7 @@ class _LanguageOption extends StatelessWidget {
                 width: 48,
                 height: 48,
                 alignment: Alignment.center,
-                decoration: BoxDecoration(color: isSelected ? theme.colorScheme.primary.withValues(alpha: 0.1) : theme.colorScheme.surfaceContainerHigh , shape: BoxShape.circle),
+                decoration: BoxDecoration(color: isSelected ? theme.colorScheme.primary.withValues(alpha: 0.1) : theme.colorScheme.surfaceContainerHigh, shape: BoxShape.circle),
                 child: Text(flag, style: const TextStyle(fontSize: 24)),
               ),
               const SizedBox(width: 16),

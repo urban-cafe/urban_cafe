@@ -69,7 +69,7 @@ class _PointSettingsScreenState extends State<PointSettingsScreen> {
 
     return Scaffold(
       backgroundColor: cs.surface,
-      appBar: AppBar(title: Text('point_settings'.tr()), centerTitle: true),
+      appBar: AppBar(title: Text('point_settings'.tr()), centerTitle: true, backgroundColor: cs.surface, scrolledUnderElevation: 0),
       body: loyalty.isLoadingSettings
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(

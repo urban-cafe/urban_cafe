@@ -74,20 +74,26 @@ class LoyaltyProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
 
-    final result = await _generatePointToken();
-    result.fold(
-      (failure) {
-        _error = failure.message;
-        _currentToken = null;
-      },
-      (token) {
-        _currentToken = token;
-        _startCountdown();
-      },
-    );
-
-    _isGenerating = false;
-    notifyListeners();
+    try {
+      final result = await _generatePointToken();
+      result.fold(
+        (failure) {
+          _error = _getUserFriendlyError(failure.message);
+          _currentToken = null;
+        },
+        (token) {
+          _currentToken = token;
+          _startCountdown();
+        },
+      );
+    } catch (e) {
+      _error = 'Failed to generate QR code. Please try again.';
+      _currentToken = null;
+      debugPrint('[LoyaltyProvider] Generate QR error: $e');
+    } finally {
+      _isGenerating = false;
+      notifyListeners();
+    }
   }
 
   void _startCountdown() {
@@ -115,21 +121,28 @@ class LoyaltyProvider extends ChangeNotifier {
     _lastRedemption = null;
     notifyListeners();
 
-    final result = await _redeemPointToken(token, purchaseAmount);
     bool success = false;
 
-    result.fold(
-      (failure) {
-        _redemptionError = failure.message;
-      },
-      (redemption) {
-        _lastRedemption = redemption;
-        success = true;
-      },
-    );
+    try {
+      final result = await _redeemPointToken(token, purchaseAmount);
 
-    _isRedeeming = false;
-    notifyListeners();
+      result.fold(
+        (failure) {
+          _redemptionError = _getUserFriendlyError(failure.message);
+        },
+        (redemption) {
+          _lastRedemption = redemption;
+          success = true;
+        },
+      );
+    } catch (e) {
+      _redemptionError = 'Failed to redeem points. Please try again.';
+      debugPrint('[LoyaltyProvider] Redeem token error: $e');
+    } finally {
+      _isRedeeming = false;
+      notifyListeners();
+    }
+
     return success;
   }
 
@@ -177,5 +190,24 @@ class LoyaltyProvider extends ChangeNotifier {
   void dispose() {
     _countdownTimer?.cancel();
     super.dispose();
+  }
+
+  String _getUserFriendlyError(String technicalError) {
+    final lowerError = technicalError.toLowerCase();
+
+    if (lowerError.contains('network') || lowerError.contains('connection') || lowerError.contains('timeout')) {
+      return 'Connection failed. Please check your internet and try again.';
+    }
+
+    if (lowerError.contains('expired') || lowerError.contains('invalid token')) {
+      return 'QR code has expired. Please generate a new one.';
+    }
+
+    if (lowerError.contains('already redeemed') || lowerError.contains('already used')) {
+      return 'This QR code has already been used.';
+    }
+
+    // Return original message if no mapping found
+    return technicalError;
   }
 }

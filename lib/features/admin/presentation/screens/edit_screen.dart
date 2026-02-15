@@ -189,11 +189,7 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
                             height: 150,
                             decoration: BoxDecoration(color: Colors.grey.shade200, borderRadius: AppRadius.mdAll),
                             clipBehavior: Clip.antiAlias,
-                            child: _imageFile != null
-                                ? Image.memory(_imageFile!.bytes!, fit: BoxFit.cover)
-                                : (widget.item?.imageUrl != null
-                                      ? CachedNetworkImage(imageUrl: widget.item!.imageUrl!, fit: BoxFit.cover)
-                                      : const Icon(Icons.add_a_photo, size: 40, color: Colors.grey)),
+                            child: _imageFile != null ? Image.memory(_imageFile!.bytes!, fit: BoxFit.cover) : (widget.item?.imageUrl != null ? CachedNetworkImage(imageUrl: widget.item!.imageUrl!, fit: BoxFit.cover) : const Icon(Icons.add_a_photo, size: 40, color: Colors.grey)),
                           ),
                         ),
                       ),
@@ -234,9 +230,7 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
                             child: DropdownButtonFormField<String>(
                               initialValue: _selectedMainId,
                               decoration: const InputDecoration(labelText: 'Main Category', border: OutlineInputBorder()),
-                              items: isLoading
-                                  ? [const DropdownMenuItem(value: 'loading', child: Text('Loading Category...'))]
-                                  : _mainCategories.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name))).toList(),
+                              items: isLoading ? [const DropdownMenuItem(value: 'loading', child: Text('Loading Category...'))] : _mainCategories.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name))).toList(),
                               onChanged: isLoading ? null : _onMainCategoryChanged,
                             ),
                           ),
@@ -251,11 +245,10 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
                         children: [
                           Expanded(
                             child: DropdownButtonFormField<String>(
+                              dropdownColor: Colors.white,
                               initialValue: _selectedSubId,
                               decoration: const InputDecoration(labelText: 'Sub Category', border: OutlineInputBorder()),
-                              items: isLoading
-                                  ? [const DropdownMenuItem(value: 'loading', child: Text('Loading Subcategory...'))]
-                                  : _subCategories.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name))).toList(),
+                              items: isLoading ? [const DropdownMenuItem(value: 'loading', child: Text('Loading Subcategory...'))] : _subCategories.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name))).toList(),
                               onChanged: isLoading ? null : (v) => setState(() => _selectedSubId = v),
                             ),
                           ),
@@ -289,28 +282,9 @@ class _AdminEditScreenState extends State<AdminEditScreen> {
                                   final price = double.tryParse(_priceCtrl.text) ?? 0.0;
                                   bool success;
                                   if (widget.item == null) {
-                                    success = await admin.create(
-                                      name: _nameCtrl.text,
-                                      description: _descCtrl.text,
-                                      price: price,
-                                      categoryId: _selectedSubId,
-                                      isAvailable: _available,
-                                      isMostPopular: _isMostPopular,
-                                      isWeekendSpecial: _isWeekendSpecial,
-                                      imageFile: _imageFile,
-                                    );
+                                    success = await admin.create(name: _nameCtrl.text, description: _descCtrl.text, price: price, categoryId: _selectedSubId, isAvailable: _available, isMostPopular: _isMostPopular, isWeekendSpecial: _isWeekendSpecial, imageFile: _imageFile);
                                   } else {
-                                    success = await admin.update(
-                                      id: widget.item!.id,
-                                      name: _nameCtrl.text,
-                                      description: _descCtrl.text,
-                                      price: price,
-                                      categoryId: _selectedSubId,
-                                      isAvailable: _available,
-                                      isMostPopular: _isMostPopular,
-                                      isWeekendSpecial: _isWeekendSpecial,
-                                      imageFile: _imageFile,
-                                    );
+                                    success = await admin.update(id: widget.item!.id, name: _nameCtrl.text, description: _descCtrl.text, price: price, categoryId: _selectedSubId, isAvailable: _available, isMostPopular: _isMostPopular, isWeekendSpecial: _isWeekendSpecial, imageFile: _imageFile);
                                   }
                                   if (!context.mounted) return;
                                   if (success) {

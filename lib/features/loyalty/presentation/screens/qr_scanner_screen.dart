@@ -148,7 +148,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
 
     return Scaffold(
       backgroundColor: cs.surface,
-      appBar: AppBar(title: Text('qr_scanner'.tr()), centerTitle: true),
+      appBar: AppBar(title: Text('qr_scanner'.tr()), centerTitle: true, backgroundColor: cs.surface, scrolledUnderElevation: 0),
       body: _showAmountInput ? _buildAmountInput(theme, cs, loyalty) : _buildScanner(theme, cs),
     );
   }

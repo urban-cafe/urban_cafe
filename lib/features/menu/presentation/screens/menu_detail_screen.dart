@@ -105,7 +105,6 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
     final menuProvider = context.watch<MenuProvider>();
     final auth = context.watch<AuthProvider>();
     final isFavorite = menuProvider.favoriteIds.contains(widget.item.id);
-    final isGuest = auth.isGuest;
 
     return Scaffold(
       backgroundColor: cs.surface,
@@ -120,6 +119,7 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
                 pinned: true,
                 stretch: true,
                 backgroundColor: cs.surface,
+                scrolledUnderElevation: 0,
                 leading: Container(
                   margin: const EdgeInsets.all(8),
                   decoration: BoxDecoration(color: cs.surface.withValues(alpha: 0.8), shape: BoxShape.circle),
@@ -269,8 +269,8 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
 
                         const SizedBox(height: 32),
 
-                        // QUANTITY & NOTES (hidden for guests)
-                        if (widget.item.isAvailable && !isGuest) ...[
+                        // QUANTITY & NOTES (hidden for guests & clients)
+                        if (widget.item.isAvailable && (auth.isAdmin || auth.isStaff)) ...[
                           Row(
                             children: [
                               Text("quantity".tr(), style: theme.textTheme.titleMedium),
@@ -325,7 +325,7 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
                           ),
                           const SizedBox(height: 120), // Space for bottom bar
                         ],
-                        if (isGuest) const SizedBox(height: 40), // Extra space for guests
+                        if (!auth.isAdmin && !auth.isStaff) const SizedBox(height: 40), // Extra space for guests/clients
                       ],
                     ),
                   ),
@@ -334,8 +334,8 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
             ],
           ),
 
-          // 3. BOTTOM ACTION BAR (hidden for guests)
-          if (widget.item.isAvailable && !isGuest)
+          // 3. BOTTOM ACTION BAR (hidden for guests & clients)
+          if (widget.item.isAvailable && (auth.isAdmin || auth.isStaff))
             Positioned(
               bottom: 0,
               left: 0,

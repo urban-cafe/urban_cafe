@@ -35,8 +35,12 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         title: Text('live_kitchen_orders'.tr()),
+        centerTitle: true,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        scrolledUnderElevation: 0,
         actions: [IconButton(icon: const Icon(Icons.print), onPressed: () => _showPrintDialog(context))],
       ),
       body: RefreshIndicator(

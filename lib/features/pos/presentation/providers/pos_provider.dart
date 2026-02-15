@@ -137,26 +137,45 @@ class PosProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
 
-    final changeAmount = paymentMethod == PosPaymentMethod.cash ? (cashTendered - total).clamp(0.0, double.infinity) : 0.0;
+    try {
+      final changeAmount = paymentMethod == PosPaymentMethod.cash ? (cashTendered - total).clamp(0.0, double.infinity) : 0.0;
 
-    final result = await createPosOrderUseCase(CreatePosOrderParams(items: _cartItems, totalAmount: total, paymentMethod: paymentMethod, cashTendered: cashTendered, changeAmount: changeAmount));
+      final result = await createPosOrderUseCase(CreatePosOrderParams(items: _cartItems, totalAmount: total, paymentMethod: paymentMethod, cashTendered: cashTendered, changeAmount: changeAmount));
 
-    return result.fold(
-      (failure) {
-        _error = failure.message;
-        _isProcessing = false;
-        notifyListeners();
-        return false;
-      },
-      (order) {
-        _lastCompletedOrder = order;
-        _cartItems.clear();
-        _isProcessing = false;
-        _loadPendingCount();
-        notifyListeners();
-        return true;
-      },
-    );
+      return result.fold(
+        (failure) {
+          _error = _getUserFriendlyError(failure.message);
+          _isProcessing = false;
+          notifyListeners();
+          return false;
+        },
+        (order) {
+          _lastCompletedOrder = order;
+          _cartItems.clear();
+          _isProcessing = false;
+          _loadPendingCount();
+          notifyListeners();
+          return true;
+        },
+      );
+    } catch (e) {
+      _error = 'Failed to complete order. Please try again.';
+      _isProcessing = false;
+      notifyListeners();
+      debugPrint('[PosProvider] Complete order error: $e');
+      return false;
+    }
+  }
+
+  String _getUserFriendlyError(String technicalError) {
+    final lowerError = technicalError.toLowerCase();
+
+    if (lowerError.contains('network') || lowerError.contains('connection') || lowerError.contains('timeout')) {
+      return 'Connection failed. Order saved locally and will sync when online.';
+    }
+
+    // Return original message if no mapping found
+    return technicalError;
   }
 
   // ─────────────────────────────────────────────────────────

@@ -126,6 +126,10 @@ class AppRouter {
           StatefulShellBranch(
             routes: [GoRoute(path: AppRoutes.staff, builder: (context, state) => const StaffOrdersScreen())],
           ),
+          // ── POS branch (index 10) - for staff/admin ────────────
+          StatefulShellBranch(
+            routes: [GoRoute(path: AppRoutes.pos, builder: (context, state) => const PosScreen())],
+          ),
         ],
       ),
 
@@ -150,8 +154,6 @@ class AppRouter {
         },
       ),
       GoRoute(path: AppRoutes.adminPointSettings, parentNavigatorKey: _navigatorKey, builder: (context, state) => const PointSettingsScreen()),
-      // POS route (full-screen, no bottom nav)
-      GoRoute(path: AppRoutes.pos, parentNavigatorKey: _navigatorKey, builder: (context, state) => const PosScreen()),
     ],
   );
 

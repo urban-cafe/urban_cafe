@@ -12,7 +12,8 @@ class ThemeScreen extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text('theme'.tr()), centerTitle: true),
+      backgroundColor: theme.colorScheme.surface,
+      appBar: AppBar(title: Text('theme'.tr()), centerTitle: true, backgroundColor: theme.colorScheme.surface, scrolledUnderElevation: 0),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -33,11 +34,31 @@ class ThemeScreen extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  _ThemeOption(label: 'System Default', description: 'Follows your device settings', icon: Icons.brightness_auto_outlined, isSelected: themeProvider.themeMode == ThemeMode.system, onTap: () => themeProvider.setThemeMode(ThemeMode.system), isFirst: true),
+                  _ThemeOption(
+                    label: 'System Default',
+                    description: 'Follows your device settings',
+                    icon: Icons.brightness_auto_outlined,
+                    isSelected: themeProvider.themeMode == ThemeMode.system,
+                    onTap: () => themeProvider.setThemeMode(ThemeMode.system),
+                    isFirst: true,
+                  ),
                   Divider(height: 1, color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
-                  _ThemeOption(label: 'Light Mode', description: 'Clean and bright interface', icon: Icons.light_mode_outlined, isSelected: themeProvider.themeMode == ThemeMode.light, onTap: () => themeProvider.setThemeMode(ThemeMode.light)),
+                  _ThemeOption(
+                    label: 'Light Mode',
+                    description: 'Clean and bright interface',
+                    icon: Icons.light_mode_outlined,
+                    isSelected: themeProvider.themeMode == ThemeMode.light,
+                    onTap: () => themeProvider.setThemeMode(ThemeMode.light),
+                  ),
                   Divider(height: 1, color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
-                  _ThemeOption(label: 'Dark Mode', description: 'Easy on the eyes in low light', icon: Icons.dark_mode_outlined, isSelected: themeProvider.themeMode == ThemeMode.dark, onTap: () => themeProvider.setThemeMode(ThemeMode.dark), isLast: true),
+                  _ThemeOption(
+                    label: 'Dark Mode',
+                    description: 'Easy on the eyes in low light',
+                    icon: Icons.dark_mode_outlined,
+                    isSelected: themeProvider.themeMode == ThemeMode.dark,
+                    onTap: () => themeProvider.setThemeMode(ThemeMode.dark),
+                    isLast: true,
+                  ),
                 ],
               ),
             ),

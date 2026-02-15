@@ -63,7 +63,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     return Scaffold(
       backgroundColor: cs.surface,
-      appBar: AppBar(title: Text('edit_profile'.tr()), centerTitle: true),
+      appBar: AppBar(title: Text('edit_profile'.tr()), centerTitle: true, backgroundColor: cs.surface, scrolledUnderElevation: 0),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(

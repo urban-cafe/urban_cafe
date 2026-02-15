@@ -32,7 +32,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     final provider = context.watch<MenuProvider>();
 
     return Scaffold(
-      appBar: AppBar(title: Text('favorites'.tr())),
+      backgroundColor: theme.colorScheme.surface,
+      appBar: AppBar(title: Text('favorites'.tr()), centerTitle: true, backgroundColor: theme.colorScheme.surface, scrolledUnderElevation: 0),
       body: RefreshIndicator(
         onRefresh: () async => context.read<MenuProvider>().loadFavorites(),
         child: Builder(

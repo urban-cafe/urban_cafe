@@ -10,6 +10,7 @@ import 'package:urban_cafe/features/_common/widgets/cards/profile_section_card.d
 import 'package:urban_cafe/features/_common/widgets/dialogs/confirmation_dialog.dart';
 import 'package:urban_cafe/features/_common/widgets/tiles/profile_action_tile.dart';
 import 'package:urban_cafe/features/auth/presentation/providers/auth_provider.dart';
+import 'package:urban_cafe/features/pos/data/services/menu_sync_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -66,6 +67,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             pinned: true,
             stretch: true,
             backgroundColor: colorScheme.surface,
+            scrolledUnderElevation: 0,
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
                 decoration: BoxDecoration(
@@ -120,7 +122,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           title: 'account'.tr(),
                           children: [
                             ProfileActionTile(icon: Icons.edit_outlined, title: 'edit_profile'.tr(), subtitle: 'Update your name and details', onTap: () => context.push('/profile/edit')),
-                            ProfileActionTile(icon: Icons.receipt_long_outlined, title: 'order_history'.tr(), subtitle: 'View past orders', onTap: () => context.push('/profile/orders')),
+                            // ProfileActionTile(icon: Icons.receipt_long_outlined, title: 'order_history'.tr(), subtitle: 'View past orders', onTap: () => context.push('/profile/orders')),
                             ProfileActionTile(
                               icon: Icons.favorite_border_rounded,
                               title: 'favorites'.tr(),
@@ -139,11 +141,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           title: 'management'.tr(),
                           children: [
                             ProfileActionTile(
-                              icon: Icons.point_of_sale,
-                              title: 'Point of Sale',
-                              subtitle: 'Sell items directly',
-                              iconColor: const Color(0xFF2E7D32),
-                              onTap: () => context.push(AppRoutes.pos),
+                              icon: Icons.list_alt,
+                              title: 'orders'.tr(),
+                              subtitle: 'View and manage orders',
+                              iconColor: const Color(0xFF1976D2),
+                              onTap: () => context.push(AppRoutes.adminOrders),
                             ),
                             if (auth.isStaff)
                               ProfileActionTile(
@@ -181,9 +183,88 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ],
                         ),
                         const SizedBox(height: 16),
-                      ],
 
-                      // Settings Section
+                        // Offline Data Section (staff/admin only)
+                        Consumer<MenuSyncService>(
+                          builder: (context, syncService, _) {
+                            final lastSync = syncService.lastSyncTime;
+                            final itemCount = syncService.cachedItemCount;
+                            final isSyncing = syncService.isSyncing;
+                            final progress = syncService.progress;
+                            final syncError = syncService.error;
+                            final syncStatus = syncService.syncStatus;
+                            final totalImages = syncService.totalImages;
+                            final downloadedImages = syncService.downloadedImages;
+
+                            String lastSyncText = 'Never synced';
+                            if (lastSync != null) {
+                              final diff = DateTime.now().difference(lastSync);
+                              if (diff.inMinutes < 1) {
+                                lastSyncText = 'Just now';
+                              } else if (diff.inMinutes < 60) {
+                                lastSyncText = '${diff.inMinutes}m ago';
+                              } else if (diff.inHours < 24) {
+                                lastSyncText = '${diff.inHours}h ago';
+                              } else {
+                                lastSyncText = '${diff.inDays}d ago';
+                              }
+                            }
+
+                            return ProfileSectionCard(
+                              title: 'Offline Data',
+                              children: [
+                                ProfileActionTile(icon: Icons.storage_outlined, title: 'Menu Items', subtitle: itemCount > 0 ? '$itemCount items cached' : 'No items cached', iconColor: Colors.indigo),
+                                if (totalImages > 0 && !isSyncing)
+                                  ProfileActionTile(icon: Icons.image_outlined, title: 'Images', subtitle: '$downloadedImages / $totalImages cached', iconColor: Colors.deepPurple),
+                                ProfileActionTile(icon: Icons.schedule, title: 'Last Synced', subtitle: lastSyncText, iconColor: Colors.teal),
+                                if (syncError != null)
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                                    child: Text('Sync error: $syncError', style: TextStyle(color: colorScheme.error, fontSize: 12)),
+                                  ),
+                                if (isSyncing)
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.circular(4),
+                                          child: LinearProgressIndicator(value: progress > 0 ? progress : null, minHeight: 6, color: colorScheme.primary),
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          syncStatus.isNotEmpty ? syncStatus : 'Syncing…',
+                                          style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant, fontWeight: FontWeight.w500),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text('${(progress * 100).toInt()}% complete', style: TextStyle(fontSize: 11, color: colorScheme.outline)),
+                                      ],
+                                    ),
+                                  ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  child: SizedBox(
+                                    width: double.infinity,
+                                    child: OutlinedButton.icon(
+                                      onPressed: isSyncing ? null : () => syncService.downloadAllMenuData(),
+                                      icon: Icon(isSyncing ? Icons.hourglass_top : Icons.refresh),
+                                      label: Text(
+                                        isSyncing
+                                            ? 'Syncing…'
+                                            : itemCount > 0
+                                            ? 'Refresh Menu & Images'
+                                            : 'Download Menu & Images',
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                      ],
                       ProfileSectionCard(
                         title: 'settings'.tr(),
                         children: [

@@ -47,7 +47,9 @@ import 'package:urban_cafe/features/orders/presentation/providers/order_provider
 // POS Feature
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:urban_cafe/features/pos/data/datasources/pos_local_datasource.dart';
+import 'package:urban_cafe/features/pos/data/datasources/menu_local_datasource.dart';
 import 'package:urban_cafe/features/pos/data/repositories/pos_repository_impl.dart';
+import 'package:urban_cafe/features/pos/data/services/menu_sync_service.dart';
 import 'package:urban_cafe/features/pos/domain/repositories/pos_repository.dart';
 import 'package:urban_cafe/features/pos/domain/usecases/create_pos_order.dart';
 import 'package:urban_cafe/features/pos/domain/usecases/get_pos_orders.dart';
@@ -119,6 +121,7 @@ Future<void> configureDependencies(SupabaseClient client) async {
       signUpUseCase: sl(),
       signInAnonymouslyUseCase: sl(),
       updateProfileUseCase: sl(),
+      menuSyncService: sl<MenuSyncService>(),
     ),
   );
 
@@ -165,7 +168,9 @@ Future<void> configureDependencies(SupabaseClient client) async {
   // ─────────────────────────────────────────────────────────────────
   sl.registerLazySingleton<Connectivity>(() => Connectivity());
   sl.registerLazySingleton<PosLocalDatasource>(() => PosLocalDatasource());
+  sl.registerLazySingleton<MenuLocalDatasource>(() => MenuLocalDatasource());
   sl.registerLazySingleton<PosRepository>(() => PosRepositoryImpl(sl<SupabaseClient>(), sl<PosLocalDatasource>(), sl<Connectivity>()));
+  sl.registerLazySingleton<MenuSyncService>(() => MenuSyncService(supabaseClient: sl<SupabaseClient>(), menuLocalDatasource: sl<MenuLocalDatasource>(), posLocalDatasource: sl<PosLocalDatasource>()));
   sl.registerLazySingleton(() => CreatePosOrder(sl<PosRepository>()));
   sl.registerLazySingleton(() => GetPosOrders(sl<PosRepository>()));
   sl.registerLazySingleton(() => SyncPosOrders(sl<PosRepository>()));

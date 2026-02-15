@@ -34,10 +34,7 @@ class _MenuCardState extends State<MenuCard> with TickerProviderStateMixin {
     _scaleAnimation = Tween<double>(begin: 1.0, end: 0.98).animate(CurvedAnimation(parent: _scaleController, curve: Curves.easeInOut));
 
     _heartController = AnimationController(vsync: this, duration: const Duration(milliseconds: 300));
-    _heartScale = TweenSequence<double>([
-      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.3), weight: 50),
-      TweenSequenceItem(tween: Tween(begin: 1.3, end: 1.0), weight: 50),
-    ]).animate(CurvedAnimation(parent: _heartController, curve: Curves.easeInOut));
+    _heartScale = TweenSequence<double>([TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.3), weight: 50), TweenSequenceItem(tween: Tween(begin: 1.3, end: 1.0), weight: 50)]).animate(CurvedAnimation(parent: _heartController, curve: Curves.easeInOut));
   }
 
   @override
@@ -79,7 +76,7 @@ class _MenuCardState extends State<MenuCard> with TickerProviderStateMixin {
     final auth = context.watch<AuthProvider>();
     final isFavorite = menuProvider.favoriteIds.contains(widget.item.id);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isGuest = auth.isGuest;
+    final isGuest = auth.isGuest || auth.isClient;
 
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
@@ -104,14 +101,7 @@ class _MenuCardState extends State<MenuCard> with TickerProviderStateMixin {
             decoration: BoxDecoration(
               color: isDark ? colorScheme.surfaceContainerHighest : colorScheme.surface,
               borderRadius: AppRadius.xlAll,
-              boxShadow: [
-                BoxShadow(
-                  color: _isPressed ? colorScheme.primary.withValues(alpha: 0.12) : Colors.black.withValues(alpha: 0.06),
-                  blurRadius: _isPressed ? 20 : 15,
-                  offset: Offset(0, _isPressed ? 8 : 5),
-                  spreadRadius: _isPressed ? 1 : 0,
-                ),
-              ],
+              boxShadow: [BoxShadow(color: _isPressed ? colorScheme.primary.withValues(alpha: 0.12) : Colors.black.withValues(alpha: 0.06), blurRadius: _isPressed ? 20 : 15, offset: Offset(0, _isPressed ? 8 : 5), spreadRadius: _isPressed ? 1 : 0)],
             ),
             child: ClipRRect(
               borderRadius: AppRadius.xlAll,
@@ -229,11 +219,7 @@ class _MenuCardState extends State<MenuCard> with TickerProviderStateMixin {
                                       width: 34,
                                       height: 34,
                                       decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                          colors: [colorScheme.primaryContainer, colorScheme.primaryContainer.withValues(alpha: 0.8)],
-                                        ),
+                                        gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [colorScheme.primaryContainer, colorScheme.primaryContainer.withValues(alpha: 0.8)]),
                                         shape: BoxShape.circle,
                                         boxShadow: [BoxShadow(color: colorScheme.primary.withValues(alpha: 0.2), blurRadius: 6, offset: const Offset(0, 3))],
                                       ),

@@ -23,13 +23,16 @@ class _PosOrderHistoryState extends State<PosOrderHistory> {
   @override
   Widget build(BuildContext context) {
     final posProvider = context.watch<PosProvider>();
+    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: cs.surface,
       appBar: AppBar(
         title: const Text("Today's Sales", style: TextStyle(fontWeight: FontWeight.w700)),
-        backgroundColor: AppTheme.primary,
-        foregroundColor: AppTheme.onPrimary,
+        centerTitle: true,
+        backgroundColor: cs.surface,
+        foregroundColor: cs.onSurface,
+        scrolledUnderElevation: 0,
       ),
       body: Column(
         children: [
@@ -39,9 +42,9 @@ class _PosOrderHistoryState extends State<PosOrderHistory> {
             margin: const EdgeInsets.all(16),
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              gradient: LinearGradient(colors: [AppTheme.primary, AppTheme.primary.withValues(alpha: 0.85)]),
+              gradient: LinearGradient(colors: [cs.primary, cs.primary.withValues(alpha: 0.85)]),
               borderRadius: AppRadius.lgAll,
-              boxShadow: [BoxShadow(color: AppTheme.primary.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 4))],
+              boxShadow: [BoxShadow(color: cs.primary.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 4))],
             ),
             child: Row(
               children: [
@@ -49,21 +52,21 @@ class _PosOrderHistoryState extends State<PosOrderHistory> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text("Today's Total", style: TextStyle(color: Colors.white70, fontSize: 13)),
+                      Text("Today's Total", style: TextStyle(color: cs.onPrimary.withValues(alpha: 0.7), fontSize: 13)),
                       const SizedBox(height: 4),
                       Text(
                         '${posProvider.todayTotal.toStringAsFixed(0)} Ks',
-                        style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w800),
+                        style: TextStyle(color: cs.onPrimary, fontSize: 28, fontWeight: FontWeight.w800),
                       ),
                     ],
                   ),
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: AppRadius.xlAll),
+                  decoration: BoxDecoration(color: cs.onPrimary.withValues(alpha: 0.2), borderRadius: AppRadius.xlAll),
                   child: Text(
                     '${posProvider.todayOrders.length} sales',
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                    style: TextStyle(color: cs.onPrimary, fontWeight: FontWeight.w600),
                   ),
                 ),
               ],
@@ -73,15 +76,15 @@ class _PosOrderHistoryState extends State<PosOrderHistory> {
           // Orders List
           Expanded(
             child: posProvider.isLoadingHistory
-                ? const Center(child: CircularProgressIndicator(color: AppTheme.primary))
+                ? Center(child: CircularProgressIndicator(color: cs.primary))
                 : posProvider.todayOrders.isEmpty
                 ? Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.receipt_long, size: 64, color: AppTheme.outline.withValues(alpha: 0.3)),
+                        Icon(Icons.receipt_long, size: 64, color: cs.outline.withValues(alpha: 0.3)),
                         const SizedBox(height: 12),
-                        Text('No sales today yet', style: TextStyle(color: AppTheme.outline, fontSize: 16)),
+                        Text('No sales today yet', style: TextStyle(color: cs.outline, fontSize: 16)),
                       ],
                     ),
                   )
@@ -90,7 +93,7 @@ class _PosOrderHistoryState extends State<PosOrderHistory> {
                     child: ListView.separated(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       itemCount: posProvider.todayOrders.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      separatorBuilder: (_, _) => const SizedBox(height: 8),
                       itemBuilder: (ctx, i) => _OrderCard(order: posProvider.todayOrders[i]),
                     ),
                   ),
@@ -107,9 +110,19 @@ class _OrderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final cashColor = isDark ? const Color(0xFF81C784) : const Color(0xFF2E7D32);
+    final cashBg = isDark ? const Color(0xFF1B3A1E) : const Color(0xFFE8F5E9);
+    final cardColor = isDark ? const Color(0xFF42A5F5) : const Color(0xFF1565C0);
+    final cardBg = isDark ? const Color(0xFF0D2A4A) : const Color(0xFFE3F2FD);
+
+    final isCash = order.paymentMethod == PosPaymentMethod.cash;
+
     return Card(
       elevation: 0.5,
-      color: AppTheme.surface,
+      color: cs.surface,
       shape: RoundedRectangleBorder(borderRadius: AppRadius.mdAll),
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -118,28 +131,30 @@ class _OrderCard extends StatelessWidget {
             Container(
               width: 40,
               height: 40,
-              decoration: BoxDecoration(color: order.paymentMethod == PosPaymentMethod.cash ? const Color(0xFFE8F5E9) : const Color(0xFFE3F2FD), borderRadius: AppRadius.smAll),
-              child: Icon(
-                order.paymentMethod == PosPaymentMethod.cash ? Icons.money : Icons.credit_card,
-                color: order.paymentMethod == PosPaymentMethod.cash ? const Color(0xFF2E7D32) : const Color(0xFF1565C0),
-                size: 20,
-              ),
+              decoration: BoxDecoration(color: isCash ? cashBg : cardBg, borderRadius: AppRadius.smAll),
+              child: Icon(isCash ? Icons.money : Icons.credit_card, color: isCash ? cashColor : cardColor, size: 20),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(order.id != null ? '#${order.id!.substring(0, 8)}' : 'Pending', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                  Text(_formatTime(order.createdAt), style: TextStyle(fontSize: 12, color: AppTheme.onSurfaceVariant)),
+                  Text(
+                    order.id != null ? '#${order.id!.substring(0, 8)}' : 'Pending',
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: cs.onSurface),
+                  ),
+                  Text(_formatTime(order.createdAt), style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
                 ],
               ),
             ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text('${order.totalAmount.toStringAsFixed(0)} Ks', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
-                Text(order.paymentMethod.label, style: TextStyle(fontSize: 11, color: AppTheme.onSurfaceVariant)),
+                Text(
+                  '${order.totalAmount.toStringAsFixed(0)} Ks',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: cs.onSurface),
+                ),
+                Text(order.paymentMethod.label, style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant)),
               ],
             ),
           ],

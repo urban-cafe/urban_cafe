@@ -4,21 +4,13 @@ class MenuItemVariant {
   final double priceAdjustment;
   final bool isDefault;
 
-  const MenuItemVariant({
-    required this.id,
-    required this.name,
-    required this.priceAdjustment,
-    required this.isDefault,
-  });
+  const MenuItemVariant({required this.id, required this.name, required this.priceAdjustment, required this.isDefault});
 
   factory MenuItemVariant.fromJson(Map<String, dynamic> json) {
-    return MenuItemVariant(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      priceAdjustment: (json['price_adjustment'] as num).toDouble(),
-      isDefault: json['is_default'] as bool,
-    );
+    return MenuItemVariant(id: json['id'] as String, name: json['name'] as String, priceAdjustment: (json['price_adjustment'] as num).toDouble(), isDefault: json['is_default'] as bool);
   }
+
+  Map<String, dynamic> toJson() => {'id': id, 'name': name, 'price_adjustment': priceAdjustment, 'is_default': isDefault};
 }
 
 class MenuItemAddon {
@@ -26,19 +18,13 @@ class MenuItemAddon {
   final String name;
   final double price;
 
-  const MenuItemAddon({
-    required this.id,
-    required this.name,
-    required this.price,
-  });
+  const MenuItemAddon({required this.id, required this.name, required this.price});
 
   factory MenuItemAddon.fromJson(Map<String, dynamic> json) {
-    return MenuItemAddon(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      price: (json['price'] as num).toDouble(),
-    );
+    return MenuItemAddon(id: json['id'] as String, name: json['name'] as String, price: (json['price'] as num).toDouble());
   }
+
+  Map<String, dynamic> toJson() => {'id': id, 'name': name, 'price': price};
 }
 
 class MenuItemEntity {
@@ -58,7 +44,7 @@ class MenuItemEntity {
   final bool isWeekendSpecial;
   final DateTime createdAt;
   final DateTime updatedAt;
-  
+
   // Customization
   final List<MenuItemVariant> variants;
   final List<MenuItemAddon> addons;
