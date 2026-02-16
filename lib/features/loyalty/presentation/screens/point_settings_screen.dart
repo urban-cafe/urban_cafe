@@ -84,7 +84,7 @@ class _PointSettingsScreenState extends State<PointSettingsScreen> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: cs.primaryContainer.withOpacity(0.3),
+                        color: cs.primaryContainer.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: cs.primaryContainer),
                       ),

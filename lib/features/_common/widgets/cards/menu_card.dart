@@ -76,7 +76,7 @@ class _MenuCardState extends State<MenuCard> with TickerProviderStateMixin {
     final auth = context.watch<AuthProvider>();
     final isFavorite = menuProvider.favoriteIds.contains(widget.item.id);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isGuest = auth.isGuest || auth.isClient;
+    final isGuest = auth.isGuest;
 
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),

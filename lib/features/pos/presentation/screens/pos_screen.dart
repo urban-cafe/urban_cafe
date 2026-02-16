@@ -1,14 +1,17 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import 'package:urban_cafe/core/theme.dart';
+import 'package:urban_cafe/features/_common/widgets/inputs/custom_search_bar.dart';
 import 'package:urban_cafe/features/cart/domain/entities/cart_item.dart';
 import 'package:urban_cafe/features/menu/domain/entities/menu_item.dart';
 import 'package:urban_cafe/features/menu/presentation/providers/menu_provider.dart';
 import 'package:urban_cafe/features/pos/data/services/menu_sync_service.dart';
 import 'package:urban_cafe/features/pos/presentation/providers/pos_provider.dart';
 import 'package:urban_cafe/features/pos/presentation/screens/pos_order_history.dart';
-import 'package:urban_cafe/features/_common/widgets/inputs/custom_search_bar.dart';
 import 'package:urban_cafe/features/pos/presentation/widgets/pos_payment_dialog.dart';
 
 class PosScreen extends StatefulWidget {
@@ -30,24 +33,35 @@ class _PosScreenState extends State<PosScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       context.read<PosProvider>().init();
 
-      // Offline-first: try local DB first
-      final syncService = context.read<MenuSyncService>();
-      final localItems = await syncService.getCachedItems();
-
-      if (localItems.isNotEmpty) {
-        if (mounted) {
-          setState(() {
-            _offlineItems = localItems;
-            _loadingOffline = false;
-          });
-        }
-      } else {
+      if (kIsWeb) {
+        // Web: Load from online (MenuProvider)
         if (!mounted) return;
         setState(() => _loadingOffline = false);
         final menuProvider = context.read<MenuProvider>();
         await menuProvider.fetchAdminList();
         while (menuProvider.hasMore) {
           await menuProvider.loadMore();
+        }
+      } else {
+        // Mobile: Load from local database (offline-first)
+        final syncService = context.read<MenuSyncService>();
+        final localItems = await syncService.getCachedItems();
+
+        if (localItems.isNotEmpty) {
+          if (mounted) {
+            setState(() {
+              _offlineItems = localItems;
+              _loadingOffline = false;
+            });
+          }
+        } else {
+          if (!mounted) return;
+          setState(() => _loadingOffline = false);
+          final menuProvider = context.read<MenuProvider>();
+          await menuProvider.fetchAdminList();
+          while (menuProvider.hasMore) {
+            await menuProvider.loadMore();
+          }
         }
       }
     });
@@ -103,29 +117,13 @@ class _PosScreenState extends State<PosScreen> {
               children: [
                 Expanded(
                   flex: 3,
-                  child: _ItemPanel(
-                    offlineItems: _offlineItems,
-                    loadingOffline: _loadingOffline,
-                    selectedCategoryId: _selectedCategoryId,
-                    searchQuery: _searchQuery,
-                    onCategoryChanged: (id) => setState(() => _selectedCategoryId = id),
-                    onSearchChanged: (q) => setState(() => _searchQuery = q),
-                    onItemTap: _onItemTap,
-                  ),
+                  child: _ItemPanel(offlineItems: _offlineItems, loadingOffline: _loadingOffline, selectedCategoryId: _selectedCategoryId, searchQuery: _searchQuery, onCategoryChanged: (id) => setState(() => _selectedCategoryId = id), onSearchChanged: (q) => setState(() => _searchQuery = q), onItemTap: _onItemTap),
                 ),
                 Container(width: 1, color: cs.outlineVariant),
                 SizedBox(width: 340, child: _buildCartPanel(posProvider, cs)),
               ],
             )
-          : _ItemPanel(
-              offlineItems: _offlineItems,
-              loadingOffline: _loadingOffline,
-              selectedCategoryId: _selectedCategoryId,
-              searchQuery: _searchQuery,
-              onCategoryChanged: (id) => setState(() => _selectedCategoryId = id),
-              onSearchChanged: (q) => setState(() => _searchQuery = q),
-              onItemTap: _onItemTap,
-            ),
+          : _ItemPanel(offlineItems: _offlineItems, loadingOffline: _loadingOffline, selectedCategoryId: _selectedCategoryId, searchQuery: _searchQuery, onCategoryChanged: (id) => setState(() => _selectedCategoryId = id), onSearchChanged: (q) => setState(() => _searchQuery = q), onItemTap: _onItemTap),
       // On narrow screens, show cart as a FAB
       floatingActionButton: isWide || posProvider.cartItemCount == 0
           ? null
@@ -154,9 +152,7 @@ class _PosScreenState extends State<PosScreen> {
 
   void _showAddedSnackBar(String name) {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$name added'), duration: const Duration(milliseconds: 800), behavior: SnackBarBehavior.floating, margin: const EdgeInsets.only(bottom: 60, left: 16, right: 16)),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$name added'), duration: const Duration(milliseconds: 800), behavior: SnackBarBehavior.floating, margin: const EdgeInsets.only(bottom: 60, left: 16, right: 16)));
   }
 
   void _showCustomizationDialog(MenuItemEntity item) {
@@ -188,16 +184,7 @@ class _PosScreenState extends State<PosScreen> {
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
-                      children: item.variants
-                          .map(
-                            (v) => ChoiceChip(
-                              label: Text('${v.name} ${v.priceAdjustment > 0 ? "(+${v.priceAdjustment.toStringAsFixed(0)})" : ""}'),
-                              selected: selectedVariant?.id == v.id,
-                              onSelected: (_) => setDialogState(() => selectedVariant = v),
-                              selectedColor: cs.primaryContainer,
-                            ),
-                          )
-                          .toList(),
+                      children: item.variants.map((v) => ChoiceChip(label: Text('${v.name} ${v.priceAdjustment > 0 ? "(+${v.priceAdjustment.toStringAsFixed(0)})" : ""}'), selected: selectedVariant?.id == v.id, onSelected: (_) => setDialogState(() => selectedVariant = v), selectedColor: cs.primaryContainer)).toList(),
                     ),
                     const SizedBox(height: 16),
                   ],
@@ -392,15 +379,7 @@ class _ItemPanel extends StatelessWidget {
   final ValueChanged<String> onSearchChanged;
   final ValueChanged<MenuItemEntity> onItemTap;
 
-  const _ItemPanel({
-    required this.offlineItems,
-    required this.loadingOffline,
-    required this.selectedCategoryId,
-    required this.searchQuery,
-    required this.onCategoryChanged,
-    required this.onSearchChanged,
-    required this.onItemTap,
-  });
+  const _ItemPanel({required this.offlineItems, required this.loadingOffline, required this.selectedCategoryId, required this.searchQuery, required this.onCategoryChanged, required this.onSearchChanged, required this.onItemTap});
 
   @override
   Widget build(BuildContext context) {
@@ -414,11 +393,25 @@ class _ItemPanel extends StatelessWidget {
         // Search Bar
         Padding(
           padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
-          child: CustomSearchBar(hintText: 'Search items...', onChanged: onSearchChanged),
+          child: CustomSearchBar(hintText: 'search'.tr(), onChanged: onSearchChanged),
         ),
 
-        // Offline indicator
-        if (offlineItems != null)
+        // Platform indicator
+        if (kIsWeb && offlineItems == null)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            color: cs.tertiaryContainer.withValues(alpha: 0.3),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.cloud, size: 14, color: cs.tertiary),
+                const SizedBox(width: 4),
+                Text('Web Mode - Loading from online', style: TextStyle(fontSize: 11, color: cs.tertiary)),
+              ],
+            ),
+          )
+        else if (offlineItems != null)
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -428,7 +421,7 @@ class _ItemPanel extends StatelessWidget {
               children: [
                 Icon(Icons.offline_bolt, size: 14, color: cs.primary),
                 const SizedBox(width: 4),
-                Text('Using offline data (${offlineItems!.length} items)', style: TextStyle(fontSize: 11, color: cs.primary)),
+                Text('Offline Mode - Using local data (${offlineItems!.length} items)', style: TextStyle(fontSize: 11, color: cs.primary)),
               ],
             ),
           ),
@@ -442,9 +435,7 @@ class _ItemPanel extends StatelessWidget {
 
         // Items Grid
         Expanded(
-          child: isLoading
-              ? Center(child: CircularProgressIndicator(color: cs.primary))
-              : _ItemGrid(items: items, selectedCategoryId: selectedCategoryId, searchQuery: searchQuery, onItemTap: onItemTap),
+          child: isLoading ? Center(child: CircularProgressIndicator(color: cs.primary)) : _ItemGrid(items: items, selectedCategoryId: selectedCategoryId, searchQuery: searchQuery, onItemTap: onItemTap),
         ),
       ],
     );

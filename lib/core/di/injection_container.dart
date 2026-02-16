@@ -1,17 +1,9 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:urban_cafe/core/services/cache_service.dart';
 import 'package:urban_cafe/core/services/storage_service.dart';
-import 'package:urban_cafe/features/loyalty/data/repositories/loyalty_repository_impl.dart';
-import 'package:urban_cafe/features/loyalty/domain/repositories/loyalty_repository.dart';
-import 'package:urban_cafe/features/loyalty/domain/usecases/generate_point_token.dart';
-import 'package:urban_cafe/features/loyalty/domain/usecases/get_point_settings.dart';
-import 'package:urban_cafe/features/loyalty/domain/usecases/redeem_point_token.dart';
-import 'package:urban_cafe/features/loyalty/domain/usecases/update_point_settings.dart';
-import 'package:urban_cafe/features/loyalty/presentation/providers/loyalty_provider.dart';
-// Cart & Admin Features
 import 'package:urban_cafe/features/admin/presentation/providers/admin_provider.dart';
-// Auth Feature
 import 'package:urban_cafe/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:urban_cafe/features/auth/domain/repositories/auth_repository.dart';
 import 'package:urban_cafe/features/auth/domain/usecases/get_current_user_role_usecase.dart';
@@ -24,7 +16,13 @@ import 'package:urban_cafe/features/auth/domain/usecases/sign_up_usecase.dart';
 import 'package:urban_cafe/features/auth/domain/usecases/update_profile_usecase.dart';
 import 'package:urban_cafe/features/auth/presentation/providers/auth_provider.dart';
 import 'package:urban_cafe/features/cart/presentation/providers/cart_provider.dart';
-// Menu Feature
+import 'package:urban_cafe/features/loyalty/data/repositories/loyalty_repository_impl.dart';
+import 'package:urban_cafe/features/loyalty/domain/repositories/loyalty_repository.dart';
+import 'package:urban_cafe/features/loyalty/domain/usecases/generate_point_token.dart';
+import 'package:urban_cafe/features/loyalty/domain/usecases/get_point_settings.dart';
+import 'package:urban_cafe/features/loyalty/domain/usecases/redeem_point_token.dart';
+import 'package:urban_cafe/features/loyalty/domain/usecases/update_point_settings.dart';
+import 'package:urban_cafe/features/loyalty/presentation/providers/loyalty_provider.dart';
 import 'package:urban_cafe/features/menu/data/repositories/menu_repository_impl.dart';
 import 'package:urban_cafe/features/menu/domain/repositories/menu_repository.dart';
 import 'package:urban_cafe/features/menu/domain/usecases/get_category_by_name.dart';
@@ -36,7 +34,6 @@ import 'package:urban_cafe/features/menu/domain/usecases/get_sub_categories.dart
 import 'package:urban_cafe/features/menu/domain/usecases/toggle_favorite.dart';
 import 'package:urban_cafe/features/menu/presentation/providers/category_manager_provider.dart';
 import 'package:urban_cafe/features/menu/presentation/providers/menu_provider.dart';
-// Orders Feature
 import 'package:urban_cafe/features/orders/data/repositories/order_repository_impl.dart';
 import 'package:urban_cafe/features/orders/domain/repositories/order_repository.dart';
 import 'package:urban_cafe/features/orders/domain/usecases/create_order.dart';
@@ -44,10 +41,8 @@ import 'package:urban_cafe/features/orders/domain/usecases/get_admin_analytics.d
 import 'package:urban_cafe/features/orders/domain/usecases/get_orders.dart';
 import 'package:urban_cafe/features/orders/domain/usecases/update_order_status.dart';
 import 'package:urban_cafe/features/orders/presentation/providers/order_provider.dart';
-// POS Feature
-import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:urban_cafe/features/pos/data/datasources/pos_local_datasource.dart';
 import 'package:urban_cafe/features/pos/data/datasources/menu_local_datasource.dart';
+import 'package:urban_cafe/features/pos/data/datasources/pos_local_datasource.dart';
 import 'package:urban_cafe/features/pos/data/repositories/pos_repository_impl.dart';
 import 'package:urban_cafe/features/pos/data/services/menu_sync_service.dart';
 import 'package:urban_cafe/features/pos/domain/repositories/pos_repository.dart';
@@ -62,56 +57,38 @@ final GetIt sl = GetIt.instance;
 /// Call this in main() before runApp()
 Future<void> configureDependencies(SupabaseClient client) async {
   // ─────────────────────────────────────────────────────────────────
-  // CORE SERVICES
+  // 1. CORE & EXTERNAL
   // ─────────────────────────────────────────────────────────────────
   sl.registerLazySingleton<SupabaseClient>(() => client);
+  sl.registerLazySingleton<Connectivity>(() => Connectivity());
   sl.registerLazySingleton<CacheService>(() => CacheService());
   sl.registerLazySingleton<StorageService>(() => StorageService());
 
   // ─────────────────────────────────────────────────────────────────
-  // REPOSITORIES
+  // 2. DATA SOURCES & SERVICES (POS/Offline)
   // ─────────────────────────────────────────────────────────────────
-  sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(supabaseClient: sl<SupabaseClient>()));
-
-  sl.registerLazySingleton<MenuRepository>(() => MenuRepositoryImpl(sl<SupabaseClient>()));
-
-  sl.registerLazySingleton<OrderRepository>(() => OrderRepositoryImpl(sl<SupabaseClient>()));
+  sl.registerLazySingleton(() => PosLocalDatasource());
+  sl.registerLazySingleton(() => MenuLocalDatasource());
+  sl.registerLazySingleton(() => MenuSyncService(supabaseClient: sl(), menuLocalDatasource: sl(), posLocalDatasource: sl()));
 
   // ─────────────────────────────────────────────────────────────────
-  // AUTH USECASES
+  // 3. AUTH FEATURE
   // ─────────────────────────────────────────────────────────────────
-  sl.registerLazySingleton(() => SignInUseCase(sl<AuthRepository>()));
-  sl.registerLazySingleton(() => SignOutUseCase(sl<AuthRepository>()));
-  sl.registerLazySingleton(() => GetCurrentUserRoleUseCase(sl<AuthRepository>()));
-  sl.registerLazySingleton(() => GetUserProfileUseCase(sl<AuthRepository>()));
-  sl.registerLazySingleton(() => SignInWithGoogleUseCase(sl<AuthRepository>()));
-  sl.registerLazySingleton(() => SignUpUseCase(sl<AuthRepository>()));
-  sl.registerLazySingleton(() => SignInAnonymouslyUseCase(sl<AuthRepository>()));
-  sl.registerLazySingleton(() => UpdateProfileUseCase(sl<AuthRepository>()));
+  // Repository
+  sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(supabaseClient: sl()));
 
-  // ─────────────────────────────────────────────────────────────────
-  // MENU USECASES
-  // ─────────────────────────────────────────────────────────────────
-  sl.registerLazySingleton(() => GetMainCategories(sl<MenuRepository>()));
-  sl.registerLazySingleton(() => GetSubCategories(sl<MenuRepository>()));
-  sl.registerLazySingleton(() => GetMenuItems(sl<MenuRepository>()));
-  sl.registerLazySingleton(() => GetCategoryByName(sl<MenuRepository>()));
-  sl.registerLazySingleton(() => GetFavorites(sl<MenuRepository>()));
-  sl.registerLazySingleton(() => GetFavoriteItems(sl<MenuRepository>()));
-  sl.registerLazySingleton(() => ToggleFavorite(sl<MenuRepository>()));
+  // UseCases
+  sl.registerLazySingleton(() => SignInUseCase(sl()));
+  sl.registerLazySingleton(() => SignOutUseCase(sl()));
+  sl.registerLazySingleton(() => GetCurrentUserRoleUseCase(sl()));
+  sl.registerLazySingleton(() => GetUserProfileUseCase(sl()));
+  sl.registerLazySingleton(() => SignInWithGoogleUseCase(sl()));
+  sl.registerLazySingleton(() => SignUpUseCase(sl()));
+  sl.registerLazySingleton(() => SignInAnonymouslyUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateProfileUseCase(sl()));
 
-  // ─────────────────────────────────────────────────────────────────
-  // ORDER USECASES
-  // ─────────────────────────────────────────────────────────────────
-  sl.registerLazySingleton(() => GetOrders(sl<OrderRepository>()));
-  sl.registerLazySingleton(() => UpdateOrderStatus(sl<OrderRepository>()));
-  sl.registerLazySingleton(() => CreateOrder(sl<OrderRepository>()));
-  sl.registerLazySingleton(() => GetAdminAnalytics(sl<OrderRepository>()));
-
-  // ─────────────────────────────────────────────────────────────────
-  // PROVIDERS (Factory - new instance each time)
-  // ─────────────────────────────────────────────────────────────────
-  sl.registerFactory<AuthProvider>(
+  // Provider
+  sl.registerFactory(
     () => AuthProvider(
       signInUseCase: sl(),
       signOutUseCase: sl(),
@@ -121,11 +98,27 @@ Future<void> configureDependencies(SupabaseClient client) async {
       signUpUseCase: sl(),
       signInAnonymouslyUseCase: sl(),
       updateProfileUseCase: sl(),
-      menuSyncService: sl<MenuSyncService>(),
+      menuSyncService: sl(),
     ),
   );
 
-  sl.registerFactory<MenuProvider>(
+  // ─────────────────────────────────────────────────────────────────
+  // 4. MENU FEATURE
+  // ─────────────────────────────────────────────────────────────────
+  // Repository
+  sl.registerLazySingleton<MenuRepository>(() => MenuRepositoryImpl(sl()));
+
+  // UseCases
+  sl.registerLazySingleton(() => GetMainCategories(sl()));
+  sl.registerLazySingleton(() => GetSubCategories(sl()));
+  sl.registerLazySingleton(() => GetMenuItems(sl()));
+  sl.registerLazySingleton(() => GetCategoryByName(sl()));
+  sl.registerLazySingleton(() => GetFavorites(sl()));
+  sl.registerLazySingleton(() => GetFavoriteItems(sl()));
+  sl.registerLazySingleton(() => ToggleFavorite(sl()));
+
+  // Providers
+  sl.registerFactory(
     () => MenuProvider(
       getMainCategoriesUseCase: sl(),
       getSubCategoriesUseCase: sl(),
@@ -136,45 +129,56 @@ Future<void> configureDependencies(SupabaseClient client) async {
       toggleFavoriteUseCase: sl(),
     ),
   );
-
-  sl.registerFactory<CategoryManagerProvider>(() => CategoryManagerProvider(getMainCategoriesUseCase: sl(), getSubCategoriesUseCase: sl()));
-
-  sl.registerFactory<CartProvider>(() => CartProvider(createOrderUseCase: sl()));
-
-  sl.registerFactory<OrderProvider>(() => OrderProvider(getOrdersUseCase: sl(), updateOrderStatusUseCase: sl()));
-
-  sl.registerFactory<AdminProvider>(() => AdminProvider(getAdminAnalyticsUseCase: sl(), storageService: sl()));
+  sl.registerFactory(() => CategoryManagerProvider(getMainCategoriesUseCase: sl(), getSubCategoriesUseCase: sl()));
 
   // ─────────────────────────────────────────────────────────────────
-  // LOYALTY REPOSITORY
+  // 5. ORDERS FEATURE
   // ─────────────────────────────────────────────────────────────────
-  sl.registerLazySingleton<LoyaltyRepository>(() => LoyaltyRepositoryImpl(sl<SupabaseClient>()));
+  // Repository
+  sl.registerLazySingleton<OrderRepository>(() => OrderRepositoryImpl(sl()));
+
+  // UseCases
+  sl.registerLazySingleton(() => GetOrders(sl()));
+  sl.registerLazySingleton(() => UpdateOrderStatus(sl()));
+  sl.registerLazySingleton(() => CreateOrder(sl()));
+  sl.registerLazySingleton(() => GetAdminAnalytics(sl()));
+
+  // Provider
+  sl.registerFactory(() => OrderProvider(getOrdersUseCase: sl(), updateOrderStatusUseCase: sl()));
 
   // ─────────────────────────────────────────────────────────────────
-  // LOYALTY USECASES
+  // 6. CART & ADMIN
   // ─────────────────────────────────────────────────────────────────
-  sl.registerLazySingleton(() => GeneratePointToken(sl<LoyaltyRepository>()));
-  sl.registerLazySingleton(() => RedeemPointToken(sl<LoyaltyRepository>()));
-  sl.registerLazySingleton(() => GetPointSettings(sl<LoyaltyRepository>()));
-  sl.registerLazySingleton(() => UpdatePointSettings(sl<LoyaltyRepository>()));
+  sl.registerFactory(() => CartProvider(createOrderUseCase: sl()));
+
+  sl.registerFactory(() => AdminProvider(getAdminAnalyticsUseCase: sl(), storageService: sl()));
 
   // ─────────────────────────────────────────────────────────────────
-  // LOYALTY PROVIDER
+  // 7. LOYALTY FEATURE
   // ─────────────────────────────────────────────────────────────────
-  sl.registerFactory<LoyaltyProvider>(() => LoyaltyProvider(generatePointToken: sl(), redeemPointToken: sl(), getPointSettings: sl(), updatePointSettings: sl()));
+  // Repository
+  sl.registerLazySingleton<LoyaltyRepository>(() => LoyaltyRepositoryImpl(sl()));
+
+  // UseCases
+  sl.registerLazySingleton(() => GeneratePointToken(sl()));
+  sl.registerLazySingleton(() => RedeemPointToken(sl()));
+  sl.registerLazySingleton(() => GetPointSettings(sl()));
+  sl.registerLazySingleton(() => UpdatePointSettings(sl()));
+
+  // Provider
+  sl.registerFactory(() => LoyaltyProvider(generatePointToken: sl(), redeemPointToken: sl(), getPointSettings: sl(), updatePointSettings: sl()));
 
   // ─────────────────────────────────────────────────────────────────
-  // POS FEATURE
+  // 8. POS FEATURE
   // ─────────────────────────────────────────────────────────────────
-  sl.registerLazySingleton<Connectivity>(() => Connectivity());
-  sl.registerLazySingleton<PosLocalDatasource>(() => PosLocalDatasource());
-  sl.registerLazySingleton<MenuLocalDatasource>(() => MenuLocalDatasource());
-  sl.registerLazySingleton<PosRepository>(() => PosRepositoryImpl(sl<SupabaseClient>(), sl<PosLocalDatasource>(), sl<Connectivity>()));
-  sl.registerLazySingleton<MenuSyncService>(() => MenuSyncService(supabaseClient: sl<SupabaseClient>(), menuLocalDatasource: sl<MenuLocalDatasource>(), posLocalDatasource: sl<PosLocalDatasource>()));
-  sl.registerLazySingleton(() => CreatePosOrder(sl<PosRepository>()));
-  sl.registerLazySingleton(() => GetPosOrders(sl<PosRepository>()));
-  sl.registerLazySingleton(() => SyncPosOrders(sl<PosRepository>()));
-  sl.registerFactory<PosProvider>(
-    () => PosProvider(createPosOrderUseCase: sl(), getPosOrdersUseCase: sl(), syncPosOrdersUseCase: sl(), repository: sl<PosRepository>(), connectivity: sl<Connectivity>()),
-  );
+  // Repository
+  sl.registerLazySingleton<PosRepository>(() => PosRepositoryImpl(sl(), sl(), sl()));
+
+  // UseCases
+  sl.registerLazySingleton(() => CreatePosOrder(sl()));
+  sl.registerLazySingleton(() => GetPosOrders(sl()));
+  sl.registerLazySingleton(() => SyncPosOrders(sl()));
+
+  // Provider
+  sl.registerFactory(() => PosProvider(createPosOrderUseCase: sl(), getPosOrdersUseCase: sl(), syncPosOrdersUseCase: sl(), repository: sl(), connectivity: sl()));
 }

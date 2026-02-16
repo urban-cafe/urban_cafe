@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:urban_cafe/core/responsive.dart';
-import 'package:urban_cafe/core/theme.dart';
+
 import 'package:urban_cafe/features/menu/domain/entities/menu_item.dart';
 
 class HomePromoBanner extends StatefulWidget {
@@ -52,23 +52,31 @@ class _HomePromoBannerState extends State<HomePromoBanner> {
       return const SizedBox.shrink();
     }
 
-    final itemWidth = Responsive.isCompact(context) ? MediaQuery.sizeOf(context).width - 48 : Responsive.width(context, 45);
+    // Landscape carousel: Reduced height, increased width
+    final double height = Responsive.isCompact(context) ? 200 : 280;
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final itemWidth = Responsive.isCompact(context) ? screenWidth * 0.92 : Responsive.width(context, 45); // Increased width
+    final horizontalPadding = (screenWidth - itemWidth) / 2;
 
     return Column(
       children: [
         // Carousel
         SizedBox(
-          height: 200,
+          height: height,
           child: CarouselView(
             controller: _controller,
             itemExtent: itemWidth,
-            shrinkExtent: itemWidth * 0.85,
+            shrinkExtent: itemWidth * 0.9,
             itemSnapping: true,
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            shape: RoundedRectangleBorder(borderRadius: AppRadius.lgAll),
+            padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+            shape: const RoundedRectangleBorder(), // Disable default shape, handle locally
+            backgroundColor: Colors.transparent,
             onTap: (index) => context.push('/detail', extra: widget.items[index]),
             children: widget.items.asMap().entries.map((entry) {
-              return _PromoCard(item: entry.value, isActive: entry.key == _currentIndex);
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4.0), // Space between images (8px total)
+                child: _PromoCard(item: entry.value, isActive: entry.key == _currentIndex),
+              );
             }).toList(),
           ),
         ),
@@ -76,23 +84,20 @@ class _HomePromoBannerState extends State<HomePromoBanner> {
         // Page Indicators
         if (widget.items.length > 1)
           Padding(
-            padding: const EdgeInsets.only(top: 16),
+            padding: const EdgeInsets.only(top: 12),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                widget.items.length,
-                (index) => AnimatedContainer(
+              children: List.generate(widget.items.length, (index) {
+                final bool isSelected = index == _currentIndex;
+                return AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeOutCubic,
+                  curve: Curves.fastOutSlowIn,
                   margin: const EdgeInsets.symmetric(horizontal: 4),
-                  height: 8,
-                  width: index == _currentIndex ? 24 : 8,
-                  decoration: BoxDecoration(
-                    color: index == _currentIndex ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.outlineVariant,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-              ),
+                  height: 6,
+                  width: isSelected ? 24 : 6,
+                  decoration: BoxDecoration(color: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.outlineVariant, borderRadius: BorderRadius.circular(3)),
+                );
+              }),
             ),
           ),
       ],
@@ -114,40 +119,71 @@ class _PromoCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        borderRadius: AppRadius.lgAll,
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 20, offset: const Offset(0, 8))],
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 10, offset: const Offset(0, 4))],
       ),
       child: ClipRRect(
-        borderRadius: AppRadius.lgAll,
+        borderRadius: BorderRadius.circular(16),
         child: Stack(
           fit: StackFit.expand,
           children: [
-            // Background Image
+            // Background Image with Parallax-like effect (image stays cover)
             if (item.imageUrl != null)
-              CachedNetworkImage(imageUrl: item.imageUrl!, fit: BoxFit.cover)
+              CachedNetworkImage(
+                imageUrl: item.imageUrl!,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => Container(color: cs.surfaceContainerHighest),
+                errorWidget: (context, url, error) => Container(
+                  color: cs.surfaceContainerHighest,
+                  child: Icon(Icons.broken_image, color: cs.onSurfaceVariant),
+                ),
+              )
             else
               Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [cs.primary, cs.tertiary]),
                 ),
-                child: Icon(Icons.local_cafe, size: 120, color: Colors.white.withValues(alpha: 0.1)),
+                child: Icon(Icons.local_cafe, size: 80, color: Colors.white.withValues(alpha: 0.2)),
               ),
 
-            // Gradient Overlay
-            Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Colors.transparent, Colors.black.withValues(alpha: 0.2), Colors.black.withValues(alpha: 0.75)],
-                    stops: const [0.3, 0.6, 1.0],
-                  ),
+            // Gradient Overlay for text readability
+            DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.black.withValues(alpha: 0.0), Colors.black.withValues(alpha: 0.1), Colors.black.withValues(alpha: 0.8)],
+                  stops: const [0.5, 0.7, 1.0],
                 ),
               ),
             ),
 
-            // Content
+            // Top Badge (Floating)
+            Positioned(
+              top: 16,
+              left: 16,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: cs.primary, // Solid primary color for pop
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [BoxShadow(color: cs.primary.withValues(alpha: 0.4), blurRadius: 8, offset: const Offset(0, 4))],
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.auto_awesome, size: 14, color: Colors.white),
+                    SizedBox(width: 4),
+                    Text(
+                      'Special',
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // Bottom Content
             Positioned(
               left: 20,
               right: 20,
@@ -156,60 +192,48 @@ class _PromoCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Badge Row
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(colors: [cs.error, cs.error.withValues(alpha: 0.8)]),
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [BoxShadow(color: cs.error.withValues(alpha: 0.4), blurRadius: 8, offset: const Offset(0, 2))],
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.local_fire_department, size: 14, color: Colors.white),
-                            SizedBox(width: 4),
-                            Text(
-                              'Special',
-                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11, letterSpacing: 0.5),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                  // Category Tag (Glass effect)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                    ),
+                    child: Text(
+                      item.categoryName?.toUpperCase() ?? 'MENU',
+                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1),
+                    ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
 
                   // Title
                   Text(
                     item.name,
-                    style: theme.textTheme.titleLarge?.copyWith(
+                    style: theme.textTheme.headlineSmall?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
-                      height: 1.2,
-                      shadows: [Shadow(color: Colors.black.withValues(alpha: 0.5), blurRadius: 8)],
+                      height: 1.1,
+                      shadows: [Shadow(color: Colors.black.withValues(alpha: 0.5), blurRadius: 4, offset: const Offset(0, 2))],
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
 
                   // Price
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        '${priceFormat.format(item.price)} Ks',
-                        style: theme.textTheme.titleMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w600),
+                        priceFormat.format(item.price),
+                        style: theme.textTheme.titleLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.w800, height: 1),
                       ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(12)),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 2, left: 4),
                         child: Text(
-                          item.categoryName ?? 'Menu',
-                          style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w500),
+                          'Ks',
+                          style: theme.textTheme.bodySmall?.copyWith(color: cs.primary, fontWeight: FontWeight.w600),
                         ),
                       ),
                     ],

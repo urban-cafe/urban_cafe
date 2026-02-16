@@ -164,8 +164,7 @@ class CartScreen extends StatelessWidget {
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                     if (item.selectedVariant != null) Text('Size: ${item.selectedVariant!.name}', style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant)),
-                                    if (item.selectedAddons.isNotEmpty)
-                                      Text('Add-ons: ${item.selectedAddons.map((e) => e.name).join(', ')}', style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant)),
+                                    if (item.selectedAddons.isNotEmpty) Text('Add-ons: ${item.selectedAddons.map((e) => e.name).join(', ')}', style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant)),
                                     if (item.notes != null && item.notes!.isNotEmpty) ...[
                                       const SizedBox(height: 4),
                                       Text(
@@ -325,12 +324,7 @@ class _CompactCheckoutBarState extends State<_CompactCheckoutBar> {
                                       style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.brown),
                                     ),
                                   ),
-                                  Switch(
-                                    value: cart.usePoints,
-                                    activeTrackColor: Colors.amber.withValues(alpha: 0.5),
-                                    thumbColor: WidgetStateProperty.all(Colors.amber),
-                                    onChanged: (value) => cart.toggleUsePoints(value, auth.loyaltyPoints),
-                                  ),
+                                  Switch(value: cart.usePoints, activeTrackColor: Colors.amber.withValues(alpha: 0.5), thumbColor: WidgetStateProperty.all(Colors.amber), onChanged: (value) => cart.toggleUsePoints(value, auth.loyaltyPoints)),
                                 ],
                               ),
                             ),
@@ -390,11 +384,7 @@ class _CompactCheckoutBarState extends State<_CompactCheckoutBar> {
                     width: double.infinity,
                     child: Container(
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: cart.isPlacingOrder ? [colorScheme.outline, colorScheme.outline] : [colorScheme.primary, colorScheme.primary.withValues(alpha: 0.85)],
-                        ),
+                        gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: cart.isPlacingOrder ? [colorScheme.outline, colorScheme.outline] : [colorScheme.primary, colorScheme.primary.withValues(alpha: 0.85)]),
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: cart.isPlacingOrder ? null : [BoxShadow(color: colorScheme.primary.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 4))],
                       ),
@@ -435,33 +425,37 @@ class _CompactCheckoutBarState extends State<_CompactCheckoutBar> {
   }
 
   Future<void> _placeOrder(BuildContext context) async {
-    final cart = widget.cart;
-    final success = await cart.placeOrder();
-    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: const Text("This Feature is currently disabled!"), backgroundColor: Theme.of(context).colorScheme.error));
+    return;
 
-    if (success) {
-      context.read<AuthProvider>().refreshProfile();
-      if (context.mounted) {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text('order_placed'.tr()),
-            content: Text('thank_you_order'.tr()),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  context.go('/orders');
-                },
-                child: Text('ok'.tr()),
-              ),
-            ],
-          ),
-        );
-      }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(cart.error ?? 'error'.tr()), backgroundColor: Theme.of(context).colorScheme.error));
-    }
+    /// ယာယီပိတ်ထားခြင်း
+    // final cart = widget.cart;
+    // final success = await cart.placeOrder();
+    // if (!context.mounted) return;
+    //
+    // if (success) {
+    //   context.read<AuthProvider>().refreshProfile();
+    //   if (context.mounted) {
+    //     showDialog(
+    //       context: context,
+    //       builder: (context) => AlertDialog(
+    //         title: Text('order_placed'.tr()),
+    //         content: Text('thank_you_order'.tr()),
+    //         actions: [
+    //           TextButton(
+    //             onPressed: () {
+    //               Navigator.of(context).pop();
+    //               context.go('/orders');
+    //             },
+    //             child: Text('ok'.tr()),
+    //           ),
+    //         ],
+    //       ),
+    //     );
+    //   }
+    // } else {
+    //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(cart.error ?? 'error'.tr()), backgroundColor: Theme.of(context).colorScheme.error));
+    // }
   }
 }
 
@@ -576,8 +570,7 @@ class _CartItemsList extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                         if (item.selectedVariant != null) Text('Size: ${item.selectedVariant!.name}', style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant)),
-                        if (item.selectedAddons.isNotEmpty)
-                          Text('Add-ons: ${item.selectedAddons.map((e) => e.name).join(', ')}', style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant)),
+                        if (item.selectedAddons.isNotEmpty) Text('Add-ons: ${item.selectedAddons.map((e) => e.name).join(', ')}', style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant)),
                         if (item.notes != null && item.notes!.isNotEmpty) ...[
                           const SizedBox(height: 4),
                           Text(
@@ -678,12 +671,7 @@ class _CheckoutPanel extends StatelessWidget {
                     ],
                   ),
                 ),
-                Switch(
-                  value: cart.usePoints,
-                  activeTrackColor: Colors.amber.withValues(alpha: 0.5),
-                  thumbColor: WidgetStateProperty.all(Colors.amber),
-                  onChanged: (value) => cart.toggleUsePoints(value, auth.loyaltyPoints),
-                ),
+                Switch(value: cart.usePoints, activeTrackColor: Colors.amber.withValues(alpha: 0.5), thumbColor: WidgetStateProperty.all(Colors.amber), onChanged: (value) => cart.toggleUsePoints(value, auth.loyaltyPoints)),
               ],
             ),
           ),
@@ -746,11 +734,7 @@ class _CheckoutPanel extends StatelessWidget {
         // Place Order Button
         Container(
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: cart.isPlacingOrder ? [colorScheme.outline, colorScheme.outline] : [colorScheme.primary, colorScheme.primary.withValues(alpha: 0.85)],
-            ),
+            gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: cart.isPlacingOrder ? [colorScheme.outline, colorScheme.outline] : [colorScheme.primary, colorScheme.primary.withValues(alpha: 0.85)]),
             borderRadius: BorderRadius.circular(16),
             boxShadow: cart.isPlacingOrder ? null : [BoxShadow(color: colorScheme.primary.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 6))],
           ),
@@ -785,31 +769,35 @@ class _CheckoutPanel extends StatelessWidget {
   }
 
   Future<void> _placeOrder(BuildContext context) async {
-    final success = await cart.placeOrder();
-    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: const Text("This Feature is currently disabled!"), backgroundColor: Theme.of(context).colorScheme.error));
+    return;
 
-    if (success) {
-      context.read<AuthProvider>().refreshProfile();
-      if (context.mounted) {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text('order_placed'.tr()),
-            content: Text('thank_you_order'.tr()),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  context.go('/orders');
-                },
-                child: Text('ok'.tr()),
-              ),
-            ],
-          ),
-        );
-      }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(cart.error ?? 'error'.tr()), backgroundColor: Theme.of(context).colorScheme.error));
-    }
+    /// ယာယီပိတ်ထားခြင်း
+    // final success = await cart.placeOrder();
+    // if (!context.mounted) return;
+    //
+    // if (success) {
+    //   context.read<AuthProvider>().refreshProfile();
+    //   if (context.mounted) {
+    //     showDialog(
+    //       context: context,
+    //       builder: (context) => AlertDialog(
+    //         title: Text('order_placed'.tr()),
+    //         content: Text('thank_you_order'.tr()),
+    //         actions: [
+    //           TextButton(
+    //             onPressed: () {
+    //               Navigator.of(context).pop();
+    //               context.go('/orders');
+    //             },
+    //             child: Text('ok'.tr()),
+    //           ),
+    //         ],
+    //       ),
+    //     );
+    //   }
+    // } else {
+    //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(cart.error ?? 'error'.tr()), backgroundColor: Theme.of(context).colorScheme.error));
+    // }
   }
 }

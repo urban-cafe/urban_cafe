@@ -32,9 +32,9 @@ class LanguageScreen extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  _LanguageOption(label: 'English', flag: '🇺🇸', isSelected: currentLocale.languageCode == 'en', onTap: () => context.setLocale(const Locale('en')), isFirst: true),
+                  _LanguageOption(label: 'english'.tr(), flag: '🇺🇸', isSelected: currentLocale.languageCode == 'en', onTap: () => context.setLocale(const Locale('en')), isFirst: true),
                   Divider(height: 1, color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
-                  _LanguageOption(label: 'Myanmar', flag: '🇲🇲', isSelected: currentLocale.languageCode == 'my', onTap: () => context.setLocale(const Locale('my')), isLast: true),
+                  _LanguageOption(label: 'myanmar'.tr(), flag: '🇲🇲', isSelected: currentLocale.languageCode == 'my', onTap: () => context.setLocale(const Locale('my')), isLast: true),
                 ],
               ),
             ),

@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -84,13 +85,7 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
 
   void _addToCart() {
     final cart = context.read<CartProvider>();
-    cart.addToCart(
-      widget.item,
-      quantity: _quantity.value,
-      notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
-      selectedVariant: _selectedVariant,
-      selectedAddons: _selectedAddons.toList(),
-    );
+    cart.addToCart(widget.item, quantity: _quantity.value, notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(), selectedVariant: _selectedVariant, selectedAddons: _selectedAddons.toList());
 
     if (!mounted) return;
 
@@ -120,19 +115,41 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
                 stretch: true,
                 backgroundColor: cs.surface,
                 scrolledUnderElevation: 0,
-                leading: Container(
-                  margin: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(color: cs.surface.withValues(alpha: 0.8), shape: BoxShape.circle),
-                  child: IconButton(
-                    icon: Icon(Icons.arrow_back, color: cs.onSurface),
-                    onPressed: () => context.pop(),
+                leading: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: ClipOval(
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: cs.surface.withValues(alpha: 0.3),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: cs.onSurface.withValues(alpha: 0.1)),
+                        ),
+                        child: IconButton(
+                          icon: Icon(Icons.arrow_back, color: cs.onSurface),
+                          onPressed: () => context.pop(),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
                 actions: [
-                  Container(
-                    margin: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(color: cs.surface.withValues(alpha: 0.8), shape: BoxShape.circle),
-                    child: AnimatedHeartButton(isFavorite: isFavorite, size: 24, onTap: () => menuProvider.toggleFavorite(widget.item.id)),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: ClipOval(
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: cs.surface.withValues(alpha: 0.3),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: cs.onSurface.withValues(alpha: 0.1)),
+                          ),
+                          child: AnimatedHeartButton(isFavorite: isFavorite, size: 24, onTap: () => menuProvider.toggleFavorite(widget.item.id)),
+                        ),
+                      ),
+                    ),
                   ),
                 ],
                 flexibleSpace: FlexibleSpaceBar(
@@ -213,10 +230,7 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
 
                         Text("Description", style: theme.textTheme.titleMedium),
                         const SizedBox(height: 12),
-                        Text(
-                          (widget.item.description?.isNotEmpty ?? false) ? widget.item.description! : "No description available.",
-                          style: theme.textTheme.bodyLarge?.copyWith(color: cs.onSurfaceVariant, height: 1.6),
-                        ),
+                        Text((widget.item.description?.isNotEmpty ?? false) ? widget.item.description! : "No description available.", style: theme.textTheme.bodyLarge?.copyWith(color: cs.onSurfaceVariant, height: 1.6)),
 
                         const SizedBox(height: 32),
 
@@ -269,8 +283,8 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
 
                         const SizedBox(height: 32),
 
-                        // QUANTITY & NOTES (hidden for guests & clients)
-                        if (widget.item.isAvailable && (auth.isAdmin || auth.isStaff)) ...[
+                        // QUANTITY & NOTES (hidden for guests only)
+                        if (widget.item.isAvailable && !auth.isGuest) ...[
                           Row(
                             children: [
                               Text("quantity".tr(), style: theme.textTheme.titleMedium),
@@ -325,7 +339,7 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
                           ),
                           const SizedBox(height: 120), // Space for bottom bar
                         ],
-                        if (!auth.isAdmin && !auth.isStaff) const SizedBox(height: 40), // Extra space for guests/clients
+                        if (!auth.isAdmin && !auth.isStaff) const SizedBox(height: 40), // Extra space for guests
                       ],
                     ),
                   ),
@@ -334,8 +348,8 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
             ],
           ),
 
-          // 3. BOTTOM ACTION BAR (hidden for guests & clients)
-          if (widget.item.isAvailable && (auth.isAdmin || auth.isStaff))
+          // 3. BOTTOM ACTION BAR (hidden for guests only)
+          if (widget.item.isAvailable && !auth.isGuest)
             Positioned(
               bottom: 0,
               left: 0,

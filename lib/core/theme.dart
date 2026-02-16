@@ -97,7 +97,7 @@ class AppTheme {
   // DYNAMIC FONT CONFIGURATION
   // ---------------------------------------------------------------------------
   static TextStyle _appFont(TextStyle? textStyle, {FontWeight? fontWeight}) {
-    return GoogleFonts.inter(textStyle: textStyle, fontWeight: fontWeight);
+    return GoogleFonts.roboto(textStyle: textStyle, fontWeight: fontWeight);
   }
 
   static TextTheme _buildTextTheme(TextTheme base) {

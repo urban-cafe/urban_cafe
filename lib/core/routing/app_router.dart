@@ -14,21 +14,21 @@ import 'package:urban_cafe/features/auth/presentation/screens/email_confirmation
 import 'package:urban_cafe/features/auth/presentation/screens/login_screen.dart';
 import 'package:urban_cafe/features/auth/presentation/screens/sign_up_screen.dart';
 import 'package:urban_cafe/features/cart/presentation/screens/cart_screen.dart';
+import 'package:urban_cafe/features/loyalty/presentation/screens/point_settings_screen.dart';
+import 'package:urban_cafe/features/loyalty/presentation/screens/qr_display_screen.dart';
+import 'package:urban_cafe/features/loyalty/presentation/screens/qr_scanner_screen.dart';
 import 'package:urban_cafe/features/menu/domain/entities/menu_item.dart';
 import 'package:urban_cafe/features/menu/presentation/screens/main_menu_screen.dart';
 import 'package:urban_cafe/features/menu/presentation/screens/menu_detail_screen.dart';
 import 'package:urban_cafe/features/menu/presentation/screens/menu_screen.dart';
 import 'package:urban_cafe/features/orders/presentation/screens/client_orders_screen.dart';
-import 'package:urban_cafe/features/loyalty/presentation/screens/point_settings_screen.dart';
-import 'package:urban_cafe/features/loyalty/presentation/screens/qr_display_screen.dart';
-import 'package:urban_cafe/features/loyalty/presentation/screens/qr_scanner_screen.dart';
 import 'package:urban_cafe/features/orders/presentation/screens/staff/staff_orders_screen.dart';
+import 'package:urban_cafe/features/pos/presentation/screens/pos_screen.dart';
 import 'package:urban_cafe/features/profile/presentation/screens/edit_profile_screen.dart';
 import 'package:urban_cafe/features/profile/presentation/screens/favorites_screen.dart';
 import 'package:urban_cafe/features/profile/presentation/screens/language_screen.dart';
 import 'package:urban_cafe/features/profile/presentation/screens/profile_screen.dart';
 import 'package:urban_cafe/features/profile/presentation/screens/theme_screen.dart';
-import 'package:urban_cafe/features/pos/presentation/screens/pos_screen.dart';
 
 /// Builds the [GoRouter] for the app.
 ///

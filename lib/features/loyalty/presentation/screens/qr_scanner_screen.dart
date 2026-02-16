@@ -161,7 +161,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
 
         // Overlay with scan area
         Container(
-          decoration: BoxDecoration(color: Colors.black.withOpacity(0.5)),
+          decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.5)),
           child: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -177,7 +177,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                 const SizedBox(height: 32),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  decoration: BoxDecoration(color: Colors.black.withOpacity(0.6), borderRadius: BorderRadius.circular(16)),
+                  decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.6), borderRadius: BorderRadius.circular(16)),
                   child: Text(
                     'scan_customer_qr'.tr(),
                     style: theme.textTheme.titleMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w500),

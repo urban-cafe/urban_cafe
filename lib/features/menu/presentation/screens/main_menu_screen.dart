@@ -100,7 +100,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                         IconButton(
                           onPressed: () => context.push('/menu?focusSearch=true'),
                           icon: Icon(Icons.search_rounded, color: cs.onSurface),
-                          style: IconButton.styleFrom(backgroundColor: cs.surfaceContainerHighest.withOpacity(0.5), padding: const EdgeInsets.all(12)),
+                          style: IconButton.styleFrom(backgroundColor: cs.surfaceContainerHighest.withValues(alpha: 0.5), padding: const EdgeInsets.all(12)),
                         ),
                       ],
                     ),
@@ -157,7 +157,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                       ),
                       const SizedBox(height: 16),
                       SizedBox(
-                        height: 50,
+                        height: 60,
                         child: Skeletonizer(
                           enabled: provider.mainCategoriesLoading,
                           child: ListView.separated(
@@ -170,7 +170,13 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                                 return const _ShimmerCategoryChip();
                               }
                               final cat = provider.mainCategories[index];
-                              return _CategoryChip(label: cat.name, isSelected: false, index: index, onTap: () => context.go('/menu?initialMainCategory=${Uri.encodeComponent(cat.name)}'));
+                              return _CategoryChip(
+                                label: cat.name,
+                                icon: provider.getIconForCategory(cat.name),
+                                isSelected: false,
+                                index: index,
+                                onTap: () => context.go('/menu?initialMainCategory=${Uri.encodeComponent(cat.name)}'),
+                              );
                             },
                           ),
                         ),
@@ -253,11 +259,12 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
 
 class _CategoryChip extends StatefulWidget {
   final String label;
+  final IconData icon;
   final bool isSelected;
   final VoidCallback? onTap;
   final int index;
 
-  const _CategoryChip({required this.label, required this.isSelected, this.onTap, this.index = 0});
+  const _CategoryChip({required this.label, required this.icon, required this.isSelected, this.onTap, this.index = 0});
 
   @override
   State<_CategoryChip> createState() => _CategoryChipState();
@@ -320,17 +327,33 @@ class _CategoryChipState extends State<_CategoryChip> with SingleTickerProviderS
           onTapCancel: _onTapCancel,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               gradient: widget.isSelected ? LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [cs.primary, cs.primary.withValues(alpha: 0.8)]) : null,
-              color: widget.isSelected ? null : cs.primaryContainer.withValues(alpha: 0.25),
-              borderRadius: BorderRadius.circular(24),
-              border: widget.isSelected ? null : Border.all(color: _isPressed ? cs.primary.withValues(alpha: 0.5) : cs.outlineVariant.withValues(alpha: 0.5), width: 1.5),
-              boxShadow: [if (widget.isSelected) BoxShadow(color: cs.primary.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 6)) else if (_isPressed) BoxShadow(color: cs.primary.withValues(alpha: 0.1), blurRadius: 8, offset: const Offset(0, 4))],
+              color: widget.isSelected ? null : cs.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: widget.isSelected ? Colors.transparent : (_isPressed ? cs.primary.withValues(alpha: 0.5) : cs.outlineVariant.withValues(alpha: 0.2)), width: 1),
+              boxShadow: [
+                if (widget.isSelected)
+                  BoxShadow(color: cs.primary.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 6))
+                else
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 8, offset: const Offset(0, 2)),
+              ],
             ),
-            child: Text(
-              widget.label,
-              style: TextStyle(color: widget.isSelected ? Colors.white : cs.onSurfaceVariant, fontWeight: FontWeight.bold, fontSize: 14),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: widget.isSelected ? Colors.white.withValues(alpha: 0.2) : cs.primaryContainer.withValues(alpha: 0.4), shape: BoxShape.circle),
+                  child: Icon(widget.icon, size: 20, color: widget.isSelected ? Colors.white : cs.primary),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  widget.label,
+                  style: TextStyle(color: widget.isSelected ? Colors.white : cs.onSurface, fontWeight: FontWeight.w600, fontSize: 14),
+                ),
+              ],
             ),
           ),
         ),
@@ -345,9 +368,9 @@ class _ShimmerCategoryChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 80,
-      height: 40,
-      decoration: BoxDecoration(color: Theme.of(context).colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(24)),
+      width: 120,
+      height: 48,
+      decoration: BoxDecoration(color: Theme.of(context).colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(16)),
     );
   }
 }

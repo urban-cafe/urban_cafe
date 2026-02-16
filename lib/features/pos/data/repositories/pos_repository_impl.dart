@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:uuid/uuid.dart';
 import 'package:urban_cafe/core/env.dart';
 import 'package:urban_cafe/core/error/app_exception.dart';
 import 'package:urban_cafe/core/error/failures.dart';
@@ -11,6 +10,7 @@ import 'package:urban_cafe/features/cart/domain/entities/cart_item.dart';
 import 'package:urban_cafe/features/pos/data/datasources/pos_local_datasource.dart';
 import 'package:urban_cafe/features/pos/domain/entities/pos_order.dart';
 import 'package:urban_cafe/features/pos/domain/repositories/pos_repository.dart';
+import 'package:uuid/uuid.dart';
 
 class PosRepositoryImpl implements PosRepository {
   static const String _ordersTable = 'orders';

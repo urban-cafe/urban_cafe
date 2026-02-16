@@ -56,19 +56,7 @@ class _AdminListScreenState extends State<AdminListScreen> {
   }
 
   // --- Dummy Data for Skeleton ---
-  MenuItemEntity get _dummyItem => MenuItemEntity(
-    id: 'dummy',
-    name: 'Loading Item Name ...',
-    description: null,
-    price: 0,
-    categoryId: null,
-    categoryName: 'Category',
-    imagePath: null,
-    imageUrl: null,
-    isAvailable: true,
-    createdAt: DateTime.now(),
-    updatedAt: DateTime.now(),
-  );
+  MenuItemEntity get _dummyItem => MenuItemEntity(id: 'dummy', name: 'Loading Item Name ...', description: null, price: 0, categoryId: null, categoryName: 'Category', imagePath: null, imageUrl: null, isAvailable: true, createdAt: DateTime.now(), updatedAt: DateTime.now());
 
   List<MenuItemEntity> get _loadingItems {
     return List.generate(8, (index) => _dummyItem);
@@ -125,12 +113,7 @@ class _AdminListScreenState extends State<AdminListScreen> {
                   children: [
                     // Search Bar
                     Expanded(
-                      child: CustomSearchBar(
-                        controller: _searchCtrl,
-                        hintText: 'Search menu items...',
-                        onChanged: (v) => menuProvider.setSearch(v),
-                        onSubmitted: (v) => FocusScope.of(context).unfocus(),
-                      ),
+                      child: CustomSearchBar(controller: _searchCtrl, hintText: 'search'.tr(), onChanged: (v) => menuProvider.setSearch(v), onSubmitted: (v) => FocusScope.of(context).unfocus()),
                     ),
                     const SizedBox(width: 12),
                     // Count Chip

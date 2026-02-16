@@ -60,7 +60,7 @@ class _QrDisplayScreenState extends State<QrDisplayScreen> {
                         '$points',
                         style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.bold, color: cs.onPrimaryContainer),
                       ),
-                      Text('loyalty_points_label'.tr(), style: theme.textTheme.bodyMedium?.copyWith(color: cs.onPrimaryContainer.withOpacity(0.7))),
+                      Text('loyalty_points_label'.tr(), style: theme.textTheme.bodyMedium?.copyWith(color: cs.onPrimaryContainer.withValues(alpha: 0.7))),
                     ],
                   ),
                 ),
@@ -94,7 +94,7 @@ class _QrDisplayScreenState extends State<QrDisplayScreen> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(24),
-            boxShadow: [BoxShadow(color: cs.shadow.withOpacity(0.1), blurRadius: 20, offset: const Offset(0, 8))],
+            boxShadow: [BoxShadow(color: cs.shadow.withValues(alpha: 0.1), blurRadius: 20, offset: const Offset(0, 8))],
           ),
           child: QrImageView(
             data: loyalty.currentToken!.token,
@@ -153,11 +153,11 @@ class _QrDisplayScreenState extends State<QrDisplayScreen> {
           decoration: BoxDecoration(color: cs.surfaceContainerHighest, borderRadius: BorderRadius.circular(24)),
           child: Column(
             children: [
-              Icon(Icons.qr_code_2_rounded, size: 80, color: cs.onSurfaceVariant.withOpacity(0.4)),
+              Icon(Icons.qr_code_2_rounded, size: 80, color: cs.onSurfaceVariant.withValues(alpha: 0.4)),
               const SizedBox(height: 16),
               Text('qr_expired'.tr(), style: theme.textTheme.titleMedium?.copyWith(color: cs.onSurfaceVariant)),
               const SizedBox(height: 8),
-              Text('tap_to_generate_new'.tr(), style: theme.textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant.withOpacity(0.7))),
+              Text('tap_to_generate_new'.tr(), style: theme.textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant.withValues(alpha: 0.7))),
             ],
           ),
         ),

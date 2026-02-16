@@ -11,26 +11,22 @@ class CustomSearchBar extends StatelessWidget {
   final VoidCallback? onFilterTap;
   final bool showFilter;
 
-  const CustomSearchBar({super.key, this.controller, required this.hintText, this.readOnly = false, this.onTap, this.onChanged, this.onSubmitted, this.autoFocus = false, this.onFilterTap, this.showFilter = false});
+  const CustomSearchBar({
+    super.key,
+    this.controller,
+    required this.hintText,
+    this.readOnly = false,
+    this.onTap,
+    this.onChanged,
+    this.onSubmitted,
+    this.autoFocus = false,
+    this.onFilterTap,
+    this.showFilter = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-
-    Widget? suffix;
-    if (showFilter) {
-      final icon = Container(
-        margin: const EdgeInsets.all(8),
-        decoration: BoxDecoration(color: cs.primary, borderRadius: BorderRadius.circular(20)),
-        child: const Icon(Icons.tune, color: Colors.white, size: 20),
-      );
-
-      if (onFilterTap != null) {
-        suffix = GestureDetector(onTap: onFilterTap, child: icon);
-      } else {
-        suffix = icon;
-      }
-    }
 
     return TextField(
       controller: controller,
@@ -45,7 +41,6 @@ class CustomSearchBar extends StatelessWidget {
         hintText: hintText,
         hintStyle: TextStyle(color: cs.onSurfaceVariant),
         prefixIcon: Icon(Icons.search_rounded, color: cs.primary),
-        suffixIcon: suffix,
         filled: true,
         fillColor: cs.surfaceContainerHigh.withValues(alpha: 0.5),
         enabledBorder: OutlineInputBorder(

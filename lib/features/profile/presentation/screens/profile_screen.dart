@@ -122,14 +122,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           title: 'account'.tr(),
                           children: [
                             ProfileActionTile(icon: Icons.edit_outlined, title: 'edit_profile'.tr(), subtitle: 'Update your name and details', onTap: () => context.push('/profile/edit')),
-                            // ProfileActionTile(icon: Icons.receipt_long_outlined, title: 'order_history'.tr(), subtitle: 'View past orders', onTap: () => context.push('/profile/orders')),
-                            ProfileActionTile(
-                              icon: Icons.favorite_border_rounded,
-                              title: 'favorites'.tr(),
-                              subtitle: 'Your saved items',
-                              iconColor: Colors.redAccent,
-                              onTap: () => context.push('/profile/favorites'),
-                            ),
+                            ProfileActionTile(icon: Icons.receipt_long_outlined, title: 'order_history'.tr(), subtitle: 'View past orders', onTap: () => context.push('/profile/orders')),
+                            ProfileActionTile(icon: Icons.favorite_border_rounded, title: 'favorites'.tr(), subtitle: 'Your saved items', iconColor: Colors.redAccent, onTap: () => context.push('/profile/favorites')),
                           ],
                         ),
                         const SizedBox(height: 16),
@@ -140,29 +134,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ProfileSectionCard(
                           title: 'management'.tr(),
                           children: [
-                            ProfileActionTile(
-                              icon: Icons.list_alt,
-                              title: 'orders'.tr(),
-                              subtitle: 'View and manage orders',
-                              iconColor: const Color(0xFF1976D2),
-                              onTap: () => context.push(AppRoutes.adminOrders),
-                            ),
-                            if (auth.isStaff)
-                              ProfileActionTile(
-                                icon: Icons.soup_kitchen_outlined,
-                                title: 'kitchen_display'.tr(),
-                                subtitle: 'Manage active orders',
-                                iconColor: Colors.orange,
-                                onTap: () => context.push(AppRoutes.staff),
-                              ),
+                            ProfileActionTile(icon: Icons.list_alt, title: 'orders'.tr(), subtitle: 'View and manage orders', iconColor: const Color(0xFF1976D2), onTap: () => context.push(AppRoutes.adminOrders)),
+                            if (auth.isStaff) ProfileActionTile(icon: Icons.soup_kitchen_outlined, title: 'kitchen_display'.tr(), subtitle: 'Manage active orders', iconColor: Colors.orange, onTap: () => context.push(AppRoutes.staff)),
                             if (auth.isAdmin) ...[
-                              ProfileActionTile(
-                                icon: Icons.dashboard_outlined,
-                                title: 'admin_dashboard'.tr(),
-                                subtitle: 'Manage menu items',
-                                iconColor: Colors.purple,
-                                onTap: () => context.push(AppRoutes.admin),
-                              ),
                               if (auth.isAdmin)
                                 ProfileActionTile(
                                   // Separate check just in case logic changes
@@ -172,13 +146,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   iconColor: Colors.blue,
                                   onTap: () => context.push('${AppRoutes.admin}/analytics'),
                                 ),
-                              ProfileActionTile(
-                                icon: Icons.settings_input_component_outlined,
-                                title: 'point_settings'.tr(),
-                                subtitle: 'Configure loyalty points',
-                                iconColor: Colors.teal,
-                                onTap: () => context.push(AppRoutes.adminPointSettings),
-                              ),
+                              ProfileActionTile(icon: Icons.settings_input_component_outlined, title: 'point_settings'.tr(), subtitle: 'Configure loyalty points', iconColor: Colors.teal, onTap: () => context.push(AppRoutes.adminPointSettings)),
                             ],
                           ],
                         ),
@@ -214,8 +182,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               title: 'Offline Data',
                               children: [
                                 ProfileActionTile(icon: Icons.storage_outlined, title: 'Menu Items', subtitle: itemCount > 0 ? '$itemCount items cached' : 'No items cached', iconColor: Colors.indigo),
-                                if (totalImages > 0 && !isSyncing)
-                                  ProfileActionTile(icon: Icons.image_outlined, title: 'Images', subtitle: '$downloadedImages / $totalImages cached', iconColor: Colors.deepPurple),
+                                if (totalImages > 0 && !isSyncing) ProfileActionTile(icon: Icons.image_outlined, title: 'Images', subtitle: '$downloadedImages / $totalImages cached', iconColor: Colors.deepPurple),
                                 ProfileActionTile(icon: Icons.schedule, title: 'Last Synced', subtitle: lastSyncText, iconColor: Colors.teal),
                                 if (syncError != null)
                                   Padding(
@@ -268,12 +235,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ProfileSectionCard(
                         title: 'settings'.tr(),
                         children: [
-                          ProfileActionTile(
-                            icon: Icons.language,
-                            title: 'language'.tr(),
-                            subtitle: context.locale.languageCode == 'en' ? 'English' : 'Myanmar',
-                            onTap: () => context.push('/profile/language'),
-                          ),
+                          ProfileActionTile(icon: Icons.language, title: 'language'.tr(), subtitle: context.locale.languageCode == 'en' ? 'english'.tr() : 'myanmar'.tr(), onTap: () => context.push('/profile/language')),
                           ProfileActionTile(icon: Icons.brightness_6_outlined, title: 'theme'.tr(), subtitle: 'Change app appearance', onTap: () => context.push('/profile/theme')),
                         ],
                       ),
@@ -325,8 +287,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _confirmSignOut(BuildContext context) async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (ctx) =>
-          ConfirmationDialog(title: 'sign_out'.tr(), message: 'sign_out_confirm'.tr(), confirmText: 'sign_out'.tr(), cancelText: 'cancel'.tr(), onConfirm: () => Navigator.pop(ctx, true)),
+      builder: (ctx) => ConfirmationDialog(title: 'sign_out'.tr(), message: 'sign_out_confirm'.tr(), confirmText: 'sign_out'.tr(), cancelText: 'cancel'.tr(), onConfirm: () => Navigator.pop(ctx, true)),
     );
 
     if (confirm == true && context.mounted) {
