@@ -192,5 +192,8 @@
   "point_conversion_preview": "Every {} MMK spent = {} point(s)",
   "save_settings": "Save Settings",
   "settings_saved": "Settings saved successfully",
-  "error_occurred": "An error occurred"
+  "error_occurred": "An error occurred",
+  "phone_numbers": "Phone Numbers",
+  "contact_us": "Contact Us",
+  "visit_us": "Visit Us"
 }

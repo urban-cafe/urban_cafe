@@ -56,7 +56,6 @@ class _HomePromoBannerState extends State<HomePromoBanner> {
     final double height = Responsive.isCompact(context) ? 200 : 280;
     final screenWidth = MediaQuery.sizeOf(context).width;
     final itemWidth = Responsive.isCompact(context) ? screenWidth * 0.92 : Responsive.width(context, 45); // Increased width
-    final horizontalPadding = (screenWidth - itemWidth) / 2;
 
     return Column(
       children: [
@@ -68,7 +67,6 @@ class _HomePromoBannerState extends State<HomePromoBanner> {
             itemExtent: itemWidth,
             shrinkExtent: itemWidth * 0.9,
             itemSnapping: true,
-            padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
             shape: const RoundedRectangleBorder(), // Disable default shape, handle locally
             backgroundColor: Colors.transparent,
             onTap: (index) => context.push('/detail', extra: widget.items[index]),
@@ -119,11 +117,11 @@ class _PromoCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 10, offset: const Offset(0, 4))],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(24),
         child: Stack(
           fit: StackFit.expand,
           children: [
@@ -149,12 +147,7 @@ class _PromoCard extends StatelessWidget {
             // Gradient Overlay for text readability
             DecoratedBox(
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Colors.black.withValues(alpha: 0.0), Colors.black.withValues(alpha: 0.1), Colors.black.withValues(alpha: 0.8)],
-                  stops: const [0.5, 0.7, 1.0],
-                ),
+                gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.black.withValues(alpha: 0.0), Colors.black.withValues(alpha: 0.1), Colors.black.withValues(alpha: 0.8)], stops: const [0.5, 0.7, 1.0]),
               ),
             ),
 
@@ -166,7 +159,7 @@ class _PromoCard extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: cs.primary, // Solid primary color for pop
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(24),
                   boxShadow: [BoxShadow(color: cs.primary.withValues(alpha: 0.4), blurRadius: 8, offset: const Offset(0, 4))],
                 ),
                 child: const Row(

@@ -198,8 +198,15 @@ class AuthProvider extends ChangeNotifier {
     });
   }
 
-  Future<void> refreshProfile() async {
-    await _loadUserRole();
+  Future<void> refreshUser() async {
+    loading = true;
+    notifyListeners();
+    try {
+      await _loadUserRole();
+    } finally {
+      loading = false;
+      notifyListeners();
+    }
   }
 
   // ─── Email/Password Sign In ───────────────────────────────────

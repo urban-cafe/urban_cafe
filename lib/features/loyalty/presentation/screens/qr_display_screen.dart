@@ -54,27 +54,37 @@ class _QrDisplayScreenState extends State<QrDisplayScreen> {
                   ),
                   child: Column(
                     children: [
-                      Text('your_points'.tr(), style: theme.textTheme.titleMedium?.copyWith(color: cs.onPrimaryContainer)),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('your_points'.tr(), style: theme.textTheme.titleMedium?.copyWith(color: cs.onPrimaryContainer)),
+                          const SizedBox(width: 8),
+                          if (auth.loading)
+                            SizedBox(height: 14, width: 14, child: CircularProgressIndicator(color: cs.onPrimaryContainer, strokeWidth: 2))
+                          else
+                            InkWell(
+                              onTap: () => auth.refreshUser(),
+                              borderRadius: BorderRadius.circular(12),
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), shape: BoxShape.circle),
+                                child: Icon(Icons.refresh_rounded, size: 14, color: cs.onPrimaryContainer),
+                              ),
+                            ),
+                        ],
+                      ),
                       const SizedBox(height: 8),
                       Text(
                         '$points',
                         style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.bold, color: cs.onPrimaryContainer),
                       ),
-                      Text('loyalty_points_label'.tr(), style: theme.textTheme.bodyMedium?.copyWith(color: cs.onPrimaryContainer.withValues(alpha: 0.7))),
                     ],
                   ),
                 ),
                 const SizedBox(height: 32),
 
                 // QR Code section
-                if (loyalty.isGenerating)
-                  const Padding(padding: EdgeInsets.all(48), child: CircularProgressIndicator())
-                else if (loyalty.error != null)
-                  _buildErrorState(cs, theme, loyalty)
-                else if (loyalty.hasActiveToken)
-                  _buildQrCode(cs, theme, loyalty)
-                else
-                  _buildExpiredState(cs, theme, loyalty),
+                if (loyalty.isGenerating) const Padding(padding: EdgeInsets.all(48), child: CircularProgressIndicator()) else if (loyalty.error != null) _buildErrorState(cs, theme, loyalty) else if (loyalty.hasActiveToken) _buildQrCode(cs, theme, loyalty) else _buildExpiredState(cs, theme, loyalty),
               ],
             ),
           ),

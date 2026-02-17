@@ -123,7 +123,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           children: [
                             ProfileActionTile(icon: Icons.edit_outlined, title: 'edit_profile'.tr(), subtitle: 'Update your name and details', onTap: () => context.push('/profile/edit')),
                             ProfileActionTile(icon: Icons.receipt_long_outlined, title: 'order_history'.tr(), subtitle: 'View past orders', onTap: () => context.push('/profile/orders')),
-                            ProfileActionTile(icon: Icons.favorite_border_rounded, title: 'favorites'.tr(), subtitle: 'Your saved items', iconColor: Colors.redAccent, onTap: () => context.push('/profile/favorites')),
                           ],
                         ),
                         const SizedBox(height: 16),
@@ -235,6 +234,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ProfileSectionCard(
                         title: 'settings'.tr(),
                         children: [
+                          ProfileActionTile(icon: Icons.favorite_border_rounded, title: 'favorites'.tr(), subtitle: 'Your saved items', iconColor: Colors.redAccent, onTap: () => context.push('/profile/favorites')),
                           ProfileActionTile(icon: Icons.language, title: 'language'.tr(), subtitle: context.locale.languageCode == 'en' ? 'english'.tr() : 'myanmar'.tr(), onTap: () => context.push('/profile/language')),
                           ProfileActionTile(icon: Icons.brightness_6_outlined, title: 'theme'.tr(), subtitle: 'Change app appearance', onTap: () => context.push('/profile/theme')),
                         ],
@@ -246,6 +246,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         title: 'about'.tr(),
                         children: [
                           ProfileActionTile(icon: Icons.info_outline, title: 'version'.tr(), subtitle: 'v$_version', trailing: const SizedBox.shrink()),
+                          ProfileActionTile(icon: Icons.support_agent_rounded, title: 'Contact Us'.tr(), subtitle: 'Get in touch with us'.tr(), onTap: () => context.push('/profile/contact')),
                           ProfileActionTile(icon: Icons.system_update_outlined, title: 'check_for_updates'.tr(), subtitle: 'check_for_updates_subtitle'.tr(), onTap: () => _checkForUpdates(context)),
                         ],
                       ),

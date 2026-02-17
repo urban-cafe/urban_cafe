@@ -24,6 +24,7 @@ import 'package:urban_cafe/features/menu/presentation/screens/menu_screen.dart';
 import 'package:urban_cafe/features/orders/presentation/screens/client_orders_screen.dart';
 import 'package:urban_cafe/features/orders/presentation/screens/staff/staff_orders_screen.dart';
 import 'package:urban_cafe/features/pos/presentation/screens/pos_screen.dart';
+import 'package:urban_cafe/features/profile/presentation/screens/contact_us_screen.dart';
 import 'package:urban_cafe/features/profile/presentation/screens/edit_profile_screen.dart';
 import 'package:urban_cafe/features/profile/presentation/screens/favorites_screen.dart';
 import 'package:urban_cafe/features/profile/presentation/screens/language_screen.dart';
@@ -96,8 +97,10 @@ class AppRouter {
                   GoRoute(path: 'edit', builder: (context, state) => const EditProfileScreen()),
                   GoRoute(path: 'language', builder: (context, state) => const LanguageScreen()),
                   GoRoute(path: 'theme', builder: (context, state) => const ThemeScreen()),
+                  GoRoute(path: 'theme', builder: (context, state) => const ThemeScreen()),
                   GoRoute(path: 'favorites', builder: (context, state) => const FavoritesScreen()),
                   GoRoute(path: 'orders', builder: (context, state) => const ClientOrdersScreen()),
+                  GoRoute(path: 'contact', builder: (context, state) => const ContactUsScreen()),
                 ],
               ),
             ],
