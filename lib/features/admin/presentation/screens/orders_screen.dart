@@ -34,7 +34,7 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('order_management'.tr()),
+        title: Text('order_management'.tr(), style: Theme.of(context).textTheme.titleMedium),
         actions: [
           // Filter Button (For Date/Payment/Type)
           IconButton(icon: const Icon(Icons.filter_list), onPressed: () => _showAdvancedFilters(context)),

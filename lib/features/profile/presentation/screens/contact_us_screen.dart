@@ -32,7 +32,7 @@ class ContactUsScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: cs.surface,
       appBar: AppBar(
-        title: Text('contact_us'.tr(), style: const TextStyle(fontWeight: FontWeight.bold)),
+        title: Text('contact_us'.tr(), style: Theme.of(context).textTheme.titleMedium),
         centerTitle: true,
         backgroundColor: cs.surface,
         elevation: 0,
@@ -53,11 +53,32 @@ class ContactUsScreen extends StatelessWidget {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               child: Column(
                 children: [
-                  _buildContactTile(context, icon: Icons.phone_rounded, title: 'Phone'.tr(), subtitle: CommonConstants.phoneNumber1, onTap: () => _makePhoneCall(CommonConstants.phoneNumber1), trailing: const Icon(Icons.arrow_forward_ios, size: 16)),
+                  _buildContactTile(
+                    context,
+                    icon: Icons.phone_rounded,
+                    title: 'Phone'.tr(),
+                    subtitle: CommonConstants.phoneNumber1,
+                    onTap: () => _makePhoneCall(CommonConstants.phoneNumber1),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  ),
                   const Divider(height: 1, indent: 56, endIndent: 16),
-                  _buildContactTile(context, icon: Icons.phone_iphone_rounded, title: 'Alternative Phone'.tr(), subtitle: CommonConstants.phoneNumber2, onTap: () => _makePhoneCall(CommonConstants.phoneNumber2), trailing: const Icon(Icons.arrow_forward_ios, size: 16)),
+                  _buildContactTile(
+                    context,
+                    icon: Icons.phone_iphone_rounded,
+                    title: 'Alternative Phone'.tr(),
+                    subtitle: CommonConstants.phoneNumber2,
+                    onTap: () => _makePhoneCall(CommonConstants.phoneNumber2),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  ),
                   const Divider(height: 1, indent: 56, endIndent: 16),
-                  _buildContactTile(context, icon: Icons.phone_iphone_rounded, title: 'Alternative Phone'.tr(), subtitle: CommonConstants.phoneNumber3, onTap: () => _makePhoneCall(CommonConstants.phoneNumber3), trailing: const Icon(Icons.arrow_forward_ios, size: 16)),
+                  _buildContactTile(
+                    context,
+                    icon: Icons.phone_iphone_rounded,
+                    title: 'Alternative Phone'.tr(),
+                    subtitle: CommonConstants.phoneNumber3,
+                    onTap: () => _makePhoneCall(CommonConstants.phoneNumber3),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  ),
                 ],
               ),
             ),
@@ -73,7 +94,15 @@ class ContactUsScreen extends StatelessWidget {
                 children: [
                   _buildContactTile(context, icon: Icons.access_time_filled_rounded, title: 'Opening Hours'.tr(), subtitle: CommonConstants.openTime, iconColor: Colors.orange),
                   const Divider(height: 1, indent: 56, endIndent: 16),
-                  _buildContactTile(context, icon: Icons.location_on_rounded, title: 'Address'.tr(), subtitle: CommonConstants.address, onTap: () => _launchUrl(CommonConstants.googleMapURl), iconColor: Colors.red, trailing: const Icon(Icons.map, size: 20)),
+                  _buildContactTile(
+                    context,
+                    icon: Icons.location_on_rounded,
+                    title: 'Address'.tr(),
+                    subtitle: CommonConstants.address,
+                    onTap: () => _launchUrl(CommonConstants.googleMapURl),
+                    iconColor: Colors.red,
+                    trailing: const Icon(Icons.map, size: 20),
+                  ),
                 ],
               ),
             ),

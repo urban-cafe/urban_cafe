@@ -41,9 +41,9 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
 
   String _getGreeting() {
     final hour = DateTime.now().hour;
-    if (hour < 12) return 'Good Morning';
-    if (hour < 17) return 'Good Afternoon';
-    return 'Good Evening';
+    if (hour < 12) return 'good_morning';
+    if (hour < 17) return 'good_afternoon';
+    return 'good_evening';
   }
 
   @override
@@ -85,7 +85,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                _getGreeting(),
+                                _getGreeting().tr(),
                                 style: theme.textTheme.titleMedium?.copyWith(color: cs.onSurfaceVariant, fontWeight: FontWeight.w500),
                               ),
                               const SizedBox(height: 2),
@@ -170,13 +170,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                                 return const _ShimmerCategoryChip();
                               }
                               final cat = provider.mainCategories[index];
-                              return _CategoryChip(
-                                label: cat.name,
-                                icon: provider.getIconForCategory(cat.name),
-                                isSelected: false,
-                                index: index,
-                                onTap: () => context.go('/menu?initialMainCategory=${Uri.encodeComponent(cat.name)}'),
-                              );
+                              return _CategoryChip(label: cat.name, icon: provider.getIconForCategory(cat.name), isSelected: false, index: index, onTap: () => context.go('/menu?initialMainCategory=${Uri.encodeComponent(cat.name)}'));
                             },
                           ),
                         ),
@@ -333,12 +327,7 @@ class _CategoryChipState extends State<_CategoryChip> with SingleTickerProviderS
               color: widget.isSelected ? null : cs.surface,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: widget.isSelected ? Colors.transparent : (_isPressed ? cs.primary.withValues(alpha: 0.5) : cs.outlineVariant.withValues(alpha: 0.2)), width: 1),
-              boxShadow: [
-                if (widget.isSelected)
-                  BoxShadow(color: cs.primary.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 6))
-                else
-                  BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 8, offset: const Offset(0, 2)),
-              ],
+              boxShadow: [if (widget.isSelected) BoxShadow(color: cs.primary.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 6)) else BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 8, offset: const Offset(0, 2))],
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,

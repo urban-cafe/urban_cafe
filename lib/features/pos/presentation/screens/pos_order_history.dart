@@ -28,7 +28,7 @@ class _PosOrderHistoryState extends State<PosOrderHistory> {
     return Scaffold(
       backgroundColor: cs.surface,
       appBar: AppBar(
-        title: const Text("Today's Sales", style: TextStyle(fontWeight: FontWeight.w700)),
+        title: Text("Today's Sales", style: Theme.of(context).textTheme.titleMedium),
         centerTitle: true,
         backgroundColor: cs.surface,
         foregroundColor: cs.onSurface,

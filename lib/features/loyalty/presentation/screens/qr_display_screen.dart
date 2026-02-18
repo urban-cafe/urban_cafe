@@ -36,7 +36,7 @@ class _QrDisplayScreenState extends State<QrDisplayScreen> {
 
     return Scaffold(
       backgroundColor: cs.surface,
-      appBar: AppBar(title: Text('qr_code'.tr()), centerTitle: true, backgroundColor: cs.surface, scrolledUnderElevation: 0),
+      appBar: AppBar(title: Text('qr_code'.tr(), style: Theme.of(context).textTheme.titleMedium), centerTitle: true, backgroundColor: cs.surface, scrolledUnderElevation: 0),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(

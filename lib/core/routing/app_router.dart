@@ -16,7 +16,7 @@ import 'package:urban_cafe/features/auth/presentation/screens/sign_up_screen.dar
 import 'package:urban_cafe/features/cart/presentation/screens/cart_screen.dart';
 import 'package:urban_cafe/features/loyalty/presentation/screens/point_settings_screen.dart';
 import 'package:urban_cafe/features/loyalty/presentation/screens/qr_display_screen.dart';
-import 'package:urban_cafe/features/loyalty/presentation/screens/qr_scanner_screen.dart';
+import 'package:urban_cafe/features/loyalty/presentation/screens/qr_scan_landing_screen.dart';
 import 'package:urban_cafe/features/menu/domain/entities/menu_item.dart';
 import 'package:urban_cafe/features/menu/presentation/screens/main_menu_screen.dart';
 import 'package:urban_cafe/features/menu/presentation/screens/menu_detail_screen.dart';
@@ -121,9 +121,9 @@ class AppRouter {
           StatefulShellBranch(
             routes: [GoRoute(path: AppRoutes.adminCategories, builder: (context, state) => const AdminCategoryManagerScreen())],
           ),
-          // ── QR Scanner for admin (index 8) ──────────────────
+          // ── QR Scanner landing for admin/staff (index 8) ────
           StatefulShellBranch(
-            routes: [GoRoute(path: AppRoutes.qrScanner, builder: (context, state) => const QrScannerScreen())],
+            routes: [GoRoute(path: AppRoutes.qrScanner, builder: (context, state) => const QrScanLandingScreen())],
           ),
           // ── Staff branch (index 9) ──────────────────────────
           StatefulShellBranch(

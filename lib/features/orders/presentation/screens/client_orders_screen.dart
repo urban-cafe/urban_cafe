@@ -37,7 +37,7 @@ class _ClientOrdersScreenState extends State<ClientOrdersScreen> {
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
-      appBar: AppBar(title: Text('my_orders'.tr()), centerTitle: true, backgroundColor: colorScheme.surface, scrolledUnderElevation: 0),
+      appBar: AppBar(title: Text('my_orders'.tr(), style: Theme.of(context).textTheme.titleMedium), centerTitle: true, backgroundColor: colorScheme.surface, scrolledUnderElevation: 0),
       body: RefreshIndicator(
         onRefresh: () => orderProvider.fetchOrders(),
         child: StreamBuilder<List<OrderEntity>>(

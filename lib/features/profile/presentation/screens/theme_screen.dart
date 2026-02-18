@@ -13,7 +13,7 @@ class ThemeScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
-      appBar: AppBar(title: Text('theme'.tr()), centerTitle: true, backgroundColor: theme.colorScheme.surface, scrolledUnderElevation: 0),
+      appBar: AppBar(title: Text('theme'.tr(), style: Theme.of(context).textTheme.titleMedium), centerTitle: true, backgroundColor: theme.colorScheme.surface, scrolledUnderElevation: 0),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
         child: Column(

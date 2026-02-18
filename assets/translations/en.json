@@ -195,5 +195,10 @@
   "error_occurred": "An error occurred",
   "phone_numbers": "Phone Numbers",
   "contact_us": "Contact Us",
-  "visit_us": "Visit Us"
+  "visit_us": "Visit Us",
+  "scan_qr_description": "Point the camera at the customer's QR code to award loyalty points.",
+  "start_scanning": "Start Scanning",
+  "good_morning" : "Good Morning",
+  "good_afternoon": "Good Afternoon",
+  "good_evening": "Good Evening"
 }

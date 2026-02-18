@@ -77,14 +77,11 @@ class _AdminListScreenState extends State<AdminListScreen> {
       child: Scaffold(
         backgroundColor: colorScheme.surface,
         appBar: AppBar(
-          automaticallyImplyLeading: false,
+          title: Text('admin_dashboard'.tr(), style: theme.textTheme.titleMedium),
           centerTitle: true,
           backgroundColor: colorScheme.surface,
+          foregroundColor: colorScheme.onSurface,
           scrolledUnderElevation: 0,
-          title: Text(
-            'Admin Dashboard',
-            style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, letterSpacing: 0.5, color: colorScheme.onSurface),
-          ),
         ),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: () async {

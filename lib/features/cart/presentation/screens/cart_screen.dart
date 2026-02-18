@@ -22,7 +22,7 @@ class CartScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
-      appBar: AppBar(title: Text('my_cart'.tr()), centerTitle: true, backgroundColor: colorScheme.surface, scrolledUnderElevation: 0),
+      appBar: AppBar(title: Text('my_cart'.tr(), style: Theme.of(context).textTheme.titleMedium), centerTitle: true, backgroundColor: colorScheme.surface, scrolledUnderElevation: 0),
       body: Consumer<CartProvider>(
         builder: (context, cart, child) {
           if (cart.items.isEmpty) {

@@ -11,7 +11,7 @@ class LanguageScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
-      appBar: AppBar(title: Text('language'.tr()), centerTitle: true, backgroundColor: theme.colorScheme.surface, scrolledUnderElevation: 0),
+      appBar: AppBar(title: Text('language'.tr(), style: Theme.of(context).textTheme.titleMedium), centerTitle: true, backgroundColor: theme.colorScheme.surface, scrolledUnderElevation: 0),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
         child: Column(

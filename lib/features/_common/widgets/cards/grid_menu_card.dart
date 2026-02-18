@@ -68,14 +68,7 @@ class _GridMenuCardState extends State<GridMenuCard> with SingleTickerProviderSt
           decoration: BoxDecoration(
             color: isDark ? cs.surfaceContainerHighest : Colors.white,
             borderRadius: AppRadius.xlAll,
-            boxShadow: [
-              BoxShadow(
-                color: _isPressed ? cs.primary.withValues(alpha: 0.15) : Colors.black.withValues(alpha: 0.08),
-                blurRadius: _isPressed ? 20 : 15,
-                offset: Offset(0, _isPressed ? 8 : 6),
-                spreadRadius: _isPressed ? 2 : 0,
-              ),
-            ],
+            boxShadow: [BoxShadow(color: _isPressed ? cs.primary.withValues(alpha: 0.15) : Colors.black.withValues(alpha: 0.08), blurRadius: _isPressed ? 20 : 15, offset: Offset(0, _isPressed ? 8 : 6), spreadRadius: _isPressed ? 2 : 0)],
           ),
           child: ClipRRect(
             borderRadius: AppRadius.xlAll,
@@ -125,29 +118,29 @@ class _GridMenuCardState extends State<GridMenuCard> with SingleTickerProviderSt
                       ),
 
                       // Rating Badge with glassmorphism
-                      Positioned(
-                        top: 10,
-                        left: 10,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.5),
-                            borderRadius: AppRadius.mdAll,
-                            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-                          ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.star_rounded, color: Colors.amber, size: 14),
-                              SizedBox(width: 4),
-                              Text(
-                                '4.8',
-                                style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                      // Positioned(
+                      //   top: 10,
+                      //   left: 10,
+                      //   child: Container(
+                      //     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      //     decoration: BoxDecoration(
+                      //       color: Colors.black.withValues(alpha: 0.5),
+                      //       borderRadius: AppRadius.mdAll,
+                      //       border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                      //     ),
+                      //     child: const Row(
+                      //       mainAxisSize: MainAxisSize.min,
+                      //       children: [
+                      //         Icon(Icons.star_rounded, color: Colors.amber, size: 14),
+                      //         SizedBox(width: 4),
+                      //         Text(
+                      //           '4.8',
+                      //           style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                      //         ),
+                      //       ],
+                      //     ),
+                      //   ),
+                      // ),
 
                       // Popular badge
                       if (widget.item.isMostPopular)

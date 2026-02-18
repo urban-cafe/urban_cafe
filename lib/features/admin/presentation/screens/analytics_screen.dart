@@ -36,7 +36,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('analytics_dashboard'.tr()),
+        title: Text('analytics_dashboard'.tr(), style: Theme.of(context).textTheme.titleMedium),
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop()),
       ),
       body: Builder(

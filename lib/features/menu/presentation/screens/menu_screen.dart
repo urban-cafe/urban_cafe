@@ -1,14 +1,13 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:urban_cafe/core/animations.dart' hide ShimmerEffect;
+import 'package:urban_cafe/features/_common/widgets/cards/grid_menu_card.dart';
 import 'package:urban_cafe/features/_common/widgets/cards/menu_card.dart';
 import 'package:urban_cafe/features/_common/widgets/inputs/custom_search_bar.dart';
 import 'package:urban_cafe/features/_common/widgets/main_scaffold.dart';
-import 'package:urban_cafe/features/auth/presentation/providers/auth_provider.dart';
 import 'package:urban_cafe/features/cart/presentation/providers/cart_provider.dart';
 import 'package:urban_cafe/features/menu/domain/entities/menu_item.dart';
 import 'package:urban_cafe/features/menu/presentation/providers/menu_provider.dart';
@@ -83,7 +82,19 @@ class _MenuScreenState extends State<MenuScreen> {
     super.dispose();
   }
 
-  MenuItemEntity get _dummyItem => MenuItemEntity(id: 'dummy', name: 'Loading...', description: '...', price: 0, categoryId: null, categoryName: '', imagePath: null, imageUrl: null, isAvailable: true, createdAt: DateTime.now(), updatedAt: DateTime.now());
+  MenuItemEntity get _dummyItem => MenuItemEntity(
+    id: 'dummy',
+    name: 'Loading...',
+    description: '...',
+    price: 0,
+    categoryId: null,
+    categoryName: '',
+    imagePath: null,
+    imageUrl: null,
+    isAvailable: true,
+    createdAt: DateTime.now(),
+    updatedAt: DateTime.now(),
+  );
 
   String get _title {
     if (widget.filter == 'popular') return 'most_popular'.tr();
@@ -121,7 +132,13 @@ class _MenuScreenState extends State<MenuScreen> {
               child: Row(
                 children: [
                   Expanded(
-                    child: CustomSearchBar(controller: _searchCtrl, hintText: 'search'.tr(), onChanged: (v) => context.read<MenuProvider>().setSearch(v), onSubmitted: (v) => FocusScope.of(context).unfocus(), showFilter: true),
+                    child: CustomSearchBar(
+                      controller: _searchCtrl,
+                      hintText: 'search'.tr(),
+                      onChanged: (v) => context.read<MenuProvider>().setSearch(v),
+                      onSubmitted: (v) => FocusScope.of(context).unfocus(),
+                      showFilter: true,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   // View Toggle Button
@@ -253,30 +270,15 @@ class _MenuScreenState extends State<MenuScreen> {
                                   ? GridView.builder(
                                       key: const ValueKey('grid_view'),
                                       controller: _scrollCtrl,
-                                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-                                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                        crossAxisCount: 2,
-                                        childAspectRatio: 0.75, // Adjust for card height
-                                        mainAxisSpacing: 16,
-                                        crossAxisSpacing: 16,
-                                      ),
+                                      padding: const EdgeInsets.fromLTRB(12, 8, 12, 32),
+                                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, childAspectRatio: 0.72, mainAxisSpacing: 12, crossAxisSpacing: 12),
                                       itemCount: displayItems.length + (provider.loadingMore ? 1 : 0),
                                       itemBuilder: (context, index) {
                                         if (index == displayItems.length) {
-                                          return Skeletonizer(enabled: true, child: _MenuGridItem(item: _dummyItem));
+                                          return Skeletonizer(enabled: true, child: GridMenuCard(item: _dummyItem));
                                         }
                                         final item = displayItems[index];
-                                        return _MenuGridItem(
-                                          item: item,
-                                          index: index,
-                                          onTap: isLoadingInitial
-                                              ? null
-                                              : () {
-                                                  FocusScope.of(context).unfocus();
-                                                  context.push('/detail', extra: item);
-                                                },
-                                          onAddToCart: isLoadingInitial || !item.isAvailable ? null : () => context.read<CartProvider>().addToCart(item),
-                                        );
+                                        return GridMenuCard(item: item, index: index);
                                       },
                                     )
                                   : ListView.separated(
@@ -316,136 +318,14 @@ class _MenuScreenState extends State<MenuScreen> {
         floatingActionButton: Consumer<CartProvider>(
           builder: (context, cart, child) {
             if (cart.items.isEmpty) return const SizedBox.shrink();
-            return FloatingActionButton.extended(onPressed: () => context.push('/cart'), backgroundColor: colorScheme.primary, foregroundColor: colorScheme.onPrimary, icon: const Icon(Icons.shopping_cart), label: Text('${cart.itemCount} items'));
+            return FloatingActionButton.extended(
+              onPressed: () => context.push('/cart'),
+              backgroundColor: colorScheme.primary,
+              foregroundColor: colorScheme.onPrimary,
+              icon: const Icon(Icons.shopping_cart),
+              label: Text('${cart.itemCount} items'),
+            );
           },
-        ),
-      ),
-    );
-  }
-}
-
-class _MenuGridItem extends StatelessWidget {
-  final MenuItemEntity item;
-  final VoidCallback? onTap;
-  final VoidCallback? onAddToCart;
-  final int index;
-
-  const _MenuGridItem({required this.item, this.onTap, this.onAddToCart, this.index = 0});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final cs = theme.colorScheme;
-    final auth = context.watch<AuthProvider>();
-    final priceFormat = NumberFormat.currency(symbol: '', decimalDigits: 0);
-    final isFavorite = context.select<MenuProvider, bool>((p) => p.favoriteIds.contains(item.id));
-    final isGuest = auth.isGuest;
-
-    return ScaleTapWidget(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: cs.surface,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [BoxShadow(color: cs.shadow.withValues(alpha: 0.08), blurRadius: 10, offset: const Offset(0, 4))],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Image with Favorite
-            Expanded(
-              flex: 5,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  ClipRRect(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-                    child: item.imageUrl != null
-                        ? CachedNetworkImage(
-                            imageUrl: item.imageUrl!,
-                            fit: BoxFit.cover,
-                            placeholder: (_, _) => Container(color: cs.surfaceContainerHighest),
-                            errorWidget: (_, _, _) => Icon(Icons.fastfood, color: cs.onSurfaceVariant),
-                          )
-                        : Container(
-                            color: cs.surfaceContainerHighest,
-                            child: Icon(Icons.restaurant, color: cs.onSurfaceVariant),
-                          ),
-                  ),
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: GestureDetector(
-                      onTap: () => context.read<MenuProvider>().toggleFavorite(item.id),
-                      child: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.8), shape: BoxShape.circle),
-                        child: Icon(isFavorite ? Icons.favorite : Icons.favorite_border, color: isFavorite ? Colors.red : cs.onSurface, size: 18),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Content
-            Expanded(
-              flex: 4,
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item.name,
-                          style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        if (item.categoryName != null) ...[
-                          const SizedBox(height: 2),
-                          Text(
-                            item.categoryName!,
-                            style: theme.textTheme.bodySmall?.copyWith(color: cs.primary, fontSize: 10),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ],
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          priceFormat.format(item.price),
-                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: cs.primary),
-                        ),
-                        if (!item.isAvailable || onAddToCart == null)
-                          const SizedBox.shrink()
-                        else if (!isGuest)
-                          GestureDetector(
-                            onTap: onAddToCart,
-                            child: Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: cs.primary,
-                                shape: BoxShape.circle,
-                                boxShadow: [BoxShadow(color: cs.primary.withValues(alpha: 0.4), blurRadius: 6, offset: const Offset(0, 2))],
-                              ),
-                              child: const Icon(Icons.add, size: 16, color: Colors.white),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
         ),
       ),
     );

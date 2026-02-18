@@ -37,7 +37,7 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        title: Text('live_kitchen_orders'.tr()),
+        title: Text('live_kitchen_orders'.tr(), style: Theme.of(context).textTheme.titleMedium),
         centerTitle: true,
         backgroundColor: Theme.of(context).colorScheme.surface,
         scrolledUnderElevation: 0,

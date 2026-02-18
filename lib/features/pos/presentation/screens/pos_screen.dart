@@ -75,11 +75,12 @@ class _PosScreenState extends State<PosScreen> {
     final posProvider = context.watch<PosProvider>();
     final cs = Theme.of(context).colorScheme;
     final isWide = _isWide(context);
+    final theme = Theme.of(context);
 
     return Scaffold(
       backgroundColor: cs.surface,
       appBar: AppBar(
-        title: const Text('Point of Sale', style: TextStyle(fontWeight: FontWeight.w700)),
+        title: Text('Point of Sale', style: theme.textTheme.titleMedium),
         centerTitle: true,
         backgroundColor: cs.surface,
         foregroundColor: cs.onSurface,
