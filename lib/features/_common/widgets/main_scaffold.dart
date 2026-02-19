@@ -150,15 +150,41 @@ class _MainScaffoldState extends State<MainScaffold> {
           ],
         ),
 
-        // Bottom NavigationBar for compact screens - with animated height
+        // Bottom NavigationBar for compact screens - with animated height collapse
         bottomNavigationBar: sizeClass == WindowSizeClass.compact
             ? AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 curve: Curves.easeOutCubic,
-                height: _isNavVisible ? null : 0,
+                height: _isNavVisible ? 62 + MediaQuery.of(context).padding.bottom : 0,
                 clipBehavior: Clip.antiAlias,
                 decoration: const BoxDecoration(),
-                child: NavigationBar(selectedIndex: selectedIndex, onDestinationSelected: (index) => _onNavTapped(index, auth), destinations: destinations),
+                child: NavigationBarTheme(
+                  data: NavigationBarThemeData(
+                    height: 62,
+                    backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
+                    indicatorShape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(24))),
+                    indicatorColor: Theme.of(context).colorScheme.primaryContainer,
+                    iconTheme: WidgetStateProperty.resolveWith((states) {
+                      final selected = states.contains(WidgetState.selected);
+                      return IconThemeData(size: 22, color: selected ? Theme.of(context).colorScheme.onPrimaryContainer : Theme.of(context).colorScheme.onSurfaceVariant);
+                    }),
+                    labelTextStyle: WidgetStateProperty.resolveWith((states) {
+                      final selected = states.contains(WidgetState.selected);
+                      return TextStyle(
+                        fontSize: 10,
+                        fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                        color: selected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant,
+                      );
+                    }),
+                  ),
+                  child: NavigationBar(
+                    height: 62,
+                    selectedIndex: selectedIndex,
+                    onDestinationSelected: (index) => _onNavTapped(index, auth),
+                    destinations: destinations,
+                    labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+                  ),
+                ),
               )
             : null,
       ),
