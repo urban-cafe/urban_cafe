@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 class MenuItemBadges extends StatelessWidget {
@@ -14,8 +15,9 @@ class MenuItemBadges extends StatelessWidget {
       spacing: 6,
       runSpacing: 4,
       children: [
-        if (isMostPopular) _Badge(text: 'Most Popular', backgroundColor: Colors.amber.shade100, textColor: Colors.brown.shade800, icon: Icons.star_rounded, iconColor: Colors.brown.shade800),
-        if (isWeekendSpecial) _Badge(text: 'Weekend Special', backgroundColor: Colors.brown.shade100, textColor: Colors.brown.shade900, icon: Icons.local_offer_rounded, iconColor: Colors.brown.shade700),
+        if (isMostPopular) _Badge(text: 'most_popular'.tr(), backgroundColor: Colors.amber.shade100, textColor: Colors.brown.shade800, icon: Icons.star_rounded, iconColor: Colors.brown.shade800),
+        if (isWeekendSpecial)
+          _Badge(text: 'weekend_specials'.tr(), backgroundColor: Colors.brown.shade100, textColor: Colors.brown.shade900, icon: Icons.local_offer_rounded, iconColor: Colors.brown.shade700),
       ],
     );
   }
@@ -42,11 +44,11 @@ class _Badge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: iconColor),
+          Icon(icon, size: 8, color: iconColor),
           const SizedBox(width: 4),
           Text(
             text,
-            style: TextStyle(color: textColor, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.3),
+            style: TextStyle(color: textColor, fontSize: 8, fontWeight: FontWeight.bold, letterSpacing: 0.3),
           ),
         ],
       ),

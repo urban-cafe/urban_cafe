@@ -22,7 +22,12 @@ class CartScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
-      appBar: AppBar(title: Text('my_cart'.tr(), style: Theme.of(context).textTheme.titleMedium), centerTitle: true, backgroundColor: colorScheme.surface, scrolledUnderElevation: 0),
+      appBar: AppBar(
+        title: Text('my_cart'.tr(), style: Theme.of(context).textTheme.titleMedium),
+        centerTitle: true,
+        backgroundColor: colorScheme.surface,
+        scrolledUnderElevation: 0,
+      ),
       body: Consumer<CartProvider>(
         builder: (context, cart, child) {
           if (cart.items.isEmpty) {
@@ -164,7 +169,8 @@ class CartScreen extends StatelessWidget {
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                     if (item.selectedVariant != null) Text('Size: ${item.selectedVariant!.name}', style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant)),
-                                    if (item.selectedAddons.isNotEmpty) Text('Add-ons: ${item.selectedAddons.map((e) => e.name).join(', ')}', style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant)),
+                                    if (item.selectedAddons.isNotEmpty)
+                                      Text('Add-ons: ${item.selectedAddons.map((e) => e.name).join(', ')}', style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant)),
                                     if (item.notes != null && item.notes!.isNotEmpty) ...[
                                       const SizedBox(height: 4),
                                       Text(
@@ -324,7 +330,12 @@ class _CompactCheckoutBarState extends State<_CompactCheckoutBar> {
                                       style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.brown),
                                     ),
                                   ),
-                                  Switch(value: cart.usePoints, activeTrackColor: Colors.amber.withValues(alpha: 0.5), thumbColor: WidgetStateProperty.all(Colors.amber), onChanged: (value) => cart.toggleUsePoints(value, auth.loyaltyPoints)),
+                                  Switch(
+                                    value: cart.usePoints,
+                                    activeTrackColor: Colors.amber.withValues(alpha: 0.5),
+                                    thumbColor: WidgetStateProperty.all(Colors.amber),
+                                    onChanged: (value) => cart.toggleUsePoints(value, auth.loyaltyPoints),
+                                  ),
                                 ],
                               ),
                             ),
@@ -384,7 +395,11 @@ class _CompactCheckoutBarState extends State<_CompactCheckoutBar> {
                     width: double.infinity,
                     child: Container(
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: cart.isPlacingOrder ? [colorScheme.outline, colorScheme.outline] : [colorScheme.primary, colorScheme.primary.withValues(alpha: 0.85)]),
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: cart.isPlacingOrder ? [colorScheme.outline, colorScheme.outline] : [colorScheme.primary, colorScheme.primary.withValues(alpha: 0.85)],
+                        ),
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: cart.isPlacingOrder ? null : [BoxShadow(color: colorScheme.primary.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 4))],
                       ),
@@ -425,7 +440,7 @@ class _CompactCheckoutBarState extends State<_CompactCheckoutBar> {
   }
 
   Future<void> _placeOrder(BuildContext context) async {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: const Text("This Feature is currently disabled!"), backgroundColor: Theme.of(context).colorScheme.error));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: const Text("This Feature will be available Soon!"), backgroundColor: Theme.of(context).colorScheme.error));
     return;
 
     /// ယာယီပိတ်ထားခြင်း
@@ -570,7 +585,8 @@ class _CartItemsList extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                         if (item.selectedVariant != null) Text('Size: ${item.selectedVariant!.name}', style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant)),
-                        if (item.selectedAddons.isNotEmpty) Text('Add-ons: ${item.selectedAddons.map((e) => e.name).join(', ')}', style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant)),
+                        if (item.selectedAddons.isNotEmpty)
+                          Text('Add-ons: ${item.selectedAddons.map((e) => e.name).join(', ')}', style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant)),
                         if (item.notes != null && item.notes!.isNotEmpty) ...[
                           const SizedBox(height: 4),
                           Text(
@@ -671,7 +687,12 @@ class _CheckoutPanel extends StatelessWidget {
                     ],
                   ),
                 ),
-                Switch(value: cart.usePoints, activeTrackColor: Colors.amber.withValues(alpha: 0.5), thumbColor: WidgetStateProperty.all(Colors.amber), onChanged: (value) => cart.toggleUsePoints(value, auth.loyaltyPoints)),
+                Switch(
+                  value: cart.usePoints,
+                  activeTrackColor: Colors.amber.withValues(alpha: 0.5),
+                  thumbColor: WidgetStateProperty.all(Colors.amber),
+                  onChanged: (value) => cart.toggleUsePoints(value, auth.loyaltyPoints),
+                ),
               ],
             ),
           ),
@@ -734,7 +755,11 @@ class _CheckoutPanel extends StatelessWidget {
         // Place Order Button
         Container(
           decoration: BoxDecoration(
-            gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: cart.isPlacingOrder ? [colorScheme.outline, colorScheme.outline] : [colorScheme.primary, colorScheme.primary.withValues(alpha: 0.85)]),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: cart.isPlacingOrder ? [colorScheme.outline, colorScheme.outline] : [colorScheme.primary, colorScheme.primary.withValues(alpha: 0.85)],
+            ),
             borderRadius: BorderRadius.circular(16),
             boxShadow: cart.isPlacingOrder ? null : [BoxShadow(color: colorScheme.primary.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 6))],
           ),

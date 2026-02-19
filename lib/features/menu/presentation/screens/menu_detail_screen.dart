@@ -85,7 +85,13 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
 
   void _addToCart() {
     final cart = context.read<CartProvider>();
-    cart.addToCart(widget.item, quantity: _quantity.value, notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(), selectedVariant: _selectedVariant, selectedAddons: _selectedAddons.toList());
+    cart.addToCart(
+      widget.item,
+      quantity: _quantity.value,
+      notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
+      selectedVariant: _selectedVariant,
+      selectedAddons: _selectedAddons.toList(),
+    );
 
     if (!mounted) return;
 
@@ -110,7 +116,7 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
             slivers: [
               // 1. IMMERSIVE APP BAR
               SliverAppBar(
-                expandedHeight: 300,
+                expandedHeight: 400,
                 pinned: true,
                 stretch: true,
                 backgroundColor: cs.surface,
@@ -196,7 +202,7 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
                             Expanded(
                               child: Text(
                                 widget.item.name,
-                                style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold, color: cs.onSurface),
+                                style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: cs.onSurface),
                               ),
                             ),
                             const SizedBox(width: 16),
@@ -230,7 +236,10 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
 
                         Text("Description", style: theme.textTheme.titleMedium),
                         const SizedBox(height: 12),
-                        Text((widget.item.description?.isNotEmpty ?? false) ? widget.item.description! : "No description available.", style: theme.textTheme.bodyLarge?.copyWith(color: cs.onSurfaceVariant, height: 1.6)),
+                        Text(
+                          (widget.item.description?.isNotEmpty ?? false) ? widget.item.description! : "No description available.",
+                          style: theme.textTheme.bodyLarge?.copyWith(color: cs.onSurfaceVariant, height: 1.6),
+                        ),
 
                         const SizedBox(height: 32),
 

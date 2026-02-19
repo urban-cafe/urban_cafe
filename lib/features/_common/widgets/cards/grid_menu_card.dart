@@ -1,8 +1,14 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:urban_cafe/core/theme.dart';
+import 'package:urban_cafe/core/utils.dart';
+import 'package:urban_cafe/features/_common/widgets/badges/menu_item_badges.dart';
+import 'package:urban_cafe/features/auth/presentation/providers/auth_provider.dart';
+import 'package:urban_cafe/features/cart/presentation/providers/cart_provider.dart';
 import 'package:urban_cafe/features/menu/domain/entities/menu_item.dart';
 
 class GridMenuCard extends StatefulWidget {
@@ -49,12 +55,24 @@ class _GridMenuCardState extends State<GridMenuCard> with SingleTickerProviderSt
     _controller.reverse();
   }
 
+  void _addToCart() {
+    // Navigate to detail if item has variants/addons — user must choose
+    if (widget.item.variants.isNotEmpty || widget.item.addons.isNotEmpty) {
+      context.push('/detail', extra: widget.item);
+      return;
+    }
+    context.read<CartProvider>().addToCart(widget.item);
+    showAppSnackBar(context, 'Added to Cart Successfully');
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final priceFormat = NumberFormat.currency(symbol: '', decimalDigits: 0);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final auth = context.watch<AuthProvider>();
+    final isGuest = auth.isGuest;
 
     return AnimatedBuilder(
       animation: _scaleAnimation,
@@ -68,7 +86,13 @@ class _GridMenuCardState extends State<GridMenuCard> with SingleTickerProviderSt
           decoration: BoxDecoration(
             color: isDark ? cs.surfaceContainerHighest : Colors.white,
             borderRadius: AppRadius.xlAll,
-            boxShadow: [BoxShadow(color: _isPressed ? cs.primary.withValues(alpha: 0.15) : Colors.black.withValues(alpha: 0.08), blurRadius: _isPressed ? 20 : 15, offset: Offset(0, _isPressed ? 8 : 6), spreadRadius: _isPressed ? 2 : 0)],
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: _isPressed ? 0.06 : 0.05),
+                blurRadius: _isPressed ? 10 : 8,
+                offset: Offset(0, _isPressed ? 3 : 2),
+              ),
+            ],
           ),
           child: ClipRRect(
             borderRadius: AppRadius.xlAll,
@@ -83,7 +107,7 @@ class _GridMenuCardState extends State<GridMenuCard> with SingleTickerProviderSt
                     children: [
                       // Image with gradient overlay
                       Hero(
-                        tag: 'menu-grid-${widget.item.id}',
+                        tag: 'menu-grid-${widget.item.id}-${widget.index}',
                         child: Container(
                           decoration: BoxDecoration(color: cs.surfaceContainerHighest),
                           child: widget.item.imageUrl != null
@@ -104,100 +128,71 @@ class _GridMenuCardState extends State<GridMenuCard> with SingleTickerProviderSt
                         ),
                       ),
 
-                      // Gradient overlay for depth
-                      Positioned(
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        height: 40,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.transparent, Colors.black.withValues(alpha: 0.1)]),
-                          ),
-                        ),
-                      ),
-
-                      // Rating Badge with glassmorphism
-                      // Positioned(
-                      //   top: 10,
-                      //   left: 10,
-                      //   child: Container(
-                      //     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      //     decoration: BoxDecoration(
-                      //       color: Colors.black.withValues(alpha: 0.5),
-                      //       borderRadius: AppRadius.mdAll,
-                      //       border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-                      //     ),
-                      //     child: const Row(
-                      //       mainAxisSize: MainAxisSize.min,
-                      //       children: [
-                      //         Icon(Icons.star_rounded, color: Colors.amber, size: 14),
-                      //         SizedBox(width: 4),
-                      //         Text(
-                      //           '4.8',
-                      //           style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
-                      //         ),
-                      //       ],
-                      //     ),
-                      //   ),
-                      // ),
-
                       // Popular badge
-                      if (widget.item.isMostPopular)
-                        Positioned(
-                          top: 10,
-                          right: 10,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(colors: [cs.primary, cs.tertiary]),
-                              borderRadius: AppRadius.mdAll,
-                            ),
-                            child: const Text(
-                              '🔥 HOT',
-                              style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        ),
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: MenuItemBadges(isMostPopular: widget.item.isMostPopular, isWeekendSpecial: widget.item.isWeekendSpecial),
+                      ),
                     ],
                   ),
                 ),
 
                 // CONTENT SECTION
-                Expanded(
-                  flex: 2,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Name
-                        Text(
-                          widget.item.name,
-                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, fontSize: 15, height: 1.2),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Name
+                      Text(
+                        widget.item.name,
+                        style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, height: 1.2),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
 
-                        // Category
-                        Text(widget.item.categoryName ?? 'Coffee', style: theme.textTheme.bodySmall?.copyWith(color: cs.outline, fontSize: 12)),
+                      // Category
+                      Text(
+                        widget.item.categoryName ?? 'Coffee',
+                        style: theme.textTheme.labelSmall?.copyWith(color: cs.outline),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 6),
 
-                        const Spacer(),
-
-                        // Price & Add Button Row
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Text(
-                              priceFormat.format(widget.item.price),
-                              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: cs.primary, fontSize: 16),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            priceFormat.format(widget.item.price),
+                            style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, fontSize: 18, color: cs.primary),
+                          ),
+                          const Spacer(),
+                          if (!widget.item.isAvailable)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(color: cs.errorContainer, borderRadius: AppRadius.smAll),
+                              child: Text(
+                                'Sold Out',
+                                style: TextStyle(color: cs.onErrorContainer, fontWeight: FontWeight.bold, fontSize: 11),
+                              ),
+                            )
+                          else if (!isGuest)
+                            GestureDetector(
+                              onTap: _addToCart,
+                              child: Container(
+                                width: 32,
+                                height: 32,
+                                decoration: BoxDecoration(color: cs.primaryContainer, shape: BoxShape.circle),
+                                child: Icon(Icons.add, size: 17, color: cs.onPrimaryContainer),
+                              ),
                             ),
-                          ],
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
               ],

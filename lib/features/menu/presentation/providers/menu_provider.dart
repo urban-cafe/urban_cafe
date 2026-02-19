@@ -51,6 +51,7 @@ class MenuProvider extends ChangeNotifier {
   int _page = 1;
   final int _pageSize = 10;
   bool hasMore = true;
+  bool _isInitializing = false; // Guard against duplicate concurrent init calls
 
   // Favorites
   Set<String> _favoriteIds = {};
@@ -154,16 +155,27 @@ class MenuProvider extends ChangeNotifier {
   }
 
   // New: Load Home Screen Data (Popular & Specials) with caching
-  Future<void> loadHomeData() async {
+  Future<void> loadHomeData({bool forceRefresh = false}) async {
     loading = true;
     notifyListeners();
+
+    // Invalidate stale cache when forced (e.g. pull-to-refresh)
+    if (forceRefresh) {
+      _cache.remove(CacheKeys.popularItems);
+      _cache.remove(CacheKeys.specialItems);
+      _cache.remove(CacheKeys.mainCategories);
+      popularItems = []; // Clear in-memory so isEmpty → skeleton shows
+      specialItems = []; // Clear in-memory so isEmpty → skeleton shows
+      mainCategories = []; // Reset so loadMainCategories() refetches
+      _mainIdCache.clear();
+    }
 
     // 1. Check Popular Items cache first
     final cachedPopular = _cache.get<List<MenuItemEntity>>(CacheKeys.popularItems);
     if (cachedPopular != null) {
       popularItems = cachedPopular;
     } else {
-      final popResult = await getMenuItemsUseCase(const GetMenuItemsParams(page: 1, pageSize: 5, isMostPopular: true));
+      final popResult = await getMenuItemsUseCase(const GetMenuItemsParams(page: 1, pageSize: 8, isMostPopular: true));
       popResult.fold((f) => debugPrint('Error loading popular: ${f.message}'), (list) {
         popularItems = list;
         _cache.set(CacheKeys.popularItems, list, ttl: CacheService.mediumTtl);
@@ -205,8 +217,29 @@ class MenuProvider extends ChangeNotifier {
     };
   }
 
+  // ── MENU SCREEN LIFECYCLE ─────────────────────────────────────────────────
+
+  /// Called by MenuScreen.dispose() so that re-entering the screen always
+  /// shows fresh data instead of leftover state from the previous visit.
+  void resetMenuState() {
+    items = [];
+    subCategories = [];
+    _currentCategoryId = null;
+    _currentCategoryIds = null;
+    _searchQuery = '';
+    hasMore = true;
+    _page = 1;
+    error = null;
+    loading = false;
+    loadingMore = false;
+    _isInitializing = false;
+    // Intentionally NOT calling notifyListeners() — screen is being disposed.
+  }
+
   // Optimized Initializer
   Future<void> initForMainCategory(String mainCategoryName) async {
+    if (_isInitializing) return; // Prevent duplicate concurrent calls
+    _isInitializing = true;
     // Only clear items if we are switching to a NEW main category
     // This prevents flashing if we just re-enter the same screen
     items = [];
@@ -271,11 +304,15 @@ class MenuProvider extends ChangeNotifier {
       error = e.toString();
       loading = false;
       notifyListeners();
+    } finally {
+      _isInitializing = false;
     }
   }
 
   // Initializer for Filtered Views (Popular / Special)
   Future<void> initForFilter(String filterType) async {
+    if (_isInitializing) return;
+    _isInitializing = true;
     items = [];
     subCategories = [];
     _currentCategoryId = null;
@@ -312,6 +349,7 @@ class MenuProvider extends ChangeNotifier {
       error = e.toString();
     } finally {
       loading = false;
+      _isInitializing = false;
       notifyListeners();
     }
   }

@@ -3,13 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
-import 'package:urban_cafe/core/animations.dart';
+import 'package:urban_cafe/core/animations.dart' hide ShimmerEffect;
 import 'package:urban_cafe/core/responsive.dart';
 import 'package:urban_cafe/features/_common/widgets/cards/grid_menu_card.dart';
 import 'package:urban_cafe/features/_common/widgets/cards/home_promo_banner.dart';
 
 import 'package:urban_cafe/features/_common/widgets/main_scaffold.dart';
 import 'package:urban_cafe/features/auth/presentation/providers/auth_provider.dart';
+import 'package:urban_cafe/features/menu/domain/entities/menu_item.dart';
 import 'package:urban_cafe/features/menu/presentation/providers/menu_provider.dart';
 
 class MainMenuScreen extends StatefulWidget {
@@ -46,6 +47,20 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     return 'good_evening';
   }
 
+  MenuItemEntity get _dummyItem => MenuItemEntity(
+    id: 'dummy',
+    name: 'Loading...',
+    description: '...',
+    price: 9000,
+    categoryId: null,
+    categoryName: 'Coffee',
+    imagePath: null,
+    imageUrl: null,
+    isAvailable: true,
+    createdAt: DateTime.now(),
+    updatedAt: DateTime.now(),
+  );
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -63,7 +78,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
       backgroundColor: cs.surface,
       body: SafeArea(
         child: RefreshIndicator(
-          onRefresh: () => provider.loadHomeData(),
+          onRefresh: () => Future.wait([provider.loadHomeData(forceRefresh: true), auth.refreshUser()]),
           color: cs.primary,
           child: CustomScrollView(
             controller: scrollController,
@@ -121,22 +136,16 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text("weekend_specials".tr(), style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                            Text("weekend_specials".tr(), style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                             ScaleTapWidget(
                               onTap: () => context.push('/menu?filter=special'),
-                              child: Text(
-                                "see_all".tr(),
-                                style: TextStyle(color: cs.primary, fontWeight: FontWeight.w600),
-                              ),
+                              child: Text("see_all".tr(), style: theme.textTheme.titleSmall?.copyWith(color: cs.primary)),
                             ),
                           ],
                         ),
                       ),
                       const SizedBox(height: 20),
-                      Skeletonizer(
-                        enabled: provider.loading,
-                        child: HomePromoBanner(items: provider.specialItems),
-                      ),
+                      HomePromoBanner(items: provider.specialItems, isLoading: provider.loading && provider.specialItems.isEmpty),
                     ],
                   ),
                 ),
@@ -153,7 +162,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                     children: [
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Text("categories".tr(), style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                        child: Text("categories".tr(), style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                       ),
                       const SizedBox(height: 16),
                       SizedBox(
@@ -166,11 +175,18 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                             itemCount: provider.mainCategories.isEmpty ? 5 : provider.mainCategories.length,
                             separatorBuilder: (context, index) => const SizedBox(width: 12),
                             itemBuilder: (context, index) {
-                              if (provider.mainCategories.isEmpty) {
-                                return const _ShimmerCategoryChip();
+                              // Guard: during skeleton loading the list is empty but itemCount=5
+                              if (index >= provider.mainCategories.length) {
+                                return const _CategoryChip(label: 'Loading', icon: Icons.circle, isSelected: false, index: 0);
                               }
                               final cat = provider.mainCategories[index];
-                              return _CategoryChip(label: cat.name, icon: provider.getIconForCategory(cat.name), isSelected: false, index: index, onTap: () => context.go('/menu?initialMainCategory=${Uri.encodeComponent(cat.name)}'));
+                              return _CategoryChip(
+                                label: cat.name,
+                                icon: provider.getIconForCategory(cat.name),
+                                isSelected: false,
+                                index: index,
+                                onTap: () => context.go('/menu?initialMainCategory=${Uri.encodeComponent(cat.name)}'),
+                              );
                             },
                           ),
                         ),
@@ -197,22 +213,11 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Row(
-                          children: [
-                            Text("most_popular".tr(), style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(color: cs.primaryContainer.withValues(alpha: 0.3)),
-                              child: const Text('🔥', style: TextStyle(fontSize: 12)),
-                            ),
-                          ],
+                          children: [Text("most_popular".tr(), style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold))],
                         ),
                         TextButton(
                           onPressed: () => context.push('/menu?filter=popular'),
-                          child: Text(
-                            "view_all".tr(),
-                            style: TextStyle(color: cs.primary, fontWeight: FontWeight.w600),
-                          ),
+                          child: Text("see_all".tr(), style: theme.textTheme.titleSmall?.copyWith(color: cs.primary)),
                         ),
                       ],
                     ),
@@ -222,23 +227,19 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
 
               const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
-              // 6. POPULAR ITEMS GRID with index for staggered animation
+              // 6. POPULAR ITEMS GRID with Skeletonizer
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
                 sliver: Skeletonizer.sliver(
                   enabled: provider.loading,
+                  effect: ShimmerEffect(baseColor: cs.surfaceContainerHighest.withValues(alpha: 0.5), highlightColor: cs.surface),
                   child: SliverGrid(
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: Responsive.gridColumns(context), mainAxisSpacing: 16, crossAxisSpacing: 16, childAspectRatio: 0.72),
                     delegate: SliverChildBuilderDelegate((context, index) {
-                      if (provider.popularItems.isEmpty) {
-                        return Container(
-                          decoration: BoxDecoration(color: cs.surfaceContainerHighest, borderRadius: BorderRadius.circular(20)),
-                        );
+                      if (index >= provider.popularItems.length) {
+                        return GridMenuCard(item: _dummyItem, index: index);
                       }
-                      return GridMenuCard(
-                        item: provider.popularItems[index],
-                        index: index, // Pass index for staggered animation
-                      );
+                      return GridMenuCard(item: provider.popularItems[index], index: index);
                     }, childCount: provider.popularItems.isEmpty ? 4 : provider.popularItems.length),
                   ),
                 ),
@@ -321,13 +322,18 @@ class _CategoryChipState extends State<_CategoryChip> with SingleTickerProviderS
           onTapCancel: _onTapCancel,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
               gradient: widget.isSelected ? LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [cs.primary, cs.primary.withValues(alpha: 0.8)]) : null,
               color: widget.isSelected ? null : cs.surface,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: widget.isSelected ? Colors.transparent : (_isPressed ? cs.primary.withValues(alpha: 0.5) : cs.outlineVariant.withValues(alpha: 0.2)), width: 1),
-              boxShadow: [if (widget.isSelected) BoxShadow(color: cs.primary.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 6)) else BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 8, offset: const Offset(0, 2))],
+              boxShadow: [
+                if (widget.isSelected)
+                  BoxShadow(color: cs.primary.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 6))
+                else
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 8, offset: const Offset(0, 2)),
+              ],
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -335,31 +341,18 @@ class _CategoryChipState extends State<_CategoryChip> with SingleTickerProviderS
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(color: widget.isSelected ? Colors.white.withValues(alpha: 0.2) : cs.primaryContainer.withValues(alpha: 0.4), shape: BoxShape.circle),
-                  child: Icon(widget.icon, size: 20, color: widget.isSelected ? Colors.white : cs.primary),
+                  child: Icon(widget.icon, size: 16, color: widget.isSelected ? Colors.white : cs.primary),
                 ),
                 const SizedBox(width: 12),
                 Text(
                   widget.label,
-                  style: TextStyle(color: widget.isSelected ? Colors.white : cs.onSurface, fontWeight: FontWeight.w600, fontSize: 14),
+                  style: TextStyle(color: widget.isSelected ? Colors.white : cs.onSurface, fontWeight: FontWeight.w600, fontSize: 12),
                 ),
               ],
             ),
           ),
         ),
       ),
-    );
-  }
-}
-
-class _ShimmerCategoryChip extends StatelessWidget {
-  const _ShimmerCategoryChip();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 120,
-      height: 48,
-      decoration: BoxDecoration(color: Theme.of(context).colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(16)),
     );
   }
 }

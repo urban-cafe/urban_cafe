@@ -25,24 +25,25 @@ class MenuScreen extends StatefulWidget {
 class _MenuScreenState extends State<MenuScreen> {
   final _searchCtrl = TextEditingController();
   final ScrollController _scrollCtrl = ScrollController();
-  bool _isGridView = true; // Toggle state
+  bool _isGridView = true;
   double _lastScrollOffset = 0;
+  late MenuProvider _menuProvider; // Cached ref — safe to call in dispose()
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final provider = context.read<MenuProvider>();
+      _menuProvider = context.read<MenuProvider>(); // Cache before any async gap
       _searchCtrl.clear();
 
+      // Always reinitialize — ensures fresh data every time the screen is entered,
+      // even if we are returning from a previous visit with stale cached state.
       if (widget.filter != null) {
-        await provider.initForFilter(widget.filter!);
+        await _menuProvider.initForFilter(widget.filter!);
       } else if (widget.initialMainCategory != null) {
-        await provider.initForMainCategory(widget.initialMainCategory!);
+        await _menuProvider.initForMainCategory(widget.initialMainCategory!);
       } else {
-        if (provider.items.isEmpty || provider.searchQuery.isNotEmpty) {
-          await provider.fetchAdminList();
-        }
+        await _menuProvider.fetchAdminList();
       }
     });
 
@@ -56,16 +57,13 @@ class _MenuScreenState extends State<MenuScreen> {
       final scope = ScrollControllerScope.of(context);
       if (scope != null && _scrollCtrl.hasClients) {
         final currentOffset = _scrollCtrl.offset;
-        // Ignore bounces at top/bottom
         if (currentOffset < 0 || currentOffset > _scrollCtrl.position.maxScrollExtent) return;
-
         final diff = currentOffset - _lastScrollOffset;
         if (diff.abs() > 20) {
-          // Threshold
           if (diff > 0) {
-            scope.onScrollDown?.call(); // Hide
+            scope.onScrollDown?.call();
           } else {
-            scope.onScrollUp?.call(); // Show
+            scope.onScrollUp?.call();
           }
           _lastScrollOffset = currentOffset;
         }
@@ -77,8 +75,7 @@ class _MenuScreenState extends State<MenuScreen> {
   void dispose() {
     _searchCtrl.dispose();
     _scrollCtrl.dispose();
-    // We can't easily access context in dispose to reset search,
-    // but MenuProvider handles reset on init anyway.
+    _menuProvider.resetMenuState();
     super.dispose();
   }
 
@@ -112,6 +109,7 @@ class _MenuScreenState extends State<MenuScreen> {
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
         FocusScope.of(context).unfocus();
+        _menuProvider.resetMenuState();
         context.pop();
       },
       child: Scaffold(
@@ -244,7 +242,10 @@ class _MenuScreenState extends State<MenuScreen> {
 
                   return RefreshIndicator(
                     onRefresh: () async {
-                      if (widget.initialMainCategory != null) {
+                      final provider = context.read<MenuProvider>();
+                      if (widget.filter != null) {
+                        await provider.initForFilter(widget.filter!);
+                      } else if (widget.initialMainCategory != null) {
                         await provider.initForMainCategory(widget.initialMainCategory!);
                       } else {
                         await provider.fetchAdminList();
@@ -267,30 +268,42 @@ class _MenuScreenState extends State<MenuScreen> {
                           : AnimatedSwitcher(
                               duration: const Duration(milliseconds: 300),
                               child: _isGridView
-                                  ? GridView.builder(
+                                  ? CustomScrollView(
                                       key: const ValueKey('grid_view'),
                                       controller: _scrollCtrl,
-                                      padding: const EdgeInsets.fromLTRB(12, 8, 12, 32),
-                                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, childAspectRatio: 0.72, mainAxisSpacing: 12, crossAxisSpacing: 12),
-                                      itemCount: displayItems.length + (provider.loadingMore ? 1 : 0),
-                                      itemBuilder: (context, index) {
-                                        if (index == displayItems.length) {
-                                          return Skeletonizer(enabled: true, child: GridMenuCard(item: _dummyItem));
-                                        }
-                                        final item = displayItems[index];
-                                        return GridMenuCard(item: item, index: index);
-                                      },
+                                      slivers: [
+                                        SliverPadding(
+                                          padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+                                          sliver: SliverGrid.builder(
+                                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, childAspectRatio: 0.72, mainAxisSpacing: 12, crossAxisSpacing: 12),
+                                            itemCount: displayItems.length + (provider.loadingMore ? 1 : 0),
+                                            itemBuilder: (context, index) {
+                                              if (index == displayItems.length && provider.loadingMore) {
+                                                return Skeletonizer(enabled: true, child: GridMenuCard(item: _dummyItem, index: -1));
+                                              }
+                                              final item = displayItems[index];
+                                              return GridMenuCard(item: item, index: index);
+                                            },
+                                          ),
+                                        ),
+                                        if (!provider.hasMore && displayItems.isNotEmpty)
+                                          const SliverToBoxAdapter(
+                                            child: Padding(padding: EdgeInsets.only(bottom: 32), child: _EndOfListIndicator()),
+                                          ),
+                                      ],
                                     )
-                                  : ListView.separated(
+                                  : ListView.builder(
                                       key: const ValueKey('list_view'),
                                       controller: _scrollCtrl,
                                       cacheExtent: 2000,
                                       padding: const EdgeInsets.only(top: 8, bottom: 32),
-                                      itemCount: displayItems.length + (provider.loadingMore ? 1 : 0),
-                                      separatorBuilder: (_, _) => Divider(height: 1, indent: 16, endIndent: 16, color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
+                                      itemCount: displayItems.length + (provider.loadingMore ? 1 : 0) + (!provider.hasMore && displayItems.isNotEmpty ? 1 : 0),
                                       itemBuilder: (context, index) {
-                                        if (index == displayItems.length) {
+                                        if (index == displayItems.length && provider.loadingMore) {
                                           return Skeletonizer(enabled: true, child: MenuCard(item: _dummyItem, onTap: null));
+                                        }
+                                        if (index >= displayItems.length) {
+                                          return const _EndOfListIndicator();
                                         }
 
                                         final item = displayItems[index];
@@ -328,6 +341,27 @@ class _MenuScreenState extends State<MenuScreen> {
           },
         ),
       ),
+    );
+  }
+}
+
+class _EndOfListIndicator extends StatelessWidget {
+  const _EndOfListIndicator();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Row(
+      mainAxisAlignment: .center,
+      crossAxisAlignment: .center,
+      children: [
+        Icon(Icons.coffee_outlined, size: 16, color: cs.outlineVariant),
+        const SizedBox(width: 8),
+        Text('no_more_items'.tr(), style: tt.bodySmall?.copyWith(color: cs.outlineVariant)),
+        const SizedBox(width: 8),
+        Icon(Icons.coffee_outlined, size: 16, color: cs.outlineVariant),
+      ],
     );
   }
 }

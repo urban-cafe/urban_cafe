@@ -29,6 +29,8 @@ class AuthProvider extends ChangeNotifier {
   final MenuSyncService? menuSyncService;
 
   bool loading = false;
+  bool _refreshingProfile = false;
+  bool get refreshingProfile => _refreshingProfile;
   String? error;
   UserRole? _role;
   UserProfile? _profile;
@@ -199,12 +201,13 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> refreshUser() async {
-    loading = true;
+    if (_refreshingProfile) return; // Guard against double-tap
+    _refreshingProfile = true;
     notifyListeners();
     try {
       await _loadUserRole();
     } finally {
-      loading = false;
+      _refreshingProfile = false;
       notifyListeners();
     }
   }

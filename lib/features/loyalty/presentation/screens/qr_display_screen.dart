@@ -36,7 +36,12 @@ class _QrDisplayScreenState extends State<QrDisplayScreen> {
 
     return Scaffold(
       backgroundColor: cs.surface,
-      appBar: AppBar(title: Text('qr_code'.tr(), style: Theme.of(context).textTheme.titleMedium), centerTitle: true, backgroundColor: cs.surface, scrolledUnderElevation: 0),
+      appBar: AppBar(
+        title: Text('qr_code'.tr(), style: Theme.of(context).textTheme.titleMedium),
+        centerTitle: true,
+        backgroundColor: cs.surface,
+        scrolledUnderElevation: 0,
+      ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -59,7 +64,7 @@ class _QrDisplayScreenState extends State<QrDisplayScreen> {
                         children: [
                           Text('your_points'.tr(), style: theme.textTheme.titleMedium?.copyWith(color: cs.onPrimaryContainer)),
                           const SizedBox(width: 8),
-                          if (auth.loading)
+                          if (auth.refreshingProfile)
                             SizedBox(height: 14, width: 14, child: CircularProgressIndicator(color: cs.onPrimaryContainer, strokeWidth: 2))
                           else
                             InkWell(
@@ -84,7 +89,14 @@ class _QrDisplayScreenState extends State<QrDisplayScreen> {
                 const SizedBox(height: 32),
 
                 // QR Code section
-                if (loyalty.isGenerating) const Padding(padding: EdgeInsets.all(48), child: CircularProgressIndicator()) else if (loyalty.error != null) _buildErrorState(cs, theme, loyalty) else if (loyalty.hasActiveToken) _buildQrCode(cs, theme, loyalty) else _buildExpiredState(cs, theme, loyalty),
+                if (loyalty.isGenerating)
+                  const Padding(padding: EdgeInsets.all(48), child: CircularProgressIndicator())
+                else if (loyalty.error != null)
+                  _buildErrorState(cs, theme, loyalty)
+                else if (loyalty.hasActiveToken)
+                  _buildQrCode(cs, theme, loyalty)
+                else
+                  _buildExpiredState(cs, theme, loyalty),
               ],
             ),
           ),
