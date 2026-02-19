@@ -64,11 +64,28 @@ class _ClientOrdersScreenState extends State<ClientOrdersScreen> {
             }
 
             if (snapshot.hasError) {
-              return SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                child: SizedBox(
-                  height: MediaQuery.of(context).size.height - 200,
-                  child: Center(child: Text('Error: ${snapshot.error}')),
+              return LayoutBuilder(
+                builder: (context, constraints) => SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: SizedBox(
+                    height: constraints.maxHeight,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.wifi_off_rounded, size: 64, color: colorScheme.outlineVariant),
+                        const SizedBox(height: 16),
+                        Text('connection_error'.tr(), style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 8),
+                        Text(
+                          'check_internet_connection'.tr(),
+                          style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 24),
+                        FilledButton.icon(onPressed: () => orderProvider.fetchOrders(), icon: const Icon(Icons.refresh), label: Text('retry'.tr())),
+                      ],
+                    ),
+                  ),
                 ),
               );
             }

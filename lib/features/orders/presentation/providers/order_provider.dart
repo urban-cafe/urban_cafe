@@ -57,7 +57,17 @@ class OrderProvider extends ChangeNotifier {
   String _getUserFriendlyError(String technicalError) {
     final lowerError = technicalError.toLowerCase();
 
-    if (lowerError.contains('network') || lowerError.contains('connection') || lowerError.contains('timeout')) {
+    // Network / connectivity errors (covers SocketException, host lookup,
+    // AuthRetryableFetchException, etc.)
+    if (lowerError.contains('network') ||
+        lowerError.contains('connection') ||
+        lowerError.contains('timeout') ||
+        lowerError.contains('socket') ||
+        lowerError.contains('host lookup') ||
+        lowerError.contains('failed host') ||
+        lowerError.contains('no address') ||
+        lowerError.contains('authretryable') ||
+        lowerError.contains('errno')) {
       return 'Connection failed. Please check your internet and try again.';
     }
 

@@ -26,6 +26,7 @@ jobs:
           # Load secrets from GitHub Actions Secrets
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          WEB_URL: ${{ secrets.WEB_URL }}
         run: |
           flutter pub get
           
@@ -33,7 +34,8 @@ jobs:
           # Note: Removed --base-href because Cloudflare hosts at root
           flutter build web --release --wasm \
             --dart-define=SUPABASE_URL=${SUPABASE_URL} \
-            --dart-define=SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+            --dart-define=SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY} \
+            --dart-define=WEB_URL=${WEB_URL}
             
 
           # 2. Create _headers file for Wasm support and Cache Busting

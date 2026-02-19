@@ -13,5 +13,10 @@ class Env {
 
   static bool get isConfigured => supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty;
 
+  static String get webUrl {
+    final v = dotenv.isInitialized ? dotenv.env['WEB_URL'] : null;
+    return v ?? const String.fromEnvironment('WEB_URL', defaultValue: '');
+  }
+
   static const String storageBucket = 'menu-images';
 }
