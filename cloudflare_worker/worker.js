@@ -17,6 +17,19 @@ const ALLOWED_ORIGIN_PATTERN = /^https:\/\/(.+\.)?urbancafe\.pages\.dev$/;
 
 export default {
   async fetch(request, env, ctx) {
+    // ── CORS Preflight (OPTIONS) ──────────────────────────────────────────────
+    if (request.method === 'OPTIONS') {
+      return new Response(null, {
+        status: 204,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+          'Access-Control-Allow-Headers': '*',
+          'Access-Control-Max-Age': '86400',
+        },
+      });
+    }
+
     // ── Security: only GET / HEAD ─────────────────────────────────────────────
     if (request.method !== 'GET' && request.method !== 'HEAD') {
       return new Response('Method Not Allowed', { status: 405 });
@@ -96,15 +109,12 @@ function isImageContentType(ct) {
 }
 
 function addCorsHeaders(response, request, env) {
-  const origin = request.headers.get('Origin') ?? '';
   const headers = new Headers(response.headers);
 
-  // Allow your Cloudflare Pages domain + localhost for dev
-  if (ALLOWED_ORIGIN_PATTERN.test(origin) || origin.startsWith('http://localhost')) {
-    headers.set('Access-Control-Allow-Origin', origin);
-    headers.set('Access-Control-Allow-Methods', 'GET, HEAD');
-    headers.set('Vary', 'Origin');
-  }
+  // Wildcard CORS is safest for public images. It prevents any Vary: Origin
+  // cache-key fragmentation and guarantees Flutter Web/CanvasKit can load it.
+  headers.set('Access-Control-Allow-Origin', '*');
+  headers.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
 
   return new Response(response.body, {
     status: response.status,

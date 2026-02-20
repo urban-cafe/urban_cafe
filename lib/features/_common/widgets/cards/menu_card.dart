@@ -140,7 +140,9 @@ class _MenuCardState extends State<MenuCard> with TickerProviderStateMixin {
                                       fadeInDuration: const Duration(milliseconds: 300),
                                       placeholder: (_, _) => Container(
                                         color: colorScheme.surfaceContainerHighest,
-                                        child: Center(child: Icon(Icons.fastfood, size: 24, color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5))),
+                                        child: Center(
+                                          child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: colorScheme.primary.withValues(alpha: 0.5))),
+                                        ),
                                       ),
                                       errorWidget: (_, _, _) => Icon(Icons.fastfood, size: 32, color: colorScheme.onSurfaceVariant),
                                     )

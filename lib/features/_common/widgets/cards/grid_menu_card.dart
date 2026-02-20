@@ -118,12 +118,17 @@ class _GridMenuCardState extends State<GridMenuCard> with SingleTickerProviderSt
                                   memCacheWidth: 400,
                                   placeholder: (_, _) => Container(
                                     color: cs.surfaceContainerHighest,
-                                    child: Center(child: Icon(Icons.local_cafe, color: cs.outlineVariant.withValues(alpha: 0.5), size: 32)),
+                                    child: Center(
+                                      child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2, color: cs.primary.withValues(alpha: 0.5))),
+                                    ),
                                   ),
-                                  errorWidget: (_, _, _) => Container(
-                                    color: cs.surfaceContainerHighest,
-                                    child: Icon(Icons.local_cafe, color: cs.outlineVariant, size: 40),
-                                  ),
+                                  errorWidget: (_, url, error) {
+                                    debugPrint('❌ Image Load Error: $url | Exception: $error');
+                                    return Container(
+                                      color: cs.surfaceContainerHighest,
+                                      child: Icon(Icons.local_cafe, color: cs.outlineVariant, size: 40),
+                                    );
+                                  },
                                 )
                               : Center(child: Icon(Icons.local_cafe, color: cs.outlineVariant, size: 40)),
                         ),
