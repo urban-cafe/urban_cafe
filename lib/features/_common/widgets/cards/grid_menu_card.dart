@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:urban_cafe/core/theme.dart';
+import 'package:urban_cafe/core/cdn_utils.dart';
 import 'package:urban_cafe/core/utils.dart';
 import 'package:urban_cafe/features/_common/widgets/badges/menu_item_badges.dart';
 import 'package:urban_cafe/features/auth/presentation/providers/auth_provider.dart';
@@ -110,9 +111,9 @@ class _GridMenuCardState extends State<GridMenuCard> with SingleTickerProviderSt
                         tag: 'menu-grid-${widget.item.id}-${widget.index}',
                         child: Container(
                           decoration: BoxDecoration(color: cs.surfaceContainerHighest),
-                          child: widget.item.imageUrl != null
+                          child: CdnUtils.menuImageUrl(widget.item.imageUrl) != null
                               ? CachedNetworkImage(
-                                  imageUrl: widget.item.imageUrl!,
+                                  imageUrl: CdnUtils.menuImageUrl(widget.item.imageUrl)!,
                                   fit: BoxFit.cover,
                                   memCacheWidth: 400,
                                   placeholder: (_, _) => Container(

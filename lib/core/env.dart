@@ -18,5 +18,12 @@ class Env {
     return v ?? const String.fromEnvironment('WEB_URL', defaultValue: '');
   }
 
+  /// Cloudflare Worker CDN URL for Supabase Storage images.
+  /// e.g. https://urbancafe-cdn.your-account.workers.dev
+  static String get cdnUrl {
+    final v = dotenv.isInitialized ? dotenv.env['CDN_URL'] : null;
+    return v ?? const String.fromEnvironment('CDN_URL', defaultValue: '');
+  }
+
   static const String storageBucket = 'menu-images';
 }

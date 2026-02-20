@@ -27,6 +27,7 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           WEB_URL: ${{ secrets.WEB_URL }}
+          CDN_URL: ${{ secrets.CDN_URL }}
         run: |
           flutter pub get
           
@@ -35,7 +36,8 @@ jobs:
           flutter build web --release --wasm \
             --dart-define=SUPABASE_URL=${SUPABASE_URL} \
             --dart-define=SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY} \
-            --dart-define=WEB_URL=${WEB_URL}
+            --dart-define=WEB_URL=${WEB_URL} \
+            --dart-define=CDN_URL=${CDN_URL}
             
 
           # 2. Create _headers file for Wasm support and Cache Busting

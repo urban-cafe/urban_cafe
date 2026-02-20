@@ -1,0 +1,16 @@
+name = "urbancafe-cdn"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Workers are deployed globally by default
+# No routes needed — we'll use the workers.dev subdomain
+
+[vars]
+# Non-secret vars — override secrets in Cloudflare dashboard or via wrangler secret put
+# SUPABASE_URL and SUPABASE_ANON_KEY are set as secrets (see deploy workflow)
+
+# Optional: bind a custom domain route
+# [[routes]]
+# pattern = "img.yourdomain.com/*"
+# zone_name = "yourdomain.com"
