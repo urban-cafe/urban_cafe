@@ -25,6 +25,7 @@ linter:
     prefer_const_literals_to_create_immutables: true
     directives_ordering: true
     always_use_package_imports: true
+    use_null_aware_elements: false  # Crashes dart2wasm compiler
 
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options

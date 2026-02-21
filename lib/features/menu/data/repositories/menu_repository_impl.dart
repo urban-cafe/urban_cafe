@@ -278,15 +278,15 @@ class MenuRepositoryImpl implements MenuRepository {
       final updated = await _client
           .from(table)
           .update({
-            'name': ?name,
-            'description': ?description,
-            'price': ?price,
-            'category_id': ?categoryId,
-            'is_available': ?isAvailable,
-            'is_most_popular': ?isMostPopular,
-            'is_weekend_special': ?isWeekendSpecial,
-            'image_path': ?imagePath,
-            'image_url': ?imageUrl,
+            if (name != null) 'name': name,
+            if (description != null) 'description': description,
+            if (price != null) 'price': price,
+            if (categoryId != null) 'category_id': categoryId,
+            if (isAvailable != null) 'is_available': isAvailable,
+            if (isMostPopular != null) 'is_most_popular': isMostPopular,
+            if (isWeekendSpecial != null) 'is_weekend_special': isWeekendSpecial,
+            if (imagePath != null) 'image_path': imagePath,
+            if (imageUrl != null) 'image_url': imageUrl,
           })
           .eq('id', id)
           .select('*, categories(name), menu_item_variants(*), menu_item_addons(*)')
