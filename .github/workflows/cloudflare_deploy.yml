@@ -21,9 +21,8 @@ jobs:
         with:
           channel: 'stable'
 
-      - name: Build Web App (Wasm)
+      - name: Build Web App
         env:
-          # Load secrets from GitHub Actions Secrets
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           WEB_URL: ${{ secrets.WEB_URL }}
@@ -31,24 +30,17 @@ jobs:
         run: |
           flutter pub get
           
-          # 1. Build with Secrets & Wasm
-          # Note: Removed --base-href because Cloudflare hosts at root
-          flutter build web --release --wasm \
+          flutter build web --release \
             --dart-define=SUPABASE_URL=${SUPABASE_URL} \
             --dart-define=SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY} \
             --dart-define=WEB_URL=${WEB_URL} \
             --dart-define=CDN_URL=${CDN_URL}
-            
 
-          # 2. Create _headers file for Wasm support and Cache Busting
-          # This tells Cloudflare to send the correct headers
+          # Cache headers for Cloudflare
           cat > build/web/_headers << 'EOF'
           /*
-            Cross-Origin-Embedder-Policy: credentialless
-            Cross-Origin-Opener-Policy: same-origin
             Cache-Control: public, max-age=31536000, immutable
 
-          # Prevent caching for entry points and mutable files
           /*.html
             Cache-Control: public, max-age=0, must-revalidate
 
@@ -64,7 +56,6 @@ jobs:
           /assets/FontManifest.json
             Cache-Control: public, max-age=0, must-revalidate
 
-          # Don't cache font files (they are not hashed by default in Flutter)
           /*.otf
             Cache-Control: public, max-age=0, must-revalidate
           /*.ttf
