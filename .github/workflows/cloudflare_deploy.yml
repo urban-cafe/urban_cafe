@@ -1,8 +1,8 @@
 name: Deploy to Cloudflare Pages
 
 on:
-  push:
-    branches: [ "main", "master" ]
+  # push:                          # ← PAUSED: uncomment to re-enable auto-deploy
+  #   branches: [ "main", "master" ]
   workflow_dispatch:
 
 jobs:

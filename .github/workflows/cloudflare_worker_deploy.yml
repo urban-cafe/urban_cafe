@@ -1,10 +1,10 @@
 name: Deploy Cloudflare CDN Worker
 
 on:
-  push:
-    branches: ["main", "master"]
-    paths:
-      - "cloudflare_worker/**"   # only re-deploy when worker code changes
+  # push:                          # ← PAUSED: uncomment to re-enable auto-deploy
+  #   branches: ["main", "master"]
+  #   paths:
+  #     - "cloudflare_worker/**"
   workflow_dispatch:
 
 jobs:

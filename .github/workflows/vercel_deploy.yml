@@ -1,8 +1,8 @@
 name: Deploy to Vercel
 
 on:
-  push:
-    branches: [ main ]  # Or your default branch
+  # push:                          # ← PAUSED: uncomment to re-enable auto-deploy
+  #   branches: [ main ]
   workflow_dispatch:    # Manual trigger
 
 jobs:

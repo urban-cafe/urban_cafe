@@ -15,6 +15,41 @@ const IMAGE_CACHE_TTL = 60 * 60 * 24 * 365; // 1 year (menu images rarely change
 const ERROR_CACHE_TTL = 60;                   // 1 minute (don't cache errors long)
 const ALLOWED_ORIGIN_PATTERN = /^https:\/\/(.+\.)?urbancafe\.pages\.dev$/;
 
+// ── Maintenance Mode ──────────────────────────────────────────────────────────
+const MAINTENANCE_HTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Urban Cafe – Under Maintenance</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, #F7F0E8 0%, #E8D5C0 100%);
+      color: #4A3728;
+    }
+    .card {
+      text-align: center; padding: 3rem 2rem; max-width: 420px;
+      background: rgba(255,255,255,0.85); border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(139,94,60,0.15);
+    }
+    .icon { font-size: 3rem; margin-bottom: 1rem; }
+    h1 { font-size: 1.5rem; margin-bottom: 0.5rem; color: #8B5E3C; }
+    p { font-size: 1rem; line-height: 1.6; opacity: 0.8; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">☕</div>
+    <h1>We're Brewing Something New</h1>
+    <p>Urban Cafe is currently under maintenance.<br>We'll be back shortly with a better experience!</p>
+  </div>
+</body>
+</html>`;
+
+
 export default {
   async fetch(request, env, ctx) {
     // ── CORS Preflight (OPTIONS) ──────────────────────────────────────────────
@@ -37,9 +72,16 @@ export default {
 
     const url = new URL(request.url);
 
-    // ── Security: only proxy /storage/** paths ────────────────────────────────
+    // ── Maintenance Page: Non-storage routes return 503 ─────────────────────
     if (!url.pathname.startsWith('/storage/')) {
-      return new Response('Not Found', { status: 404 });
+      return new Response(MAINTENANCE_HTML, {
+        status: 503,
+        headers: {
+          'Content-Type': 'text/html; charset=utf-8',
+          'Retry-After': '86400',
+          'Cache-Control': 'no-store',
+        },
+      });
     }
 
     // ── 1. Check Cloudflare edge cache ────────────────────────────────────────
