@@ -165,68 +165,6 @@ class _ScaleTapWidgetState extends State<ScaleTapWidget> with SingleTickerProvid
   }
 }
 
-/// Animated heart/favorite button with bounce
-class AnimatedHeartButton extends StatefulWidget {
-  final bool isFavorite;
-  final VoidCallback onTap;
-  final double size;
-  final Color? activeColor;
-  final Color? inactiveColor;
-
-  const AnimatedHeartButton({super.key, required this.isFavorite, required this.onTap, this.size = 24, this.activeColor, this.inactiveColor});
-
-  @override
-  State<AnimatedHeartButton> createState() => _AnimatedHeartButtonState();
-}
-
-class _AnimatedHeartButtonState extends State<AnimatedHeartButton> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scale;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 300));
-    _scale = TweenSequence<double>([
-      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.3), weight: 50),
-      TweenSequenceItem(tween: Tween(begin: 1.3, end: 1.0), weight: 50),
-    ]).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-  }
-
-  @override
-  void didUpdateWidget(AnimatedHeartButton oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.isFavorite && !oldWidget.isFavorite) {
-      _controller.forward(from: 0);
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return GestureDetector(
-      onTap: widget.onTap,
-      child: AnimatedBuilder(
-        animation: _scale,
-        builder: (context, child) => Transform.scale(
-          scale: _scale.value,
-          child: Icon(
-            widget.isFavorite ? Icons.favorite : Icons.favorite_border,
-            size: widget.size,
-            color: widget.isFavorite ? (widget.activeColor ?? Colors.red) : (widget.inactiveColor ?? cs.onSurfaceVariant),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 /// Shimmer effect for loading states and premium cards
 class ShimmerEffect extends StatefulWidget {
   final Widget child;

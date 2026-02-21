@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:urban_cafe/core/responsive.dart';
 import 'package:urban_cafe/features/auth/presentation/providers/auth_provider.dart';
-import 'package:urban_cafe/features/cart/presentation/providers/cart_provider.dart';
 
 /// InheritedWidget to share scroll controller with child screens
 class ScrollControllerScope extends InheritedWidget {
@@ -81,18 +80,15 @@ class _MainScaffoldState extends State<MainScaffold> {
 
   // ─── Branch index mapping ────────────────────────────────────────
   // Shell branches are registered in this order:
-  //   0: Home (client)  1: Cart  2: QR  3: Orders  4: Profile
-  //   5: Admin           6: Admin Orders    7: Admin Categories
-  //   8: QR Scanner (admin/staff)
-  //   9: Staff
-  //   10: POS (staff/admin)
+  //   0: Home (client)  1: QR  2: Profile
+  //   3: Admin           4: Admin Categories  5: QR Scanner
   //
   // Each role maps its nav bar indices → shell branch indices.
 
-  static const _clientBranchIndices = [0, 1, 3, 2, 4]; // Home, Cart, Orders, QR, Profile
-  static const _guestBranchIndices = [0, 4]; // Home, Profile (guests can't access cart/orders/QR)
-  static const _adminBranchIndices = [5, 10, 7, 8, 4]; // Admin, POS, AdminCategories, QRScanner, Profile
-  static const _staffBranchIndices = [9, 10, 8, 4]; // Staff, POS, QRScanner, Profile
+  static const _clientBranchIndices = [0, 1, 2]; // Home, QR, Profile
+  static const _guestBranchIndices = [0, 2]; // Home, Profile
+  static const _adminBranchIndices = [3, 4, 5, 2]; // Admin, Categories, QRScanner, Profile
+  static const _staffBranchIndices = [5, 2]; // QRScanner, Profile
 
   List<int> _branchIndices(AuthProvider auth) {
     if (auth.isAdmin) return _adminBranchIndices;
@@ -119,9 +115,8 @@ class _MainScaffoldState extends State<MainScaffold> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
-    final cart = context.watch<CartProvider>();
     final sizeClass = Responsive.windowSizeClass(context);
-    final destinations = _buildDestinations(auth, cart);
+    final destinations = _buildDestinations(auth);
     final selectedIndex = _navIndexFromBranch(auth);
 
     return ScrollControllerScope(
@@ -191,32 +186,20 @@ class _MainScaffoldState extends State<MainScaffold> {
     );
   }
 
-  List<NavigationDestination> _buildDestinations(AuthProvider auth, CartProvider cart) {
+  List<NavigationDestination> _buildDestinations(AuthProvider auth) {
     if (auth.isGuest) {
       return [NavigationDestination(icon: const Icon(Icons.restaurant_menu), label: 'menu'.tr()), NavigationDestination(icon: const Icon(Icons.person), label: 'profile'.tr())];
     } else if (auth.isClient) {
       return [
         NavigationDestination(icon: const Icon(Icons.restaurant_menu), label: 'menu'.tr()),
-        NavigationDestination(
-          icon: Badge(label: Text('${cart.itemCount}'), isLabelVisible: cart.itemCount > 0, child: const Icon(Icons.shopping_cart_outlined)),
-          selectedIcon: Badge(label: Text('${cart.itemCount}'), isLabelVisible: cart.itemCount > 0, child: const Icon(Icons.shopping_cart)),
-          label: 'cart'.tr(),
-        ),
-        NavigationDestination(icon: const Icon(Icons.receipt_long_outlined), selectedIcon: const Icon(Icons.receipt_long), label: 'orders'.tr()),
         NavigationDestination(icon: const Icon(Icons.qr_code_rounded), label: 'qr_code'.tr()),
         NavigationDestination(icon: const Icon(Icons.person), label: 'profile'.tr()),
       ];
     } else if (auth.isStaff) {
-      return [
-        NavigationDestination(icon: const Icon(Icons.kitchen), label: 'kitchen'.tr()),
-        const NavigationDestination(icon: Icon(Icons.point_of_sale), label: 'POS'),
-        NavigationDestination(icon: const Icon(Icons.qr_code_scanner_rounded), label: 'qr_scan'.tr()),
-        NavigationDestination(icon: const Icon(Icons.person), label: 'profile'.tr()),
-      ];
+      return [NavigationDestination(icon: const Icon(Icons.qr_code_scanner_rounded), label: 'qr_scan'.tr()), NavigationDestination(icon: const Icon(Icons.person), label: 'profile'.tr())];
     } else if (auth.isAdmin) {
       return [
         NavigationDestination(icon: const Icon(Icons.dashboard), label: 'items'.tr()),
-        const NavigationDestination(icon: Icon(Icons.point_of_sale), label: 'POS'),
         NavigationDestination(icon: const Icon(Icons.category), label: 'categories'.tr()),
         NavigationDestination(icon: const Icon(Icons.qr_code_scanner_rounded), label: 'qr_scan'.tr()),
         NavigationDestination(icon: const Icon(Icons.person), label: 'profile'.tr()),

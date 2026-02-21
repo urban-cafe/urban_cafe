@@ -2,20 +2,16 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:get_it/get_it.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:urban_cafe/core/error/failures.dart';
 import 'package:urban_cafe/core/services/storage_service.dart';
-import 'package:urban_cafe/core/usecases/usecase.dart';
 import 'package:urban_cafe/features/menu/domain/repositories/menu_repository.dart';
-import 'package:urban_cafe/features/orders/domain/usecases/get_admin_analytics.dart';
 
 class AdminProvider extends ChangeNotifier {
   final MenuRepository _repo;
   final StorageService _storage;
-  final GetAdminAnalytics? getAdminAnalyticsUseCase;
 
-  AdminProvider({MenuRepository? menuRepository, StorageService? storageService, this.getAdminAnalyticsUseCase})
-    : _repo = menuRepository ?? GetIt.I<MenuRepository>(),
-      _storage = storageService ?? GetIt.I<StorageService>();
+  AdminProvider({MenuRepository? menuRepository, StorageService? storageService}) : _repo = menuRepository ?? GetIt.I<MenuRepository>(), _storage = storageService ?? GetIt.I<StorageService>();
 
   bool loading = false;
   String? error;
@@ -47,13 +43,39 @@ class AdminProvider extends ChangeNotifier {
   }
 
   // ─────────────────────────────────────────────────────────────────
-  // ANALYTICS
+  // ANALYTICS (queries Supabase directly)
   // ─────────────────────────────────────────────────────────────────
   Future<void> loadAnalytics() async {
-    if (getAdminAnalyticsUseCase == null) return;
+    loading = true;
+    error = null;
+    notifyListeners();
 
-    final data = await _execute(() => getAdminAnalyticsUseCase!(NoParams()));
-    if (data != null) analytics = data;
+    try {
+      final client = GetIt.I<SupabaseClient>();
+
+      // Total orders count
+      final ordersResponse = await client.from('orders').select('id').count(CountOption.exact);
+      final totalOrders = ordersResponse.count;
+
+      // Revenue
+      final revenueData = await client.from('orders').select('total_amount').eq('status', 'completed');
+      final totalRevenue = revenueData.fold<double>(0, (sum, row) => sum + (double.tryParse(row['total_amount'].toString()) ?? 0));
+
+      // Menu items count
+      final itemsResponse = await client.from('menu_items').select('id').count(CountOption.exact);
+      final totalItems = itemsResponse.count;
+
+      // Users count
+      final usersResponse = await client.from('profiles').select('id').count(CountOption.exact);
+      final totalUsers = usersResponse.count;
+
+      analytics = {'totalOrders': totalOrders, 'totalRevenue': totalRevenue, 'totalMenuItems': totalItems, 'totalUsers': totalUsers};
+    } catch (e) {
+      error = e.toString();
+    } finally {
+      loading = false;
+      notifyListeners();
+    }
   }
 
   // ─────────────────────────────────────────────────────────────────

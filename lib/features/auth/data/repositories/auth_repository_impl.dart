@@ -75,7 +75,7 @@ class AuthRepositoryImpl implements AuthRepository {
       // On web: use an explicit https:// redirect — browsers cannot handle
       // custom app schemes (io.supabase.urbancafe://).
       // On mobile: use the deep-link scheme registered in AndroidManifest / Info.plist.
-      final String? redirectTo = kIsWeb ? '${Env.webUrl}/#/auth/callback' : 'io.supabase.urbancafe://login-callback/';
+      final String redirectTo = kIsWeb ? '${Env.webUrl}/#/auth/callback' : 'io.supabase.urbancafe://login-callback/';
 
       final bool result = await supabaseClient.auth.signInWithOAuth(
         OAuthProvider.google,

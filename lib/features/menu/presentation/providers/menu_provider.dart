@@ -5,21 +5,15 @@ import 'package:urban_cafe/core/usecases/usecase.dart';
 import 'package:urban_cafe/features/menu/domain/entities/category.dart';
 import 'package:urban_cafe/features/menu/domain/entities/menu_item.dart';
 import 'package:urban_cafe/features/menu/domain/usecases/get_category_by_name.dart';
-import 'package:urban_cafe/features/menu/domain/usecases/get_favorite_items.dart';
-import 'package:urban_cafe/features/menu/domain/usecases/get_favorites.dart';
 import 'package:urban_cafe/features/menu/domain/usecases/get_main_categories.dart';
 import 'package:urban_cafe/features/menu/domain/usecases/get_menu_items.dart';
 import 'package:urban_cafe/features/menu/domain/usecases/get_sub_categories.dart';
-import 'package:urban_cafe/features/menu/domain/usecases/toggle_favorite.dart';
 
 class MenuProvider extends ChangeNotifier {
   final GetMainCategories getMainCategoriesUseCase;
   final GetSubCategories getSubCategoriesUseCase;
   final GetMenuItems getMenuItemsUseCase;
   final GetCategoryByName getCategoryByNameUseCase;
-  final GetFavorites getFavoritesUseCase;
-  final GetFavoriteItems getFavoriteItemsUseCase;
-  final ToggleFavorite toggleFavoriteUseCase;
 
   // Cache service for reducing API calls
   final CacheService _cache;
@@ -34,7 +28,6 @@ class MenuProvider extends ChangeNotifier {
   List<MenuItemEntity> items = [];
   List<MenuItemEntity> popularItems = []; // New
   List<MenuItemEntity> specialItems = []; // New
-  List<MenuItemEntity> favoriteItems = []; // Store full items
   List<Category> subCategories = [];
 
   bool loading = false;
@@ -53,68 +46,9 @@ class MenuProvider extends ChangeNotifier {
   bool hasMore = true;
   bool _isInitializing = false; // Guard against duplicate concurrent init calls
 
-  // Favorites
-  Set<String> _favoriteIds = {};
-  Set<String> get favoriteIds => _favoriteIds;
+  MenuProvider({required this.getMainCategoriesUseCase, required this.getSubCategoriesUseCase, required this.getMenuItemsUseCase, required this.getCategoryByNameUseCase, CacheService? cacheService})
+    : _cache = cacheService ?? GetIt.I<CacheService>();
 
-  MenuProvider({
-    required this.getMainCategoriesUseCase,
-    required this.getSubCategoriesUseCase,
-    required this.getMenuItemsUseCase,
-    required this.getCategoryByNameUseCase,
-    required this.getFavoritesUseCase,
-    required this.getFavoriteItemsUseCase,
-    required this.toggleFavoriteUseCase,
-    CacheService? cacheService,
-  }) : _cache = cacheService ?? GetIt.I<CacheService>();
-
-  Future<void> loadFavorites() async {
-    loading = true;
-    notifyListeners();
-
-    // 1. Get IDs (for badges)
-    final idsResult = await getFavoritesUseCase(NoParams());
-    idsResult.fold((failure) => debugPrint('Error loading favorite IDs: ${failure.message}'), (ids) {
-      _favoriteIds = ids.toSet();
-    });
-
-    // 2. Get Items (for screen)
-    final itemsResult = await getFavoriteItemsUseCase(NoParams());
-    itemsResult.fold((failure) => error = failure.message, (items) {
-      favoriteItems = items;
-    });
-
-    loading = false;
-    notifyListeners();
-  }
-
-  Future<void> toggleFavorite(String itemId) async {
-    // Optimistic Update
-    final isFav = _favoriteIds.contains(itemId);
-    if (isFav) {
-      _favoriteIds.remove(itemId);
-    } else {
-      _favoriteIds.add(itemId);
-    }
-    notifyListeners();
-
-    final result = await toggleFavoriteUseCase(itemId);
-    result.fold(
-      (failure) {
-        // Revert on failure
-        if (isFav) {
-          _favoriteIds.add(itemId);
-        } else {
-          _favoriteIds.remove(itemId);
-        }
-        notifyListeners();
-        debugPrint('Error toggling favorite: ${failure.message}');
-      },
-      (_) => null, // Success
-    );
-  }
-
-  // New method to fetch main categories with caching
   Future<void> loadMainCategories() async {
     // Check in-memory first
     if (mainCategories.isNotEmpty) return;

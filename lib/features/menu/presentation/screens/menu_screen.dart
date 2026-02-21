@@ -8,7 +8,6 @@ import 'package:urban_cafe/features/_common/widgets/cards/grid_menu_card.dart';
 import 'package:urban_cafe/features/_common/widgets/cards/menu_card.dart';
 import 'package:urban_cafe/features/_common/widgets/inputs/custom_search_bar.dart';
 import 'package:urban_cafe/features/_common/widgets/main_scaffold.dart';
-import 'package:urban_cafe/features/cart/presentation/providers/cart_provider.dart';
 import 'package:urban_cafe/features/menu/domain/entities/menu_item.dart';
 import 'package:urban_cafe/features/menu/presentation/providers/menu_provider.dart';
 
@@ -296,6 +295,7 @@ class _MenuScreenState extends State<MenuScreen> {
                                       key: const ValueKey('list_view'),
                                       controller: _scrollCtrl,
                                       cacheExtent: 2000,
+                                      addAutomaticKeepAlives: false,
                                       padding: const EdgeInsets.only(top: 8, bottom: 32),
                                       itemCount: displayItems.length + (provider.loadingMore ? 1 : 0) + (!provider.hasMore && displayItems.isNotEmpty ? 1 : 0),
                                       itemBuilder: (context, index) {
@@ -316,7 +316,7 @@ class _MenuScreenState extends State<MenuScreen> {
                                                   FocusScope.of(context).unfocus();
                                                   context.push('/detail', extra: item);
                                                 },
-                                          onAddToCart: isLoadingInitial || !item.isAvailable ? null : () => context.read<CartProvider>().addToCart(item),
+                                          onAddToCart: null, // Cart removed
                                         );
                                       },
                                     ),
@@ -327,18 +327,6 @@ class _MenuScreenState extends State<MenuScreen> {
               ),
             ),
           ],
-        ),
-        floatingActionButton: Consumer<CartProvider>(
-          builder: (context, cart, child) {
-            if (cart.items.isEmpty) return const SizedBox.shrink();
-            return FloatingActionButton.extended(
-              onPressed: () => context.push('/cart'),
-              backgroundColor: colorScheme.primary,
-              foregroundColor: colorScheme.onPrimary,
-              icon: const Icon(Icons.shopping_cart),
-              label: Text('${cart.itemCount} items'),
-            );
-          },
         ),
       ),
     );

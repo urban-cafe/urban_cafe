@@ -15,7 +15,6 @@ import 'package:urban_cafe/features/auth/domain/usecases/sign_in_with_google_use
 import 'package:urban_cafe/features/auth/domain/usecases/sign_out_usecase.dart';
 import 'package:urban_cafe/features/auth/domain/usecases/sign_up_usecase.dart';
 import 'package:urban_cafe/features/auth/domain/usecases/update_profile_usecase.dart';
-import 'package:urban_cafe/features/pos/data/services/menu_sync_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   final SignInUseCase signInUseCase;
@@ -26,7 +25,6 @@ class AuthProvider extends ChangeNotifier {
   final SignUpUseCase signUpUseCase;
   final SignInAnonymouslyUseCase signInAnonymouslyUseCase;
   final UpdateProfileUseCase updateProfileUseCase;
-  final MenuSyncService? menuSyncService;
 
   bool loading = false;
   bool _refreshingProfile = false;
@@ -65,7 +63,6 @@ class AuthProvider extends ChangeNotifier {
     required this.signUpUseCase,
     required this.signInAnonymouslyUseCase,
     required this.updateProfileUseCase,
-    this.menuSyncService,
   }) {
     _loadUserRole();
     _listenToAuthStateChanges();
@@ -182,22 +179,6 @@ class AuthProvider extends ChangeNotifier {
       },
     );
     notifyListeners();
-
-    // Auto-download menu data for staff/admin
-    if (isAdmin || isStaff) {
-      _triggerMenuSync();
-    }
-  }
-
-  /// Trigger background menu data download.
-  void _triggerMenuSync() {
-    final sync = menuSyncService;
-    if (sync == null) return;
-    sync.init().then((_) {
-      if (!sync.isSyncing) {
-        sync.downloadAllMenuData();
-      }
-    });
   }
 
   Future<void> refreshUser() async {
@@ -388,7 +369,7 @@ class AuthProvider extends ChangeNotifier {
 
     // Clear local data before signing out
     try {
-      await menuSyncService?.clearAllLocalData();
+      // Future: clear local menu cache here
     } catch (e) {
       debugPrint('Error clearing local data: $e');
     }

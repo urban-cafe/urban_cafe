@@ -8,12 +8,10 @@ import 'package:urban_cafe/features/admin/presentation/screens/category_manager_
 import 'package:urban_cafe/features/admin/presentation/screens/edit_screen.dart';
 import 'package:urban_cafe/features/admin/presentation/screens/list_screen.dart';
 import 'package:urban_cafe/features/admin/presentation/screens/login_screen.dart' as admin;
-import 'package:urban_cafe/features/admin/presentation/screens/orders_screen.dart';
 import 'package:urban_cafe/features/auth/presentation/providers/auth_provider.dart';
 import 'package:urban_cafe/features/auth/presentation/screens/email_confirmation_screen.dart';
 import 'package:urban_cafe/features/auth/presentation/screens/login_screen.dart';
 import 'package:urban_cafe/features/auth/presentation/screens/sign_up_screen.dart';
-import 'package:urban_cafe/features/cart/presentation/screens/cart_screen.dart';
 import 'package:urban_cafe/features/loyalty/presentation/screens/point_settings_screen.dart';
 import 'package:urban_cafe/features/loyalty/presentation/screens/qr_display_screen.dart';
 import 'package:urban_cafe/features/loyalty/presentation/screens/qr_scan_landing_screen.dart';
@@ -21,12 +19,9 @@ import 'package:urban_cafe/features/menu/domain/entities/menu_item.dart';
 import 'package:urban_cafe/features/menu/presentation/screens/main_menu_screen.dart';
 import 'package:urban_cafe/features/menu/presentation/screens/menu_detail_screen.dart';
 import 'package:urban_cafe/features/menu/presentation/screens/menu_screen.dart';
-import 'package:urban_cafe/features/orders/presentation/screens/client_orders_screen.dart';
-import 'package:urban_cafe/features/orders/presentation/screens/staff/staff_orders_screen.dart';
-import 'package:urban_cafe/features/pos/presentation/screens/pos_screen.dart';
 import 'package:urban_cafe/features/profile/presentation/screens/contact_us_screen.dart';
 import 'package:urban_cafe/features/profile/presentation/screens/edit_profile_screen.dart';
-import 'package:urban_cafe/features/profile/presentation/screens/favorites_screen.dart';
+
 import 'package:urban_cafe/features/profile/presentation/screens/language_screen.dart';
 import 'package:urban_cafe/features/profile/presentation/screens/profile_screen.dart';
 import 'package:urban_cafe/features/profile/presentation/screens/theme_screen.dart';
@@ -59,7 +54,8 @@ class AppRouter {
           return MainScaffold(navigationShell: navigationShell);
         },
         branches: [
-          // ── Client branches (index 0-4) ─────────────────────
+          // ── Client branches (index 0-2) ─────────────────────
+          // 0: Home/Menu
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -78,16 +74,11 @@ class AppRouter {
               ),
             ],
           ),
-          StatefulShellBranch(
-            routes: [GoRoute(path: AppRoutes.cart, builder: (context, state) => const CartScreen())],
-          ),
+          // 1: QR (loyalty)
           StatefulShellBranch(
             routes: [GoRoute(path: AppRoutes.qr, builder: (context, state) => const QrDisplayScreen())],
           ),
-          StatefulShellBranch(
-            routes: [GoRoute(path: AppRoutes.orders, builder: (context, state) => const ClientOrdersScreen())],
-          ),
-          // ── Profile (shared, index 4 for client / last for admin & staff) ──
+          // 2: Profile (shared across all roles)
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -97,15 +88,14 @@ class AppRouter {
                   GoRoute(path: 'edit', builder: (context, state) => const EditProfileScreen()),
                   GoRoute(path: 'language', builder: (context, state) => const LanguageScreen()),
                   GoRoute(path: 'theme', builder: (context, state) => const ThemeScreen()),
-                  GoRoute(path: 'theme', builder: (context, state) => const ThemeScreen()),
-                  GoRoute(path: 'favorites', builder: (context, state) => const FavoritesScreen()),
-                  GoRoute(path: 'orders', builder: (context, state) => const ClientOrdersScreen()),
+
                   GoRoute(path: 'contact', builder: (context, state) => const ContactUsScreen()),
                 ],
               ),
             ],
           ),
-          // ── Admin branches (index 5-7) ──────────────────────
+          // ── Admin branches (index 3-5) ──────────────────────
+          // 3: Admin dashboard
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -115,23 +105,13 @@ class AppRouter {
               ),
             ],
           ),
-          StatefulShellBranch(
-            routes: [GoRoute(path: AppRoutes.adminOrders, builder: (context, state) => const AdminOrdersScreen())],
-          ),
+          // 4: Admin categories
           StatefulShellBranch(
             routes: [GoRoute(path: AppRoutes.adminCategories, builder: (context, state) => const AdminCategoryManagerScreen())],
           ),
-          // ── QR Scanner landing for admin/staff (index 8) ────
+          // 5: QR Scanner (admin/staff)
           StatefulShellBranch(
             routes: [GoRoute(path: AppRoutes.qrScanner, builder: (context, state) => const QrScanLandingScreen())],
-          ),
-          // ── Staff branch (index 9) ──────────────────────────
-          StatefulShellBranch(
-            routes: [GoRoute(path: AppRoutes.staff, builder: (context, state) => const StaffOrdersScreen())],
-          ),
-          // ── POS branch (index 10) - for staff/admin ────────────
-          StatefulShellBranch(
-            routes: [GoRoute(path: AppRoutes.pos, builder: (context, state) => const PosScreen())],
           ),
         ],
       ),
@@ -190,16 +170,13 @@ class AppRouter {
 
     // 2. Guest users can only browse — restrict to allowed routes
     if (isGuest) {
-      // Let guests access menu/home/detail routes
       final isAllowed = _guestAllowedPrefixes.any((prefix) => location == prefix || location.startsWith('$prefix/') || location.startsWith('$prefix?'));
 
       if (isGoingToLogin || isGoingToSignUp) {
-        // Guest going to auth pages — allow (they may want to upgrade)
         return null;
       }
 
       if (!isAllowed) {
-        // Guest trying to access restricted area → send to home
         return AppRoutes.home;
       }
       return null;
@@ -208,24 +185,19 @@ class AppRouter {
     // 3. Logged in → redirect root to role-specific home
     if (location == AppRoutes.home) {
       if (isAdmin) return AppRoutes.admin;
-      if (isStaff) return AppRoutes.staff;
+      if (isStaff) return AppRoutes.qrScanner; // Staff land on QR scanner
     }
 
     // 4. Logged in but going to auth pages → redirect based on role
     if (isGoingToLogin || isGoingToAdminLogin || isGoingToSignUp) {
       if (isAdmin) return AppRoutes.admin;
-      if (isStaff) return AppRoutes.staff;
+      if (isStaff) return AppRoutes.qrScanner;
       return AppRoutes.home;
     }
 
     // 5. Role-based access control for admin area
     if (isGoingToAdminArea) {
-      if (isStaff && location == AppRoutes.admin) return AppRoutes.staff;
-      if (!isAdmin && !isStaff) return AppRoutes.home;
-    }
-
-    // 6. POS access control — only staff and admin
-    if (location.startsWith(AppRoutes.pos)) {
+      if (isStaff && location == AppRoutes.admin) return AppRoutes.qrScanner;
       if (!isAdmin && !isStaff) return AppRoutes.home;
     }
 

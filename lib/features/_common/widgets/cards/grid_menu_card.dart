@@ -4,12 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:urban_cafe/core/theme.dart';
 import 'package:urban_cafe/core/cdn_utils.dart';
-import 'package:urban_cafe/core/utils.dart';
+import 'package:urban_cafe/core/theme.dart';
 import 'package:urban_cafe/features/_common/widgets/badges/menu_item_badges.dart';
 import 'package:urban_cafe/features/auth/presentation/providers/auth_provider.dart';
-import 'package:urban_cafe/features/cart/presentation/providers/cart_provider.dart';
 import 'package:urban_cafe/features/menu/domain/entities/menu_item.dart';
 
 class GridMenuCard extends StatefulWidget {
@@ -57,13 +55,8 @@ class _GridMenuCardState extends State<GridMenuCard> with SingleTickerProviderSt
   }
 
   void _addToCart() {
-    // Navigate to detail if item has variants/addons — user must choose
-    if (widget.item.variants.isNotEmpty || widget.item.addons.isNotEmpty) {
-      context.push('/detail', extra: widget.item);
-      return;
-    }
-    context.read<CartProvider>().addToCart(widget.item);
-    showAppSnackBar(context, 'Added to Cart Successfully');
+    // Navigate to detail — no cart functionality
+    context.push('/detail', extra: widget.item);
   }
 
   @override

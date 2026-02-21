@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:urban_cafe/core/di/injection_container.dart';
 import 'package:urban_cafe/core/env.dart';
 import 'package:urban_cafe/core/routing/app_router.dart';
+import 'package:urban_cafe/core/services/menu_cache_database.dart';
 import 'package:urban_cafe/core/services/supabase_client.dart';
 import 'package:urban_cafe/core/theme.dart';
 // Providers
@@ -14,13 +15,9 @@ import 'package:urban_cafe/features/_common/theme_provider.dart';
 import 'package:urban_cafe/features/_common/widgets/upgrade_listener.dart';
 import 'package:urban_cafe/features/admin/presentation/providers/admin_provider.dart';
 import 'package:urban_cafe/features/auth/presentation/providers/auth_provider.dart';
-import 'package:urban_cafe/features/cart/presentation/providers/cart_provider.dart';
 import 'package:urban_cafe/features/loyalty/presentation/providers/loyalty_provider.dart';
 import 'package:urban_cafe/features/menu/presentation/providers/category_manager_provider.dart';
 import 'package:urban_cafe/features/menu/presentation/providers/menu_provider.dart';
-import 'package:urban_cafe/features/orders/presentation/providers/order_provider.dart';
-import 'package:urban_cafe/features/pos/data/services/menu_sync_service.dart';
-import 'package:urban_cafe/features/pos/presentation/providers/pos_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,6 +32,9 @@ Future<void> main() async {
   // Configure all dependencies with get_it
   await configureDependencies(SupabaseClientProvider.client);
 
+  // Initialize SQLite menu cache (no-op on web)
+  await sl<MenuCacheDatabase>().init();
+
   runApp(
     EasyLocalization(
       supportedLocales: const [Locale('en'), Locale('my')],
@@ -43,15 +43,11 @@ Future<void> main() async {
       child: MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (_) => sl<AuthProvider>()),
-          ChangeNotifierProvider(create: (_) => sl<CartProvider>()),
           ChangeNotifierProvider(create: (_) => sl<MenuProvider>()),
           ChangeNotifierProvider(create: (_) => sl<CategoryManagerProvider>()),
           ChangeNotifierProvider(create: (_) => sl<AdminProvider>()),
           ChangeNotifierProvider(create: (_) => ThemeProvider()),
-          ChangeNotifierProvider(create: (_) => sl<OrderProvider>()),
           ChangeNotifierProvider(create: (_) => sl<LoyaltyProvider>()),
-          ChangeNotifierProvider(create: (_) => sl<PosProvider>()),
-          ChangeNotifierProvider.value(value: sl<MenuSyncService>()),
         ],
         child: const UrbanCafeApp(),
       ),

@@ -1,13 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
 import 'package:urban_cafe/core/cdn_utils.dart';
 import 'package:urban_cafe/core/theme.dart';
 import 'package:urban_cafe/features/_common/widgets/badges/menu_item_badges.dart';
-import 'package:urban_cafe/features/auth/presentation/providers/auth_provider.dart';
 import 'package:urban_cafe/features/menu/domain/entities/menu_item.dart';
-import 'package:urban_cafe/features/menu/presentation/providers/menu_provider.dart';
 
 class MenuCard extends StatefulWidget {
   final MenuItemEntity item;
@@ -24,8 +21,6 @@ class MenuCard extends StatefulWidget {
 class _MenuCardState extends State<MenuCard> with TickerProviderStateMixin {
   late AnimationController _scaleController;
   late Animation<double> _scaleAnimation;
-  late AnimationController _heartController;
-  late Animation<double> _heartScale;
   bool _isPressed = false;
 
   @override
@@ -33,18 +28,11 @@ class _MenuCardState extends State<MenuCard> with TickerProviderStateMixin {
     super.initState();
     _scaleController = AnimationController(vsync: this, duration: const Duration(milliseconds: 100));
     _scaleAnimation = Tween<double>(begin: 1.0, end: 0.98).animate(CurvedAnimation(parent: _scaleController, curve: Curves.easeInOut));
-
-    _heartController = AnimationController(vsync: this, duration: const Duration(milliseconds: 300));
-    _heartScale = TweenSequence<double>([
-      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.3), weight: 50),
-      TweenSequenceItem(tween: Tween(begin: 1.3, end: 1.0), weight: 50),
-    ]).animate(CurvedAnimation(parent: _heartController, curve: Curves.easeInOut));
   }
 
   @override
   void dispose() {
     _scaleController.dispose();
-    _heartController.dispose();
     super.dispose();
   }
 
@@ -66,21 +54,12 @@ class _MenuCardState extends State<MenuCard> with TickerProviderStateMixin {
     _scaleController.reverse();
   }
 
-  void _onFavoriteTap(MenuProvider provider) {
-    provider.toggleFavorite(widget.item.id);
-    _heartController.forward(from: 0);
-  }
-
   @override
   Widget build(BuildContext context) {
     final priceFormat = NumberFormat.currency(symbol: '', decimalDigits: 0);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final menuProvider = context.watch<MenuProvider>();
-    final auth = context.watch<AuthProvider>();
-    final isFavorite = menuProvider.favoriteIds.contains(widget.item.id);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isGuest = auth.isGuest;
 
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
@@ -121,59 +100,32 @@ class _MenuCardState extends State<MenuCard> with TickerProviderStateMixin {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // LARGER IMAGE (100x100) WITH FAVORITE ICON
-                    Stack(
-                      children: [
-                        Hero(
-                          tag: 'menu-${widget.item.id}',
-                          child: ClipRRect(
-                            borderRadius: AppRadius.lgAll,
-                            child: Container(
-                              width: 100,
-                              height: 100,
-                              color: colorScheme.surfaceContainerHighest,
-                              child: CdnUtils.menuImageUrl(widget.item.imageUrl) != null
-                                  ? CachedNetworkImage(
-                                      imageUrl: CdnUtils.menuImageUrl(widget.item.imageUrl)!,
-                                      fit: BoxFit.cover,
-                                      memCacheWidth: 300,
-                                      fadeInDuration: const Duration(milliseconds: 300),
-                                      placeholder: (_, _) => Container(
-                                        color: colorScheme.surfaceContainerHighest,
-                                        child: Center(
-                                          child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: colorScheme.primary.withValues(alpha: 0.5))),
-                                        ),
-                                      ),
-                                      errorWidget: (_, _, _) => Icon(Icons.fastfood, size: 32, color: colorScheme.onSurfaceVariant),
-                                    )
-                                  : Icon(Icons.fastfood, size: 32, color: colorScheme.onSurfaceVariant),
-                            ),
-                          ),
-                        ),
-                        // Animated favorite button
-                        Positioned(
-                          top: 6,
-                          left: 6,
-                          child: GestureDetector(
-                            onTap: () => _onFavoriteTap(menuProvider),
-                            child: AnimatedBuilder(
-                              animation: _heartScale,
-                              builder: (context, child) => Transform.scale(
-                                scale: _heartScale.value,
-                                child: Container(
-                                  padding: const EdgeInsets.all(6),
-                                  decoration: BoxDecoration(
-                                    color: Colors.black.withValues(alpha: 0.4),
-                                    shape: BoxShape.circle,
-                                    boxShadow: isFavorite ? [BoxShadow(color: Colors.red.withValues(alpha: 0.3), blurRadius: 8, spreadRadius: 1)] : null,
+                    // IMAGE
+                    Hero(
+                      tag: 'menu-${widget.item.id}',
+                      child: ClipRRect(
+                        borderRadius: AppRadius.lgAll,
+                        child: Container(
+                          width: 100,
+                          height: 100,
+                          color: colorScheme.surfaceContainerHighest,
+                          child: CdnUtils.menuImageUrl(widget.item.imageUrl) != null
+                              ? CachedNetworkImage(
+                                  imageUrl: CdnUtils.menuImageUrl(widget.item.imageUrl)!,
+                                  fit: BoxFit.cover,
+                                  memCacheWidth: 300,
+                                  fadeInDuration: const Duration(milliseconds: 300),
+                                  placeholder: (_, _) => Container(
+                                    color: colorScheme.surfaceContainerHighest,
+                                    child: Center(
+                                      child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: colorScheme.primary.withValues(alpha: 0.5))),
+                                    ),
                                   ),
-                                  child: Icon(isFavorite ? Icons.favorite : Icons.favorite_border, color: isFavorite ? Colors.red : Colors.white, size: 16),
-                                ),
-                              ),
-                            ),
-                          ),
+                                  errorWidget: (_, _, _) => Icon(Icons.fastfood, size: 32, color: colorScheme.onSurfaceVariant),
+                                )
+                              : Icon(Icons.fastfood, size: 32, color: colorScheme.onSurfaceVariant),
                         ),
-                      ],
+                      ),
                     ),
 
                     const SizedBox(width: 16),
@@ -224,25 +176,24 @@ class _MenuCardState extends State<MenuCard> with TickerProviderStateMixin {
                                       'Sold Out',
                                       style: TextStyle(color: colorScheme.onErrorContainer, fontWeight: FontWeight.bold, fontSize: 11),
                                     ),
-                                  )
-                                else if (!isGuest)
-                                  GestureDetector(
-                                    onTap: widget.onAddToCart,
-                                    child: Container(
-                                      width: 34,
-                                      height: 34,
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                          colors: [colorScheme.primaryContainer, colorScheme.primaryContainer.withValues(alpha: 0.8)],
-                                        ),
-                                        shape: BoxShape.circle,
-                                        boxShadow: [BoxShadow(color: colorScheme.primary.withValues(alpha: 0.2), blurRadius: 6, offset: const Offset(0, 3))],
-                                      ),
-                                      child: Icon(Icons.add, size: 18, color: colorScheme.onPrimaryContainer),
-                                    ),
                                   ),
+                                GestureDetector(
+                                  onTap: widget.onAddToCart,
+                                  child: Container(
+                                    width: 34,
+                                    height: 34,
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                        colors: [colorScheme.primaryContainer, colorScheme.primaryContainer.withValues(alpha: 0.8)],
+                                      ),
+                                      shape: BoxShape.circle,
+                                      boxShadow: [BoxShadow(color: colorScheme.primary.withValues(alpha: 0.2), blurRadius: 6, offset: const Offset(0, 3))],
+                                    ),
+                                    child: Icon(Icons.add, size: 18, color: colorScheme.onPrimaryContainer),
+                                  ),
+                                ),
                               ],
                             ),
                           ],

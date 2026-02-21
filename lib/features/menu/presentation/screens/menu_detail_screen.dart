@@ -9,9 +9,7 @@ import 'package:urban_cafe/core/theme.dart';
 import 'package:urban_cafe/core/utils.dart';
 import 'package:urban_cafe/features/_common/widgets/badges/menu_item_badges.dart';
 import 'package:urban_cafe/features/auth/presentation/providers/auth_provider.dart';
-import 'package:urban_cafe/features/cart/presentation/providers/cart_provider.dart';
 import 'package:urban_cafe/features/menu/domain/entities/menu_item.dart';
-import 'package:urban_cafe/features/menu/presentation/providers/menu_provider.dart';
 
 class MenuDetailScreen extends StatefulWidget {
   final MenuItemEntity item;
@@ -84,18 +82,9 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
   }
 
   void _addToCart() {
-    final cart = context.read<CartProvider>();
-    cart.addToCart(
-      widget.item,
-      quantity: _quantity.value,
-      notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
-      selectedVariant: _selectedVariant,
-      selectedAddons: _selectedAddons.toList(),
-    );
-
+    // Cart removed — show a message
     if (!mounted) return;
-
-    showAppSnackBar(context, "Added to Cart Successfully");
+    showAppSnackBar(context, 'Cart functionality coming soon');
   }
 
   @override
@@ -103,9 +92,7 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final priceFormat = NumberFormat.currency(symbol: '', decimalDigits: 0);
-    final menuProvider = context.watch<MenuProvider>();
     final auth = context.watch<AuthProvider>();
-    final isFavorite = menuProvider.favoriteIds.contains(widget.item.id);
 
     return Scaffold(
       backgroundColor: cs.surface,
@@ -152,7 +139,7 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
                             shape: BoxShape.circle,
                             border: Border.all(color: cs.onSurface.withValues(alpha: 0.1)),
                           ),
-                          child: AnimatedHeartButton(isFavorite: isFavorite, size: 24, onTap: () => menuProvider.toggleFavorite(widget.item.id)),
+                          child: Icon(Icons.share, color: cs.onSurface),
                         ),
                       ),
                     ),

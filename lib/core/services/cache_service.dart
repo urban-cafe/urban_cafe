@@ -119,7 +119,6 @@ abstract class CacheKeys {
   static String menuItems(String categoryId) => 'menu:items:$categoryId';
   static const String popularItems = 'menu:popular_items';
   static const String specialItems = 'menu:special_items';
-  static const String favoriteIds = 'menu:favorite_ids';
 
   // Auth Feature
   static const String userProfile = 'auth:user_profile';

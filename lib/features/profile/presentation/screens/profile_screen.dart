@@ -10,7 +10,6 @@ import 'package:urban_cafe/features/_common/widgets/cards/profile_section_card.d
 import 'package:urban_cafe/features/_common/widgets/dialogs/confirmation_dialog.dart';
 import 'package:urban_cafe/features/_common/widgets/tiles/profile_action_tile.dart';
 import 'package:urban_cafe/features/auth/presentation/providers/auth_provider.dart';
-import 'package:urban_cafe/features/pos/data/services/menu_sync_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -133,21 +132,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ProfileSectionCard(
                           title: 'management'.tr(),
                           children: [
-                            ProfileActionTile(
-                              icon: Icons.list_alt,
-                              title: 'orders'.tr(),
-                              subtitle: 'View and manage orders',
-                              iconColor: const Color(0xFF1976D2),
-                              onTap: () => context.push(AppRoutes.adminOrders),
-                            ),
-                            if (auth.isStaff)
-                              ProfileActionTile(
-                                icon: Icons.soup_kitchen_outlined,
-                                title: 'kitchen_display'.tr(),
-                                subtitle: 'Manage active orders',
-                                iconColor: Colors.orange,
-                                onTap: () => context.push(AppRoutes.staff),
-                              ),
                             if (auth.isAdmin) ...[
                               if (auth.isAdmin)
                                 ProfileActionTile(
@@ -169,98 +153,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ],
                         ),
                         const SizedBox(height: 16),
-
-                        // Offline Data Section (staff/admin only)
-                        Consumer<MenuSyncService>(
-                          builder: (context, syncService, _) {
-                            final lastSync = syncService.lastSyncTime;
-                            final itemCount = syncService.cachedItemCount;
-                            final isSyncing = syncService.isSyncing;
-                            final progress = syncService.progress;
-                            final syncError = syncService.error;
-                            final syncStatus = syncService.syncStatus;
-                            final totalImages = syncService.totalImages;
-                            final downloadedImages = syncService.downloadedImages;
-
-                            String lastSyncText = 'Never synced';
-                            if (lastSync != null) {
-                              final diff = DateTime.now().difference(lastSync);
-                              if (diff.inMinutes < 1) {
-                                lastSyncText = 'Just now';
-                              } else if (diff.inMinutes < 60) {
-                                lastSyncText = '${diff.inMinutes}m ago';
-                              } else if (diff.inHours < 24) {
-                                lastSyncText = '${diff.inHours}h ago';
-                              } else {
-                                lastSyncText = '${diff.inDays}d ago';
-                              }
-                            }
-
-                            return ProfileSectionCard(
-                              title: 'Offline Data',
-                              children: [
-                                ProfileActionTile(icon: Icons.storage_outlined, title: 'Menu Items', subtitle: itemCount > 0 ? '$itemCount items cached' : 'No items cached', iconColor: Colors.indigo),
-                                if (totalImages > 0 && !isSyncing)
-                                  ProfileActionTile(icon: Icons.image_outlined, title: 'Images', subtitle: '$downloadedImages / $totalImages cached', iconColor: Colors.deepPurple),
-                                ProfileActionTile(icon: Icons.schedule, title: 'Last Synced', subtitle: lastSyncText, iconColor: Colors.teal),
-                                if (syncError != null)
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                                    child: Text('Sync error: $syncError', style: TextStyle(color: colorScheme.error, fontSize: 12)),
-                                  ),
-                                if (isSyncing)
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        ClipRRect(
-                                          borderRadius: BorderRadius.circular(4),
-                                          child: LinearProgressIndicator(value: progress > 0 ? progress : null, minHeight: 6, color: colorScheme.primary),
-                                        ),
-                                        const SizedBox(height: 6),
-                                        Text(
-                                          syncStatus.isNotEmpty ? syncStatus : 'Syncing…',
-                                          style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant, fontWeight: FontWeight.w500),
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text('${(progress * 100).toInt()}% complete', style: TextStyle(fontSize: 11, color: colorScheme.outline)),
-                                      ],
-                                    ),
-                                  ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                  child: SizedBox(
-                                    width: double.infinity,
-                                    child: OutlinedButton.icon(
-                                      onPressed: isSyncing ? null : () => syncService.downloadAllMenuData(),
-                                      icon: Icon(isSyncing ? Icons.hourglass_top : Icons.refresh),
-                                      label: Text(
-                                        isSyncing
-                                            ? 'Syncing…'
-                                            : itemCount > 0
-                                            ? 'Refresh Menu & Images'
-                                            : 'Download Menu & Images',
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 16),
                       ],
                       ProfileSectionCard(
                         title: 'settings'.tr(),
                         children: [
-                          ProfileActionTile(
-                            icon: Icons.favorite_border_rounded,
-                            title: 'favorites'.tr(),
-                            subtitle: 'Your saved items',
-                            iconColor: Colors.redAccent,
-                            onTap: () => context.push('/profile/favorites'),
-                          ),
                           ProfileActionTile(
                             icon: Icons.language,
                             title: 'language'.tr(),
