@@ -1,8 +1,8 @@
 name: Deploy Flutter Web to GitHub Pages
 
 on:
-  # push:                          # ← PAUSED: uncomment to re-enable auto-deploy
-  #   branches: [ "main", "master" ]
+  push:
+    branches: [ "main", "master" ]
   workflow_dispatch:
 
 permissions:
