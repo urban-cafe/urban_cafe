@@ -133,15 +133,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           title: 'management'.tr(),
                           children: [
                             if (auth.isAdmin) ...[
-                              if (auth.isAdmin)
-                                ProfileActionTile(
-                                  // Separate check just in case logic changes
-                                  icon: Icons.analytics_outlined,
-                                  title: 'Analytics',
-                                  subtitle: 'View sales performance',
-                                  iconColor: Colors.blue,
-                                  onTap: () => context.push('${AppRoutes.admin}/analytics'),
-                                ),
                               ProfileActionTile(
                                 icon: Icons.settings_input_component_outlined,
                                 title: 'point_settings'.tr(),

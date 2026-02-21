@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:urban_cafe/core/routing/routes.dart';
 import 'package:urban_cafe/features/_common/widgets/main_scaffold.dart';
 // Feature screens
-import 'package:urban_cafe/features/admin/presentation/screens/analytics_screen.dart';
 import 'package:urban_cafe/features/admin/presentation/screens/category_manager_screen.dart';
 import 'package:urban_cafe/features/admin/presentation/screens/edit_screen.dart';
 import 'package:urban_cafe/features/admin/presentation/screens/list_screen.dart';
@@ -97,13 +96,7 @@ class AppRouter {
           // ── Admin branches (index 3-5) ──────────────────────
           // 3: Admin dashboard
           StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: AppRoutes.admin,
-                builder: (context, state) => const AdminListScreen(),
-                routes: [GoRoute(path: 'analytics', builder: (context, state) => const AdminAnalyticsScreen())],
-              ),
-            ],
+            routes: [GoRoute(path: AppRoutes.admin, builder: (context, state) => const AdminListScreen())],
           ),
           // 4: Admin categories
           StatefulShellBranch(

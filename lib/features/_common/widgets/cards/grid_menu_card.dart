@@ -3,11 +3,9 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
 import 'package:urban_cafe/core/cdn_utils.dart';
 import 'package:urban_cafe/core/theme.dart';
 import 'package:urban_cafe/features/_common/widgets/badges/menu_item_badges.dart';
-import 'package:urban_cafe/features/auth/presentation/providers/auth_provider.dart';
 import 'package:urban_cafe/features/menu/domain/entities/menu_item.dart';
 
 class GridMenuCard extends StatefulWidget {
@@ -54,19 +52,12 @@ class _GridMenuCardState extends State<GridMenuCard> with SingleTickerProviderSt
     _controller.reverse();
   }
 
-  void _addToCart() {
-    // Navigate to detail — no cart functionality
-    context.push('/detail', extra: widget.item);
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final priceFormat = NumberFormat.currency(symbol: '', decimalDigits: 0);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final auth = context.watch<AuthProvider>();
-    final isGuest = auth.isGuest;
 
     return AnimatedBuilder(
       animation: _scaleAnimation,
@@ -177,16 +168,6 @@ class _GridMenuCardState extends State<GridMenuCard> with SingleTickerProviderSt
                               child: Text(
                                 'Sold Out',
                                 style: TextStyle(color: cs.onErrorContainer, fontWeight: FontWeight.bold, fontSize: 11),
-                              ),
-                            )
-                          else if (!isGuest)
-                            GestureDetector(
-                              onTap: _addToCart,
-                              child: Container(
-                                width: 32,
-                                height: 32,
-                                decoration: BoxDecoration(color: cs.primaryContainer, shape: BoxShape.circle),
-                                child: Icon(Icons.add, size: 17, color: cs.onPrimaryContainer),
                               ),
                             ),
                         ],

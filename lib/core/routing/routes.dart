@@ -19,7 +19,6 @@ abstract final class AppRoutes {
 
   // Admin
   static const admin = '/admin';
-  static const adminAnalytics = '/admin/analytics';
   static const adminCategories = '/admin/categories';
   static const adminEdit = '/admin/edit';
   static const adminPointSettings = '/admin/point-settings';

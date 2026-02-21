@@ -316,7 +316,6 @@ class _MenuScreenState extends State<MenuScreen> {
                                                   FocusScope.of(context).unfocus();
                                                   context.push('/detail', extra: item);
                                                 },
-                                          onAddToCart: null, // Cart removed
                                         );
                                       },
                                     ),

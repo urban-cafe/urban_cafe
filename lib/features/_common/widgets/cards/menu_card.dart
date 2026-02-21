@@ -9,10 +9,9 @@ import 'package:urban_cafe/features/menu/domain/entities/menu_item.dart';
 class MenuCard extends StatefulWidget {
   final MenuItemEntity item;
   final VoidCallback? onTap;
-  final VoidCallback? onAddToCart;
   final int index;
 
-  const MenuCard({super.key, required this.item, this.onTap, this.onAddToCart, this.index = 0});
+  const MenuCard({super.key, required this.item, this.onTap, this.index = 0});
 
   @override
   State<MenuCard> createState() => _MenuCardState();
@@ -177,23 +176,6 @@ class _MenuCardState extends State<MenuCard> with TickerProviderStateMixin {
                                       style: TextStyle(color: colorScheme.onErrorContainer, fontWeight: FontWeight.bold, fontSize: 11),
                                     ),
                                   ),
-                                GestureDetector(
-                                  onTap: widget.onAddToCart,
-                                  child: Container(
-                                    width: 34,
-                                    height: 34,
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                        colors: [colorScheme.primaryContainer, colorScheme.primaryContainer.withValues(alpha: 0.8)],
-                                      ),
-                                      shape: BoxShape.circle,
-                                      boxShadow: [BoxShadow(color: colorScheme.primary.withValues(alpha: 0.2), blurRadius: 6, offset: const Offset(0, 3))],
-                                    ),
-                                    child: Icon(Icons.add, size: 18, color: colorScheme.onPrimaryContainer),
-                                  ),
-                                ),
                               ],
                             ),
                           ],

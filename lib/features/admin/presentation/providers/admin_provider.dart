@@ -2,7 +2,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:get_it/get_it.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:urban_cafe/core/error/failures.dart';
 import 'package:urban_cafe/core/services/storage_service.dart';
 import 'package:urban_cafe/features/menu/domain/repositories/menu_repository.dart';
@@ -15,9 +14,6 @@ class AdminProvider extends ChangeNotifier {
 
   bool loading = false;
   String? error;
-
-  // Analytics State
-  Map<String, dynamic>? analytics;
 
   // ─────────────────────────────────────────────────────────────────
   // HELPER: Unified loading/error handling
@@ -39,42 +35,6 @@ class AdminProvider extends ChangeNotifier {
     } finally {
       loading = false;
       if (notify) notifyListeners();
-    }
-  }
-
-  // ─────────────────────────────────────────────────────────────────
-  // ANALYTICS (queries Supabase directly)
-  // ─────────────────────────────────────────────────────────────────
-  Future<void> loadAnalytics() async {
-    loading = true;
-    error = null;
-    notifyListeners();
-
-    try {
-      final client = GetIt.I<SupabaseClient>();
-
-      // Total orders count
-      final ordersResponse = await client.from('orders').select('id').count(CountOption.exact);
-      final totalOrders = ordersResponse.count;
-
-      // Revenue
-      final revenueData = await client.from('orders').select('total_amount').eq('status', 'completed');
-      final totalRevenue = revenueData.fold<double>(0, (sum, row) => sum + (double.tryParse(row['total_amount'].toString()) ?? 0));
-
-      // Menu items count
-      final itemsResponse = await client.from('menu_items').select('id').count(CountOption.exact);
-      final totalItems = itemsResponse.count;
-
-      // Users count
-      final usersResponse = await client.from('profiles').select('id').count(CountOption.exact);
-      final totalUsers = usersResponse.count;
-
-      analytics = {'totalOrders': totalOrders, 'totalRevenue': totalRevenue, 'totalMenuItems': totalItems, 'totalUsers': totalUsers};
-    } catch (e) {
-      error = e.toString();
-    } finally {
-      loading = false;
-      notifyListeners();
     }
   }
 
