@@ -1,18 +1,22 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:urban_cafe/features/loyalty/domain/entities/loyalty_transaction.dart';
 import 'package:urban_cafe/features/loyalty/domain/entities/point_token.dart';
 import 'package:urban_cafe/features/loyalty/domain/entities/redemption_result.dart';
 import 'package:urban_cafe/features/loyalty/domain/usecases/generate_point_token.dart';
+import 'package:urban_cafe/features/loyalty/domain/usecases/get_loyalty_history_usecase.dart';
 import 'package:urban_cafe/features/loyalty/domain/usecases/process_point_transaction.dart';
 
 class LoyaltyProvider extends ChangeNotifier {
   final GeneratePointToken _generatePointToken;
   final ProcessPointTransaction _processPointTransaction;
+  final GetLoyaltyHistoryUseCase _getLoyaltyHistoryUseCase;
 
-  LoyaltyProvider({required GeneratePointToken generatePointToken, required ProcessPointTransaction processPointTransaction})
+  LoyaltyProvider({required GeneratePointToken generatePointToken, required ProcessPointTransaction processPointTransaction, required GetLoyaltyHistoryUseCase getLoyaltyHistoryUseCase})
     : _generatePointToken = generatePointToken,
-      _processPointTransaction = processPointTransaction;
+      _processPointTransaction = processPointTransaction,
+      _getLoyaltyHistoryUseCase = getLoyaltyHistoryUseCase;
 
   // ─── QR Token State (Client) ─────────────────────────────────────
   PointToken? _currentToken;
@@ -42,6 +46,16 @@ class LoyaltyProvider extends ChangeNotifier {
 
   String? _redemptionError;
   String? get redemptionError => _redemptionError;
+
+  // ─── History State ───────────────────────────────────────────────
+  List<LoyaltyTransaction> _history = [];
+  List<LoyaltyTransaction> get history => _history;
+
+  bool _isLoadingHistory = false;
+  bool get isLoadingHistory => _isLoadingHistory;
+
+  String? _historyError;
+  String? get historyError => _historyError;
 
   // ─── Settings State (Admin) ──────────────────────────────────────
   // Removed static point settings logic.
@@ -132,6 +146,33 @@ class LoyaltyProvider extends ChangeNotifier {
     _lastRedemption = null;
     _redemptionError = null;
     notifyListeners();
+  }
+
+  // ─── History Fetching ────────────────────────────────────────────
+
+  Future<void> fetchHistory({String? userId}) async {
+    _isLoadingHistory = true;
+    _historyError = null;
+    notifyListeners();
+
+    try {
+      final result = await _getLoyaltyHistoryUseCase(userId: userId);
+
+      result.fold(
+        (failure) {
+          _historyError = _getUserFriendlyError(failure.message);
+        },
+        (historyData) {
+          _history = historyData;
+        },
+      );
+    } catch (e) {
+      _historyError = 'Failed to load transaction history.';
+      debugPrint('[LoyaltyProvider] Fetch history error: $e');
+    } finally {
+      _isLoadingHistory = false;
+      notifyListeners();
+    }
   }
 
   // Settings Methods removed.

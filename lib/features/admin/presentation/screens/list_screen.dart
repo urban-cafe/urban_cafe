@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
+import 'package:urban_cafe/core/routing/routes.dart';
 import 'package:urban_cafe/core/theme.dart';
 import 'package:urban_cafe/features/_common/widgets/inputs/custom_search_bar.dart';
 import 'package:urban_cafe/features/_common/widgets/tiles/admin_item_tile.dart';
@@ -56,7 +57,19 @@ class _AdminListScreenState extends State<AdminListScreen> {
   }
 
   // --- Dummy Data for Skeleton ---
-  MenuItemEntity get _dummyItem => MenuItemEntity(id: 'dummy', name: 'Loading Item Name ...', description: null, price: 0, categoryId: null, categoryName: 'Category', imagePath: null, imageUrl: null, isAvailable: true, createdAt: DateTime.now(), updatedAt: DateTime.now());
+  MenuItemEntity get _dummyItem => MenuItemEntity(
+    id: 'dummy',
+    name: 'Loading Item Name ...',
+    description: null,
+    price: 0,
+    categoryId: null,
+    categoryName: 'Category',
+    imagePath: null,
+    imageUrl: null,
+    isAvailable: true,
+    createdAt: DateTime.now(),
+    updatedAt: DateTime.now(),
+  );
 
   List<MenuItemEntity> get _loadingItems {
     return List.generate(8, (index) => _dummyItem);
@@ -82,6 +95,7 @@ class _AdminListScreenState extends State<AdminListScreen> {
           backgroundColor: colorScheme.surface,
           foregroundColor: colorScheme.onSurface,
           scrolledUnderElevation: 0,
+          actions: [IconButton(icon: const Icon(Icons.history_rounded), tooltip: 'Transaction Ledger', onPressed: () => context.push(AppRoutes.adminLoyaltyHistory))],
         ),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: () async {

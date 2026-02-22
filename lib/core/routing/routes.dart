@@ -10,6 +10,7 @@ abstract final class AppRoutes {
   static const home = '/';
   static const menu = '/menu';
   static const qr = '/qr';
+  static const loyaltyHistory = '/loyalty-history';
 
   // Profile
   static const profile = '/profile';
@@ -21,6 +22,7 @@ abstract final class AppRoutes {
   static const admin = '/admin';
   static const adminCategories = '/admin/categories';
   static const adminEdit = '/admin/edit';
+  static const adminLoyaltyHistory = '/admin/loyalty-history';
 
   // QR Scanner (staff/admin)
   static const qrScanner = '/qr-scanner';

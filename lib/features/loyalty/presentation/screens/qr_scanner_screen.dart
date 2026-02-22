@@ -1,7 +1,9 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:provider/provider.dart';
+import 'package:urban_cafe/core/routing/routes.dart';
 import 'package:urban_cafe/features/loyalty/presentation/providers/loyalty_provider.dart';
 
 /// Staff/Admin screen: scan client QR codes and award loyalty points.
@@ -153,6 +155,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
         centerTitle: true,
         backgroundColor: cs.surface,
         scrolledUnderElevation: 0,
+        actions: [IconButton(icon: const Icon(Icons.history_rounded), tooltip: 'Transaction Ledger', onPressed: () => context.push(AppRoutes.adminLoyaltyHistory))],
       ),
       body: _showAmountInput ? _buildAmountInput(theme, cs, loyalty) : _buildScanner(theme, cs),
     );

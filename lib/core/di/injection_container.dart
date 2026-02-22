@@ -18,6 +18,7 @@ import 'package:urban_cafe/features/auth/presentation/providers/auth_provider.da
 import 'package:urban_cafe/features/loyalty/data/repositories/loyalty_repository_impl.dart';
 import 'package:urban_cafe/features/loyalty/domain/repositories/loyalty_repository.dart';
 import 'package:urban_cafe/features/loyalty/domain/usecases/generate_point_token.dart';
+import 'package:urban_cafe/features/loyalty/domain/usecases/get_loyalty_history_usecase.dart';
 import 'package:urban_cafe/features/loyalty/domain/usecases/process_point_transaction.dart';
 import 'package:urban_cafe/features/loyalty/presentation/providers/loyalty_provider.dart';
 import 'package:urban_cafe/features/menu/data/repositories/menu_repository_impl.dart';
@@ -102,7 +103,8 @@ Future<void> configureDependencies(SupabaseClient client) async {
   // UseCases
   sl.registerLazySingleton(() => GeneratePointToken(sl()));
   sl.registerLazySingleton(() => ProcessPointTransaction(sl()));
+  sl.registerLazySingleton(() => GetLoyaltyHistoryUseCase(sl()));
 
   // Provider
-  sl.registerFactory(() => LoyaltyProvider(generatePointToken: sl(), processPointTransaction: sl()));
+  sl.registerFactory(() => LoyaltyProvider(generatePointToken: sl(), processPointTransaction: sl(), getLoyaltyHistoryUseCase: sl()));
 }

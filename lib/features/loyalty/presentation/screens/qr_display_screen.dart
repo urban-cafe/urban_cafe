@@ -1,7 +1,9 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:urban_cafe/core/routing/routes.dart';
 import 'package:urban_cafe/features/auth/presentation/providers/auth_provider.dart';
 import 'package:urban_cafe/features/loyalty/presentation/providers/loyalty_provider.dart';
 
@@ -160,7 +162,19 @@ class _QrDisplayScreenState extends State<QrDisplayScreen> {
           label: Text('generate_new_qr'.tr()),
           style: OutlinedButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            side: BorderSide(color: cs.outlineVariant),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        ),
+        const SizedBox(height: 16),
+        TextButton.icon(
+          onPressed: () => context.push(AppRoutes.loyaltyHistory),
+          icon: const Icon(Icons.history_rounded),
+          label: const Text('View Points History'),
+          style: TextButton.styleFrom(
+            foregroundColor: cs.primary,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         ),
       ],

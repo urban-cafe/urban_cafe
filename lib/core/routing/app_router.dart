@@ -11,8 +11,10 @@ import 'package:urban_cafe/features/auth/presentation/providers/auth_provider.da
 import 'package:urban_cafe/features/auth/presentation/screens/email_confirmation_screen.dart';
 import 'package:urban_cafe/features/auth/presentation/screens/login_screen.dart';
 import 'package:urban_cafe/features/auth/presentation/screens/sign_up_screen.dart';
+import 'package:urban_cafe/features/loyalty/presentation/screens/admin_loyalty_history_screen.dart';
+import 'package:urban_cafe/features/loyalty/presentation/screens/client_loyalty_history_screen.dart';
 import 'package:urban_cafe/features/loyalty/presentation/screens/qr_display_screen.dart';
-import 'package:urban_cafe/features/loyalty/presentation/screens/qr_scan_landing_screen.dart';
+import 'package:urban_cafe/features/loyalty/presentation/screens/qr_scanner_screen.dart';
 import 'package:urban_cafe/features/menu/domain/entities/menu_item.dart';
 import 'package:urban_cafe/features/menu/presentation/screens/main_menu_screen.dart';
 import 'package:urban_cafe/features/menu/presentation/screens/menu_detail_screen.dart';
@@ -74,7 +76,10 @@ class AppRouter {
           ),
           // 1: QR (loyalty)
           StatefulShellBranch(
-            routes: [GoRoute(path: AppRoutes.qr, builder: (context, state) => const QrDisplayScreen())],
+            routes: [
+              GoRoute(path: AppRoutes.qr, builder: (context, state) => const QrDisplayScreen()),
+              GoRoute(path: AppRoutes.loyaltyHistory, builder: (context, state) => const ClientLoyaltyHistoryScreen()),
+            ],
           ),
           // 2: Profile (shared across all roles)
           StatefulShellBranch(
@@ -95,7 +100,13 @@ class AppRouter {
           // ── Admin branches (index 3-5) ──────────────────────
           // 3: Admin dashboard
           StatefulShellBranch(
-            routes: [GoRoute(path: AppRoutes.admin, builder: (context, state) => const AdminListScreen())],
+            routes: [
+              GoRoute(
+                path: AppRoutes.admin,
+                builder: (context, state) => const AdminListScreen(),
+                routes: [GoRoute(path: 'loyalty-history', builder: (context, state) => const AdminLoyaltyHistoryScreen())],
+              ),
+            ],
           ),
           // 4: Admin categories
           StatefulShellBranch(
@@ -103,7 +114,7 @@ class AppRouter {
           ),
           // 5: QR Scanner (admin/staff)
           StatefulShellBranch(
-            routes: [GoRoute(path: AppRoutes.qrScanner, builder: (context, state) => const QrScanLandingScreen())],
+            routes: [GoRoute(path: AppRoutes.qrScanner, builder: (context, state) => const QrScannerScreen())],
           ),
         ],
       ),
