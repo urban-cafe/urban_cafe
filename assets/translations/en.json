@@ -204,5 +204,9 @@
   "start_scanning": "Start Scanning",
   "good_morning" : "Good Morning",
   "good_afternoon": "Good Afternoon",
-  "good_evening": "Good Evening"
+  "good_evening": "Good Evening",
+  "points_redeemed_title": "Points Redeemed!",
+  "points_deducted": "Points Deducted",
+  "redeem": "Redeem",
+  "transaction_type": "Transaction Type"
 }

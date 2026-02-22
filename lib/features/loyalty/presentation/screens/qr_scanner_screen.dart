@@ -214,14 +214,14 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
               const SizedBox(height: 16),
               Text('qr_scanned_successfully'.tr(), style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
-              Text('Transaction Type', style: theme.textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
+              Text('transaction_type'.tr(), style: theme.textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
               const SizedBox(height: 16),
 
               // Segmented control for Award vs Redeem
               SegmentedButton<bool>(
-                segments: const [
-                  ButtonSegment(value: true, label: Text('Award Points'), icon: Icon(Icons.add_circle_outline)),
-                  ButtonSegment(value: false, label: Text('Redeem Points'), icon: Icon(Icons.remove_circle_outline)),
+                segments: [
+                  ButtonSegment(value: true, label: Text('award_points'.tr()), icon: const Icon(Icons.add_circle_outline)),
+                  ButtonSegment(value: false, label: Text('redeem_points'.tr()), icon: const Icon(Icons.remove_circle_outline)),
                 ],
                 selected: {_isAwarding},
                 onSelectionChanged: (Set<bool> newSelection) {

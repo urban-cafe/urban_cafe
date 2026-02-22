@@ -203,5 +203,9 @@
   "start_scanning": "စကင်ဖတ်ရန်",
   "good_morning" : "မင်္ဂလာ နံနက်ခင်းပါ",
   "good_afternoon": "မင်္ဂလာ နေ့လည်ခင်းပါ",
-  "good_evening": "မင်္ဂလာ ညနေခင်းပါ"
+  "good_evening": "မင်္ဂလာ ညနေခင်းပါ",
+  "points_redeemed_title": "ပွိုင့်များ အသုံးပြုပြီးပါပြီ!",
+  "points_deducted": "လျှော့လိုက်သော ပွိုင့်များ",
+  "redeem": "အသုံးပြုမည်",
+  "transaction_type": "လုပ်ဆောင်မှု အမျိုးအစား"
 }
