@@ -18,9 +18,7 @@ import 'package:urban_cafe/features/auth/presentation/providers/auth_provider.da
 import 'package:urban_cafe/features/loyalty/data/repositories/loyalty_repository_impl.dart';
 import 'package:urban_cafe/features/loyalty/domain/repositories/loyalty_repository.dart';
 import 'package:urban_cafe/features/loyalty/domain/usecases/generate_point_token.dart';
-import 'package:urban_cafe/features/loyalty/domain/usecases/get_point_settings.dart';
-import 'package:urban_cafe/features/loyalty/domain/usecases/redeem_point_token.dart';
-import 'package:urban_cafe/features/loyalty/domain/usecases/update_point_settings.dart';
+import 'package:urban_cafe/features/loyalty/domain/usecases/process_point_transaction.dart';
 import 'package:urban_cafe/features/loyalty/presentation/providers/loyalty_provider.dart';
 import 'package:urban_cafe/features/menu/data/repositories/menu_repository_impl.dart';
 import 'package:urban_cafe/features/menu/domain/repositories/menu_repository.dart';
@@ -103,10 +101,8 @@ Future<void> configureDependencies(SupabaseClient client) async {
 
   // UseCases
   sl.registerLazySingleton(() => GeneratePointToken(sl()));
-  sl.registerLazySingleton(() => RedeemPointToken(sl()));
-  sl.registerLazySingleton(() => GetPointSettings(sl()));
-  sl.registerLazySingleton(() => UpdatePointSettings(sl()));
+  sl.registerLazySingleton(() => ProcessPointTransaction(sl()));
 
   // Provider
-  sl.registerFactory(() => LoyaltyProvider(generatePointToken: sl(), redeemPointToken: sl(), getPointSettings: sl(), updatePointSettings: sl()));
+  sl.registerFactory(() => LoyaltyProvider(generatePointToken: sl(), processPointTransaction: sl()));
 }

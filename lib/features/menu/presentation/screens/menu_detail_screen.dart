@@ -55,24 +55,7 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
                     ),
                   ),
                 ),
-                actions: [
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: ClipOval(
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: cs.surface.withValues(alpha: 0.3),
-                            shape: BoxShape.circle,
-                            border: Border.all(color: cs.onSurface.withValues(alpha: 0.1)),
-                          ),
-                          child: Icon(Icons.share, color: cs.onSurface),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+
                 flexibleSpace: FlexibleSpaceBar(
                   stretchModes: const [StretchMode.zoomBackground],
                   background: widget.item.imageUrl == null
@@ -91,74 +74,59 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
 
               // 2. CONTENT
               SliverToBoxAdapter(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: cs.surface,
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.xxl)),
-                  ),
-                  transform: Matrix4.translationValues(0, -24, 0), // Overlap effect
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Center(
-                          child: Container(
-                            width: 40,
-                            height: 4,
-                            margin: const EdgeInsets.only(bottom: 20),
-                            decoration: BoxDecoration(color: cs.outlineVariant, borderRadius: BorderRadius.circular(2)),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Title + Price
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              widget.item.name,
+                              style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: cs.onSurface),
+                            ),
                           ),
-                        ),
-                        // Title + Price
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                widget.item.name,
-                                style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: cs.onSurface),
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Text(
-                              priceFormat.format(widget.item.price),
-                              style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: cs.primary),
-                            ),
-                          ],
-                        ),
+                          const SizedBox(width: 16),
+                          Text(
+                            priceFormat.format(widget.item.price),
+                            style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: cs.primary),
+                          ),
+                        ],
+                      ),
 
-                        const SizedBox(height: 16),
+                      const SizedBox(height: 16),
 
-                        // Badges
-                        MenuItemBadges(isMostPopular: widget.item.isMostPopular, isWeekendSpecial: widget.item.isWeekendSpecial),
-                        const SizedBox(height: 16),
+                      // Badges
+                      MenuItemBadges(isMostPopular: widget.item.isMostPopular, isWeekendSpecial: widget.item.isWeekendSpecial),
+                      const SizedBox(height: 16),
 
-                        // Tags
-                        Wrap(
-                          spacing: 8,
-                          children: [
-                            if (widget.item.categoryName != null) _buildTag(context, widget.item.categoryName!, Icons.category_outlined),
-                            widget.item.isAvailable
-                                ? _buildTag(context, "Available", Icons.check_circle_outline, color: cs.secondary) // Use secondary (greenish gold) or success color
-                                : _buildTag(context, "Unavailable", Icons.cancel_outlined, color: cs.error),
-                          ],
-                        ),
+                      // Tags
+                      Wrap(
+                        spacing: 8,
+                        children: [
+                          if (widget.item.categoryName != null) _buildTag(context, widget.item.categoryName!, Icons.category_outlined),
+                          widget.item.isAvailable
+                              ? _buildTag(context, "Available", Icons.check_circle_outline, color: cs.secondary) // Use secondary (greenish gold) or success color
+                              : _buildTag(context, "Unavailable", Icons.cancel_outlined, color: cs.error),
+                        ],
+                      ),
 
-                        const SizedBox(height: 32),
-                        const Divider(),
-                        const SizedBox(height: 24),
+                      const SizedBox(height: 32),
+                      const Divider(),
+                      const SizedBox(height: 24),
 
-                        Text("Description", style: theme.textTheme.titleMedium),
-                        const SizedBox(height: 12),
-                        Text(
-                          (widget.item.description?.isNotEmpty ?? false) ? widget.item.description! : "No description available.",
-                          style: theme.textTheme.bodyLarge?.copyWith(color: cs.onSurfaceVariant, height: 1.6),
-                        ),
+                      Text("Description", style: theme.textTheme.titleMedium),
+                      const SizedBox(height: 12),
+                      Text(
+                        (widget.item.description?.isNotEmpty ?? false) ? widget.item.description! : "No description available.",
+                        style: theme.textTheme.bodyLarge?.copyWith(color: cs.onSurfaceVariant, height: 1.6),
+                      ),
 
-                        const SizedBox(height: 32),
-                      ],
-                    ),
+                      const SizedBox(height: 32),
+                    ],
                   ),
                 ),
               ),

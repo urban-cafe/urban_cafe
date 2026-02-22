@@ -123,7 +123,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                 ),
               ),
 
-              const SliverToBoxAdapter(child: SizedBox(height: 20)),
+              const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
               // 3. PROMO BANNER with stagger delay
               SliverToBoxAdapter(
@@ -151,7 +151,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                 ),
               ),
 
-              const SliverToBoxAdapter(child: SizedBox(height: 20)),
+              const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
               // 4. CATEGORIES with stagger delay
               SliverToBoxAdapter(
@@ -166,14 +166,14 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                       ),
                       const SizedBox(height: 16),
                       SizedBox(
-                        height: 60,
+                        height: 50,
                         child: Skeletonizer(
                           enabled: provider.mainCategoriesLoading,
                           child: ListView.separated(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
                             scrollDirection: Axis.horizontal,
                             itemCount: provider.mainCategories.isEmpty ? 5 : provider.mainCategories.length,
-                            separatorBuilder: (context, index) => const SizedBox(width: 12),
+                            separatorBuilder: (context, index) => const SizedBox(width: 8),
                             itemBuilder: (context, index) {
                               // Guard: during skeleton loading the list is empty but itemCount=5
                               if (index >= provider.mainCategories.length) {
@@ -196,7 +196,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                 ),
               ),
 
-              const SliverToBoxAdapter(child: SizedBox(height: 20)),
+              const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
               // 5. POPULAR ITEMS HEADER
               SliverPadding(

@@ -3,7 +3,6 @@ import 'dart:math';
 import 'package:fpdart/fpdart.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:urban_cafe/core/error/failures.dart';
-import 'package:urban_cafe/features/loyalty/domain/entities/point_settings.dart';
 import 'package:urban_cafe/features/loyalty/domain/entities/point_token.dart';
 import 'package:urban_cafe/features/loyalty/domain/entities/redemption_result.dart';
 import 'package:urban_cafe/features/loyalty/domain/repositories/loyalty_repository.dart';
@@ -42,43 +41,19 @@ class LoyaltyRepositoryImpl implements LoyaltyRepository {
   }
 
   @override
-  Future<Either<Failure, RedemptionResult>> redeemToken(String token, double purchaseAmount) async {
+  Future<Either<Failure, RedemptionResult>> processPointTransaction(String token, int points, bool isAward) async {
     try {
-      final response = await _client.rpc('redeem_point_token', params: {'p_token': token, 'p_purchase_amount': purchaseAmount});
+      final response = await _client.rpc('process_point_transaction', params: {'p_token': token, 'p_points': points, 'p_is_award': isAward});
 
       final result = RedemptionResult.fromJson(response as Map<String, dynamic>);
       if (!result.success) {
-        return Left(ServerFailure(result.message ?? 'Failed to redeem QR code'));
+        return Left(ServerFailure(result.message ?? 'Failed to process point transaction'));
       }
       return Right(result);
     } on PostgrestException catch (e) {
-      return Left(ServerFailure('Failed to redeem QR code', devMessage: e.message));
+      return Left(ServerFailure('Failed to process point transaction', devMessage: e.message));
     } catch (e) {
-      return Left(ServerFailure('Failed to redeem QR code', devMessage: e.toString()));
-    }
-  }
-
-  @override
-  Future<Either<Failure, PointSettings>> getPointSettings() async {
-    try {
-      final response = await _client.from('point_settings').select().limit(1).single();
-      return Right(PointSettings.fromJson(response));
-    } on PostgrestException catch (e) {
-      return Left(ServerFailure('Failed to load point settings', devMessage: e.message));
-    } catch (e) {
-      return Left(ServerFailure('Failed to load point settings', devMessage: e.toString()));
-    }
-  }
-
-  @override
-  Future<Either<Failure, PointSettings>> updatePointSettings(PointSettings settings) async {
-    try {
-      final response = await _client.from('point_settings').update(settings.toJson()).eq('id', settings.id).select().single();
-      return Right(PointSettings.fromJson(response));
-    } on PostgrestException catch (e) {
-      return Left(ServerFailure('Failed to update point settings', devMessage: e.message));
-    } catch (e) {
-      return Left(ServerFailure('Failed to update point settings', devMessage: e.toString()));
+      return Left(ServerFailure('Failed to process point transaction', devMessage: e.toString()));
     }
   }
 }

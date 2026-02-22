@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:urban_cafe/core/responsive.dart';
-import 'package:urban_cafe/core/routing/routes.dart';
 import 'package:urban_cafe/features/_common/widgets/buttons/primary_button.dart';
 import 'package:urban_cafe/features/_common/widgets/cards/profile_section_card.dart';
 import 'package:urban_cafe/features/_common/widgets/dialogs/confirmation_dialog.dart';
@@ -119,32 +118,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       if (auth.isClient && !isGuest) ...[
                         ProfileSectionCard(
                           title: 'account'.tr(),
-                          children: [
-                            ProfileActionTile(icon: Icons.edit_outlined, title: 'edit_profile'.tr(), subtitle: 'Update your name and details', onTap: () => context.push('/profile/edit')),
-                            ProfileActionTile(icon: Icons.receipt_long_outlined, title: 'order_history'.tr(), subtitle: 'View past orders', onTap: () => context.push('/profile/orders')),
-                          ],
+                          children: [ProfileActionTile(icon: Icons.edit_outlined, title: 'edit_profile'.tr(), subtitle: 'Update your name and details', onTap: () => context.push('/profile/edit'))],
                         ),
                         const SizedBox(height: 16),
                       ],
 
-                      // Staff/Admin Management Section
-                      if (auth.isStaff || auth.isAdmin) ...[
-                        ProfileSectionCard(
-                          title: 'management'.tr(),
-                          children: [
-                            if (auth.isAdmin) ...[
-                              ProfileActionTile(
-                                icon: Icons.settings_input_component_outlined,
-                                title: 'point_settings'.tr(),
-                                subtitle: 'Configure loyalty points',
-                                iconColor: Colors.teal,
-                                onTap: () => context.push(AppRoutes.adminPointSettings),
-                              ),
-                            ],
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                      ],
                       ProfileSectionCard(
                         title: 'settings'.tr(),
                         children: [

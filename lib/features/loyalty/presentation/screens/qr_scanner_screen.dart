@@ -14,16 +14,17 @@ class QrScannerScreen extends StatefulWidget {
 
 class _QrScannerScreenState extends State<QrScannerScreen> {
   final MobileScannerController _scannerController = MobileScannerController();
-  final TextEditingController _amountController = TextEditingController();
+  final TextEditingController _pointsController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   String? _scannedToken;
   bool _showAmountInput = false;
+  bool _isAwarding = true; // Default to awarding points
 
   @override
   void dispose() {
     _scannerController.dispose();
-    _amountController.dispose();
+    _pointsController.dispose();
     super.dispose();
   }
 
@@ -40,13 +41,13 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
     }
   }
 
-  Future<void> _awardPoints() async {
+  Future<void> _processTransaction() async {
     if (!_formKey.currentState!.validate() || _scannedToken == null) return;
 
-    final amount = double.parse(_amountController.text);
+    final points = int.parse(_pointsController.text);
     final loyalty = context.read<LoyaltyProvider>();
 
-    final success = await loyalty.redeemScannedToken(_scannedToken!, amount);
+    final success = await loyalty.processScannedToken(_scannedToken!, points, _isAwarding);
 
     if (!mounted) return;
 
@@ -77,11 +78,10 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
               child: Icon(Icons.check_circle_rounded, color: Colors.green.shade600, size: 56),
             ),
             const SizedBox(height: 20),
-            Text('points_awarded_title'.tr(), style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+            Text(result.isAward == true ? 'points_awarded_title'.tr() : 'points_redeemed_title'.tr(), style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             _infoRow(theme, 'customer'.tr(), result.clientName ?? 'Customer'),
-            _infoRow(theme, 'purchase_amount_label'.tr(), '${result.purchaseAmount?.toStringAsFixed(0)} MMK'),
-            _infoRow(theme, 'points_given'.tr(), '+${result.pointsAwarded}'),
+            _infoRow(theme, result.isAward == true ? 'points_given'.tr() : 'points_deducted'.tr(), '${result.isAward == true ? '+' : '-'}${result.pointsProcessed}'),
             _infoRow(theme, 'new_balance_label'.tr(), '${result.newBalance} ${'pts'.tr()}'),
           ],
         ),
@@ -134,7 +134,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
     setState(() {
       _scannedToken = null;
       _showAmountInput = false;
-      _amountController.clear();
+      _pointsController.clear();
     });
     context.read<LoyaltyProvider>().clearRedemption();
     _scannerController.start();
@@ -148,7 +148,12 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
 
     return Scaffold(
       backgroundColor: cs.surface,
-      appBar: AppBar(title: Text('qr_scanner'.tr(), style: Theme.of(context).textTheme.titleMedium), centerTitle: true, backgroundColor: cs.surface, scrolledUnderElevation: 0),
+      appBar: AppBar(
+        title: Text('qr_scanner'.tr(), style: Theme.of(context).textTheme.titleMedium),
+        centerTitle: true,
+        backgroundColor: cs.surface,
+        scrolledUnderElevation: 0,
+      ),
       body: _showAmountInput ? _buildAmountInput(theme, cs, loyalty) : _buildScanner(theme, cs),
     );
   }
@@ -209,19 +214,34 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
               const SizedBox(height: 16),
               Text('qr_scanned_successfully'.tr(), style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
-              Text('enter_purchase_amount'.tr(), style: theme.textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
-              const SizedBox(height: 32),
+              Text('Transaction Type', style: theme.textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
+              const SizedBox(height: 16),
+
+              // Segmented control for Award vs Redeem
+              SegmentedButton<bool>(
+                segments: const [
+                  ButtonSegment(value: true, label: Text('Award Points'), icon: Icon(Icons.add_circle_outline)),
+                  ButtonSegment(value: false, label: Text('Redeem Points'), icon: Icon(Icons.remove_circle_outline)),
+                ],
+                selected: {_isAwarding},
+                onSelectionChanged: (Set<bool> newSelection) {
+                  setState(() {
+                    _isAwarding = newSelection.first;
+                  });
+                },
+              ),
+              const SizedBox(height: 24),
 
               // Amount input
               TextFormField(
-                controller: _amountController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                controller: _pointsController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: false),
                 autofocus: true,
                 style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
                 decoration: InputDecoration(
                   hintText: '0',
-                  suffixText: 'MMK',
+                  suffixText: 'pts'.tr(),
                   suffixStyle: theme.textTheme.titleLarge?.copyWith(color: cs.onSurfaceVariant),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
@@ -235,7 +255,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) return 'amount_required'.tr();
-                  final amount = double.tryParse(value);
+                  final amount = int.tryParse(value);
                   if (amount == null || amount <= 0) return 'invalid_amount'.tr();
                   return null;
                 },
@@ -259,12 +279,14 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                   Expanded(
                     flex: 2,
                     child: FilledButton.icon(
-                      onPressed: loyalty.isRedeeming ? null : _awardPoints,
+                      onPressed: loyalty.isRedeeming ? null : _processTransaction,
                       icon: loyalty.isRedeeming
                           ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                          : const Icon(Icons.card_giftcard_rounded),
-                      label: Text('award_points'.tr()),
+                          : Icon(_isAwarding ? Icons.card_giftcard_rounded : Icons.shopping_basket_rounded),
+                      label: Text(_isAwarding ? 'award_points'.tr() : 'redeem'.tr()),
                       style: FilledButton.styleFrom(
+                        backgroundColor: _isAwarding ? null : cs.error,
+                        foregroundColor: _isAwarding ? null : cs.onError,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       ),

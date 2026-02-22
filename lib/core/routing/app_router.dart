@@ -11,7 +11,6 @@ import 'package:urban_cafe/features/auth/presentation/providers/auth_provider.da
 import 'package:urban_cafe/features/auth/presentation/screens/email_confirmation_screen.dart';
 import 'package:urban_cafe/features/auth/presentation/screens/login_screen.dart';
 import 'package:urban_cafe/features/auth/presentation/screens/sign_up_screen.dart';
-import 'package:urban_cafe/features/loyalty/presentation/screens/point_settings_screen.dart';
 import 'package:urban_cafe/features/loyalty/presentation/screens/qr_display_screen.dart';
 import 'package:urban_cafe/features/loyalty/presentation/screens/qr_scan_landing_screen.dart';
 import 'package:urban_cafe/features/menu/domain/entities/menu_item.dart';
@@ -129,7 +128,6 @@ class AppRouter {
           return AdminEditScreen(id: state.uri.queryParameters['id'], item: item);
         },
       ),
-      GoRoute(path: AppRoutes.adminPointSettings, parentNavigatorKey: _navigatorKey, builder: (context, state) => const PointSettingsScreen()),
     ],
   );
 

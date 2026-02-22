@@ -1,21 +1,21 @@
 class RedemptionResult {
   final bool success;
-  final int? pointsAwarded;
+  final int? pointsProcessed;
   final int? newBalance;
   final String? clientName;
-  final double? purchaseAmount;
+  final bool? isAward;
   final String? error;
   final String? message;
 
-  const RedemptionResult({required this.success, this.pointsAwarded, this.newBalance, this.clientName, this.purchaseAmount, this.error, this.message});
+  const RedemptionResult({required this.success, this.pointsProcessed, this.newBalance, this.clientName, this.isAward, this.error, this.message});
 
   factory RedemptionResult.fromJson(Map<String, dynamic> json) {
     return RedemptionResult(
       success: json['success'] as bool? ?? false,
-      pointsAwarded: json['points_awarded'] as int?,
-      newBalance: json['new_balance'] as int?,
-      clientName: json['client_name'] as String?,
-      purchaseAmount: (json['purchase_amount'] as num?)?.toDouble(),
+      pointsProcessed: json['pointsProcessed'] as int?,
+      newBalance: json['newBalance'] as int?,
+      clientName: json['clientName'] as String?,
+      isAward: json['isAward'] as bool?,
       error: json['error'] as String?,
       message: json['message'] as String?,
     );

@@ -21,7 +21,6 @@ abstract final class AppRoutes {
   static const admin = '/admin';
   static const adminCategories = '/admin/categories';
   static const adminEdit = '/admin/edit';
-  static const adminPointSettings = '/admin/point-settings';
 
   // QR Scanner (staff/admin)
   static const qrScanner = '/qr-scanner';

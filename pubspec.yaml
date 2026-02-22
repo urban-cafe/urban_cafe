@@ -4,7 +4,7 @@ description: "Urban Cafe"
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 2.1.0+3
+version: 2.2.0+4
 
 environment:
   sdk: ^3.11.0
@@ -79,7 +79,7 @@ flutter_launcher_icons:
 flutter:
   uses-material-design: true
   assets:
-    # - .env
+    #- .env
     - assets/logos/
     - assets/translations/
   #   - images/a_dot_ham.jpeg
