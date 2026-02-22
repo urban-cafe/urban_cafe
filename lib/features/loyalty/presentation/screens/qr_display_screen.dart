@@ -85,6 +85,16 @@ class _QrDisplayScreenState extends State<QrDisplayScreen> {
                         '$points',
                         style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.bold, color: cs.onPrimaryContainer),
                       ),
+                      TextButton.icon(
+                        onPressed: () => context.push(AppRoutes.loyaltyHistory),
+                        icon: const Icon(Icons.history_rounded),
+                        label: Text('points_history'.tr()),
+                        style: TextButton.styleFrom(
+                          foregroundColor: cs.primary,
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -167,16 +177,6 @@ class _QrDisplayScreenState extends State<QrDisplayScreen> {
           ),
         ),
         const SizedBox(height: 16),
-        TextButton.icon(
-          onPressed: () => context.push(AppRoutes.loyaltyHistory),
-          icon: const Icon(Icons.history_rounded),
-          label: const Text('View Points History'),
-          style: TextButton.styleFrom(
-            foregroundColor: cs.primary,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        ),
       ],
     );
   }

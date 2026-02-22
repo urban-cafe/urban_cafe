@@ -147,6 +147,14 @@ class AuthRepositoryImpl implements AuthRepository {
     }
 
     try {
+      // Clear cached Google credential so the account picker shows next time
+      if (!kIsWeb) {
+        try {
+          await GoogleSignIn().signOut();
+        } catch (_) {
+          // Ignore — user may not have signed in with Google
+        }
+      }
       await supabaseClient.auth.signOut();
       return const Right(null);
     } catch (e) {

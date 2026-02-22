@@ -16,15 +16,16 @@ class ProfileActionTile extends StatelessWidget {
 
     return ListTile(
       onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+      dense: true,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       leading: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(color: (iconColor ?? theme.colorScheme.primary).withValues(alpha: 0.12), shape: BoxShape.circle),
-        child: Icon(icon, color: iconColor ?? theme.colorScheme.primary),
+        padding: const EdgeInsets.all(7),
+        decoration: BoxDecoration(color: (iconColor ?? theme.colorScheme.primary).withValues(alpha: 0.1), shape: BoxShape.circle),
+        child: Icon(icon, color: iconColor ?? theme.colorScheme.primary, size: 18),
       ),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-      subtitle: Text(subtitle),
-      trailing: trailing ?? (onTap != null ? const Icon(Icons.chevron_right) : null),
+      title: Text(title, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+      subtitle: Text(subtitle, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+      trailing: trailing ?? (onTap != null ? Icon(Icons.chevron_right, size: 18, color: theme.colorScheme.onSurfaceVariant) : null),
     );
   }
 }

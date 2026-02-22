@@ -27,6 +27,8 @@ class AuthProvider extends ChangeNotifier {
   final UpdateProfileUseCase updateProfileUseCase;
 
   bool loading = false;
+  bool _initializing = true;
+  bool get initializing => _initializing;
   bool _refreshingProfile = false;
   bool get refreshingProfile => _refreshingProfile;
   String? error;
@@ -158,6 +160,8 @@ class AuthProvider extends ChangeNotifier {
     if (!isLoggedIn) {
       _role = null;
       _profile = null;
+      _initializing = false;
+      notifyListeners();
       return;
     }
 
@@ -167,6 +171,7 @@ class AuthProvider extends ChangeNotifier {
       _profile = null;
       _profileSubscription?.unsubscribe();
       _profileSubscription = null;
+      _initializing = false;
       notifyListeners();
       return;
     }
@@ -185,6 +190,7 @@ class AuthProvider extends ChangeNotifier {
         _listenToProfileChanges(profile.id);
       },
     );
+    _initializing = false;
     notifyListeners();
   }
 

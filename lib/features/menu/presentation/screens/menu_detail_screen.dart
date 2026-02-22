@@ -55,6 +55,11 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
                     ),
                   ),
                 ),
+                actions: [
+                  // Badges
+                  MenuItemBadges(isMostPopular: widget.item.isMostPopular, isWeekendSpecial: widget.item.isWeekendSpecial),
+                  const SizedBox(width: 10),
+                ],
 
                 flexibleSpace: FlexibleSpaceBar(
                   stretchModes: const [StretchMode.zoomBackground],
@@ -99,10 +104,6 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
 
                       const SizedBox(height: 16),
 
-                      // Badges
-                      MenuItemBadges(isMostPopular: widget.item.isMostPopular, isWeekendSpecial: widget.item.isWeekendSpecial),
-                      const SizedBox(height: 16),
-
                       // Tags
                       Wrap(
                         spacing: 8,
@@ -114,9 +115,9 @@ class _MenuDetailScreenState extends State<MenuDetailScreen> {
                         ],
                       ),
 
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 16),
                       const Divider(),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 16),
 
                       Text("Description", style: theme.textTheme.titleMedium),
                       const SizedBox(height: 12),

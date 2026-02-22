@@ -125,7 +125,7 @@
   "see_all": "See All",
   "no_more_items": "You've seen all items",
   "select_language": "Select Language",
-  "choose_your_preferred_language": "Choose your preferred language",
+  "choose_language": "Choose language",
   "appearance": "Appearance",
   "subtotal": "Subtotal",
   "discount": "Discount",
@@ -208,5 +208,6 @@
   "points_redeemed_title": "Points Redeemed!",
   "points_deducted": "Points Deducted",
   "redeem": "Redeem",
-  "transaction_type": "Transaction Type"
+  "transaction_type": "Transaction Type",
+  "points_history": "Points History"
 }

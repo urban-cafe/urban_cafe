@@ -148,16 +148,32 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
     final cs = theme.colorScheme;
     final loyalty = context.watch<LoyaltyProvider>();
 
-    return Scaffold(
-      backgroundColor: cs.surface,
-      appBar: AppBar(
-        title: Text('qr_scanner'.tr(), style: Theme.of(context).textTheme.titleMedium),
-        centerTitle: true,
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          _scannerController.stop();
+          Navigator.of(context).pop();
+        }
+      },
+      child: Scaffold(
         backgroundColor: cs.surface,
-        scrolledUnderElevation: 0,
-        actions: [IconButton(icon: const Icon(Icons.history_rounded), tooltip: 'Transaction Ledger', onPressed: () => context.push(AppRoutes.adminLoyaltyHistory))],
+        appBar: AppBar(
+          title: Text('qr_scanner'.tr(), style: Theme.of(context).textTheme.titleMedium),
+          centerTitle: true,
+          backgroundColor: cs.surface,
+          scrolledUnderElevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              _scannerController.stop();
+              Navigator.of(context).pop();
+            },
+          ),
+          actions: [IconButton(icon: const Icon(Icons.history_rounded), tooltip: 'Transaction Ledger', onPressed: () => context.push(AppRoutes.adminLoyaltyHistory))],
+        ),
+        body: _showAmountInput ? _buildAmountInput(theme, cs, loyalty) : _buildScanner(theme, cs),
       ),
-      body: _showAmountInput ? _buildAmountInput(theme, cs, loyalty) : _buildScanner(theme, cs),
     );
   }
 

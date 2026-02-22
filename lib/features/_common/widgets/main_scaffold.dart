@@ -5,22 +5,6 @@ import 'package:provider/provider.dart';
 import 'package:urban_cafe/core/responsive.dart';
 import 'package:urban_cafe/features/auth/presentation/providers/auth_provider.dart';
 
-/// InheritedWidget to share scroll controller with child screens
-class ScrollControllerScope extends InheritedWidget {
-  final ScrollController scrollController;
-  final VoidCallback? onScrollUp;
-  final VoidCallback? onScrollDown;
-
-  const ScrollControllerScope({super.key, required this.scrollController, this.onScrollUp, this.onScrollDown, required super.child});
-
-  static ScrollControllerScope? of(BuildContext context) {
-    return context.dependOnInheritedWidgetOfExactType<ScrollControllerScope>();
-  }
-
-  @override
-  bool updateShouldNotify(ScrollControllerScope oldWidget) => scrollController != oldWidget.scrollController;
-}
-
 class MainScaffold extends StatefulWidget {
   final StatefulNavigationShell navigationShell;
 
@@ -31,53 +15,6 @@ class MainScaffold extends StatefulWidget {
 }
 
 class _MainScaffoldState extends State<MainScaffold> {
-  final ScrollController _scrollController = ScrollController();
-  bool _isNavVisible = true;
-  double _lastScrollPosition = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _scrollController.addListener(_onScroll);
-  }
-
-  @override
-  void dispose() {
-    _scrollController.removeListener(_onScroll);
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  void _onScroll() {
-    final currentPosition = _scrollController.position.pixels;
-    final delta = currentPosition - _lastScrollPosition;
-
-    // Only trigger hide/show after 10px threshold
-    if (delta.abs() > 10) {
-      if (delta > 0 && _isNavVisible) {
-        // Scrolling down → hide
-        setState(() => _isNavVisible = false);
-      } else if (delta < 0 && !_isNavVisible) {
-        // Scrolling up → show
-        setState(() => _isNavVisible = true);
-      }
-      _lastScrollPosition = currentPosition;
-    }
-
-    // Always show at top
-    if (currentPosition <= 0 && !_isNavVisible) {
-      setState(() => _isNavVisible = true);
-    }
-  }
-
-  void _showNav() {
-    if (!_isNavVisible) setState(() => _isNavVisible = true);
-  }
-
-  void _hideNav() {
-    if (_isNavVisible) setState(() => _isNavVisible = false);
-  }
-
   // ─── Branch index mapping ────────────────────────────────────────
   // Shell branches are registered in this order:
   //   0: Home (client)  1: QR  2: Profile
@@ -119,70 +56,52 @@ class _MainScaffoldState extends State<MainScaffold> {
     final destinations = _buildDestinations(auth);
     final selectedIndex = _navIndexFromBranch(auth);
 
-    return ScrollControllerScope(
-      scrollController: _scrollController,
-      onScrollUp: _showNav,
-      onScrollDown: _hideNav,
-      child: Scaffold(
-        extendBody: true,
-        body: Row(
-          children: [
-            // NavigationRail for medium/expanded screens
-            if (sizeClass != WindowSizeClass.compact)
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                child: NavigationRail(
-                  extended: sizeClass == WindowSizeClass.expanded,
-                  selectedIndex: selectedIndex,
-                  onDestinationSelected: (index) => _onNavTapped(index, auth),
-                  destinations: destinations.map((d) => NavigationRailDestination(icon: d.icon, selectedIcon: d.selectedIcon ?? d.icon, label: Text(d.label))).toList(),
-                  labelType: sizeClass == WindowSizeClass.expanded ? NavigationRailLabelType.none : NavigationRailLabelType.selected,
-                ),
-              ),
+    return Scaffold(
+      body: Row(
+        children: [
+          // NavigationRail for medium/expanded screens
+          if (sizeClass != WindowSizeClass.compact)
+            NavigationRail(
+              extended: sizeClass == WindowSizeClass.expanded,
+              selectedIndex: selectedIndex,
+              onDestinationSelected: (index) => _onNavTapped(index, auth),
+              destinations: destinations.map((d) => NavigationRailDestination(icon: d.icon, selectedIcon: d.selectedIcon ?? d.icon, label: Text(d.label))).toList(),
+              labelType: sizeClass == WindowSizeClass.expanded ? NavigationRailLabelType.none : NavigationRailLabelType.selected,
+            ),
 
-            // Main content
-            Expanded(child: widget.navigationShell),
-          ],
-        ),
-
-        // Bottom NavigationBar for compact screens - with animated height collapse
-        bottomNavigationBar: sizeClass == WindowSizeClass.compact
-            ? AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                curve: Curves.easeOutCubic,
-                height: _isNavVisible ? 62 + MediaQuery.of(context).padding.bottom : 0,
-                clipBehavior: Clip.antiAlias,
-                decoration: const BoxDecoration(),
-                child: NavigationBarTheme(
-                  data: NavigationBarThemeData(
-                    height: 62,
-                    backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
-                    indicatorShape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(24))),
-                    indicatorColor: Theme.of(context).colorScheme.primaryContainer,
-                    iconTheme: WidgetStateProperty.resolveWith((states) {
-                      final selected = states.contains(WidgetState.selected);
-                      return IconThemeData(size: 22, color: selected ? Theme.of(context).colorScheme.onPrimaryContainer : Theme.of(context).colorScheme.onSurfaceVariant);
-                    }),
-                    labelTextStyle: WidgetStateProperty.resolveWith((states) {
-                      final selected = states.contains(WidgetState.selected);
-                      return TextStyle(
-                        fontSize: 10,
-                        fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                        color: selected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant,
-                      );
-                    }),
-                  ),
-                  child: NavigationBar(
-                    height: 62,
-                    selectedIndex: selectedIndex,
-                    onDestinationSelected: (index) => _onNavTapped(index, auth),
-                    destinations: destinations,
-                    labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-                  ),
-                ),
-              )
-            : null,
+          // Main content
+          Expanded(child: widget.navigationShell),
+        ],
       ),
+
+      // Bottom NavigationBar for compact screens
+      bottomNavigationBar: sizeClass == WindowSizeClass.compact
+          ? NavigationBarTheme(
+              data: NavigationBarThemeData(
+                backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
+                indicatorShape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(24))),
+                indicatorColor: Theme.of(context).colorScheme.primaryContainer,
+                iconTheme: WidgetStateProperty.resolveWith((states) {
+                  final selected = states.contains(WidgetState.selected);
+                  return IconThemeData(size: 22, color: selected ? Theme.of(context).colorScheme.onPrimaryContainer : Theme.of(context).colorScheme.onSurfaceVariant);
+                }),
+                labelTextStyle: WidgetStateProperty.resolveWith((states) {
+                  final selected = states.contains(WidgetState.selected);
+                  return TextStyle(
+                    fontSize: 10,
+                    fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                    color: selected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant,
+                  );
+                }),
+              ),
+              child: NavigationBar(
+                selectedIndex: selectedIndex,
+                onDestinationSelected: (index) => _onNavTapped(index, auth),
+                destinations: destinations,
+                labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+              ),
+            )
+          : null,
     );
   }
 

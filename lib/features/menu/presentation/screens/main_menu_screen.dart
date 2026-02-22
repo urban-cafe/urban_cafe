@@ -8,7 +8,6 @@ import 'package:urban_cafe/core/responsive.dart';
 import 'package:urban_cafe/features/_common/widgets/cards/grid_menu_card.dart';
 import 'package:urban_cafe/features/_common/widgets/cards/home_promo_banner.dart';
 
-import 'package:urban_cafe/features/_common/widgets/main_scaffold.dart';
 import 'package:urban_cafe/features/auth/presentation/providers/auth_provider.dart';
 import 'package:urban_cafe/features/menu/domain/entities/menu_item.dart';
 import 'package:urban_cafe/features/menu/presentation/providers/menu_provider.dart';
@@ -70,10 +69,6 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
 
     final userName = auth.profile?.fullName ?? (auth.isGuest ? 'Guest' : 'User');
 
-    // Get scroll controller from MainScaffold if available
-    final scrollScope = ScrollControllerScope.of(context);
-    final scrollController = scrollScope?.scrollController;
-
     return Scaffold(
       backgroundColor: cs.surface,
       body: SafeArea(
@@ -81,7 +76,6 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
           onRefresh: () => Future.wait([provider.loadHomeData(forceRefresh: true), auth.refreshUser()]),
           color: cs.primary,
           child: CustomScrollView(
-            controller: scrollController,
             slivers: [
               // 1. GREETING HEADER with logo, user name, and search icon
               SliverToBoxAdapter(
@@ -123,7 +117,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                 ),
               ),
 
-              const SliverToBoxAdapter(child: SizedBox(height: 16)),
+              const SliverToBoxAdapter(child: SizedBox(height: 8)),
 
               // 3. PROMO BANNER with stagger delay
               SliverToBoxAdapter(
@@ -151,7 +145,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                 ),
               ),
 
-              const SliverToBoxAdapter(child: SizedBox(height: 16)),
+              const SliverToBoxAdapter(child: SizedBox(height: 8)),
 
               // 4. CATEGORIES with stagger delay
               SliverToBoxAdapter(
@@ -196,7 +190,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                 ),
               ),
 
-              const SliverToBoxAdapter(child: SizedBox(height: 16)),
+              const SliverToBoxAdapter(child: SizedBox(height: 8)),
 
               // 5. POPULAR ITEMS HEADER
               SliverPadding(
@@ -225,11 +219,11 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                 ),
               ),
 
-              const SliverToBoxAdapter(child: SizedBox(height: 16)),
+              const SliverToBoxAdapter(child: SizedBox(height: 8)),
 
               // 6. POPULAR ITEMS GRID with Skeletonizer
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 30),
                 sliver: Skeletonizer.sliver(
                   enabled: provider.loading,
                   effect: ShimmerEffect(baseColor: cs.surfaceContainerHighest.withValues(alpha: 0.5), highlightColor: cs.surface),

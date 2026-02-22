@@ -7,7 +7,6 @@ import 'package:urban_cafe/core/animations.dart' hide ShimmerEffect;
 import 'package:urban_cafe/features/_common/widgets/cards/grid_menu_card.dart';
 import 'package:urban_cafe/features/_common/widgets/cards/menu_card.dart';
 import 'package:urban_cafe/features/_common/widgets/inputs/custom_search_bar.dart';
-import 'package:urban_cafe/features/_common/widgets/main_scaffold.dart';
 import 'package:urban_cafe/features/menu/domain/entities/menu_item.dart';
 import 'package:urban_cafe/features/menu/presentation/providers/menu_provider.dart';
 
@@ -25,7 +24,6 @@ class _MenuScreenState extends State<MenuScreen> {
   final _searchCtrl = TextEditingController();
   final ScrollController _scrollCtrl = ScrollController();
   bool _isGridView = true;
-  double _lastScrollOffset = 0;
   late MenuProvider _menuProvider; // Cached ref — safe to call in dispose()
 
   @override
@@ -50,22 +48,6 @@ class _MenuScreenState extends State<MenuScreen> {
       // Pagination
       if (_scrollCtrl.position.pixels >= _scrollCtrl.position.maxScrollExtent - 200) {
         context.read<MenuProvider>().loadMore();
-      }
-
-      // Dynamic Nav Bar
-      final scope = ScrollControllerScope.of(context);
-      if (scope != null && _scrollCtrl.hasClients) {
-        final currentOffset = _scrollCtrl.offset;
-        if (currentOffset < 0 || currentOffset > _scrollCtrl.position.maxScrollExtent) return;
-        final diff = currentOffset - _lastScrollOffset;
-        if (diff.abs() > 20) {
-          if (diff > 0) {
-            scope.onScrollDown?.call();
-          } else {
-            scope.onScrollUp?.call();
-          }
-          _lastScrollOffset = currentOffset;
-        }
       }
     });
   }

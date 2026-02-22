@@ -1,4 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:urban_cafe/features/loyalty/domain/entities/loyalty_transaction.dart';
@@ -38,17 +39,65 @@ class _AdminLoyaltyHistoryScreenState extends State<AdminLoyaltyHistoryScreen> {
   Future<void> _pickDateRange() async {
     final loyalty = context.read<LoyaltyProvider>();
     final now = DateTime.now();
-    final picked = await showDateRangePicker(
+    DateTime tempStart = loyalty.filterStartDate ?? now.subtract(const Duration(days: 30));
+    DateTime tempEnd = loyalty.filterEndDate ?? now;
+
+    await showModalBottomSheet(
       context: context,
-      firstDate: DateTime(2024),
-      lastDate: now,
-      initialDateRange: loyalty.filterStartDate != null && loyalty.filterEndDate != null
-          ? DateTimeRange(start: loyalty.filterStartDate!, end: loyalty.filterEndDate!)
-          : DateTimeRange(start: now.subtract(const Duration(days: 30)), end: now),
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            final theme = Theme.of(ctx);
+            final cs = theme.colorScheme;
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Handle bar
+                    Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(color: cs.outlineVariant, borderRadius: BorderRadius.circular(2)),
+                    ),
+                    const SizedBox(height: 16),
+                    Text('Filter by Date', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 20),
+
+                    // Start Date
+                    _DatePickerRow(label: 'From', date: tempStart, maximumDate: tempEnd, onChanged: (d) => setSheetState(() => tempStart = d)),
+                    const SizedBox(height: 12),
+
+                    // End Date
+                    _DatePickerRow(label: 'To', date: tempEnd, minimumDate: tempStart, maximumDate: now, onChanged: (d) => setSheetState(() => tempEnd = d)),
+                    const SizedBox(height: 20),
+
+                    // Apply button
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          loyalty.setDateFilter(start: tempStart, end: tempEnd);
+                        },
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: const Text('Apply Filter'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
-    if (picked != null && mounted) {
-      loyalty.setDateFilter(start: picked.start, end: picked.end);
-    }
   }
 
   @override
@@ -122,7 +171,7 @@ class _AdminLoyaltyHistoryScreenState extends State<AdminLoyaltyHistoryScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Chip(
               avatar: const Icon(Icons.calendar_today_rounded, size: 16),
-              label: Text('${dateFormat.format(loyalty.filterStartDate!)} – ${dateFormat.format(loyalty.filterEndDate!)}'),
+              label: Text('${dateFormat.format(loyalty.filterStartDate!)} – ${dateFormat.format(loyalty.filterEndDate!)}', style: theme.textTheme.labelSmall),
               onDeleted: () => loyalty.clearDateFilter(),
             ),
           ),
@@ -194,6 +243,67 @@ class _TransactionTile extends StatelessWidget {
         Text(
           '$sign${tx.points.abs()}',
           style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: color),
+        ),
+      ],
+    );
+  }
+}
+
+/// A tappable row that shows a label + date, and opens a CupertinoDatePicker.
+class _DatePickerRow extends StatefulWidget {
+  const _DatePickerRow({required this.label, required this.date, required this.onChanged, this.minimumDate, this.maximumDate});
+
+  final String label;
+  final DateTime date;
+  final DateTime? minimumDate;
+  final DateTime? maximumDate;
+  final ValueChanged<DateTime> onChanged;
+
+  @override
+  State<_DatePickerRow> createState() => _DatePickerRowState();
+}
+
+class _DatePickerRowState extends State<_DatePickerRow> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final dateFormat = DateFormat('MMM dd, yyyy');
+
+    return Column(
+      children: [
+        InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () => setState(() => _expanded = !_expanded),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(color: cs.surfaceContainerHighest, borderRadius: BorderRadius.circular(12)),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(widget.label, style: theme.textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
+                Text(dateFormat.format(widget.date), style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+              ],
+            ),
+          ),
+        ),
+        AnimatedSize(
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeInOut,
+          child: _expanded
+              ? SizedBox(
+                  height: 180,
+                  child: CupertinoDatePicker(
+                    mode: CupertinoDatePickerMode.date,
+                    initialDateTime: widget.date,
+                    minimumDate: widget.minimumDate,
+                    maximumDate: widget.maximumDate,
+                    onDateTimeChanged: widget.onChanged,
+                  ),
+                )
+              : const SizedBox.shrink(),
         ),
       ],
     );

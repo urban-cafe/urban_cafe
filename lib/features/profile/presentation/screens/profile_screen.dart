@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:urban_cafe/core/responsive.dart';
+import 'package:urban_cafe/features/_common/theme_provider.dart';
 import 'package:urban_cafe/features/_common/widgets/buttons/primary_button.dart';
 import 'package:urban_cafe/features/_common/widgets/cards/profile_section_card.dart';
 import 'package:urban_cafe/features/_common/widgets/dialogs/confirmation_dialog.dart';
@@ -61,7 +62,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
-            expandedHeight: 220,
+            expandedHeight: 200,
             pinned: true,
             stretch: true,
             backgroundColor: colorScheme.surface,
@@ -107,20 +108,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
           SliverToBoxAdapter(
             child: Center(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 600),
+                constraints: const BoxConstraints(maxWidth: 500),
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
                   child: Column(
                     children: [
-                      const SizedBox(height: 8),
-
                       // Account section
                       if (!isGuest) ...[
                         ProfileSectionCard(
                           title: 'account'.tr(),
                           children: [ProfileActionTile(icon: Icons.edit_outlined, title: 'edit_profile'.tr(), subtitle: 'Update your name and details', onTap: () => context.push('/profile/edit'))],
                         ),
-                        const SizedBox(height: 16),
                       ],
 
                       ProfileSectionCard(
@@ -130,12 +128,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             icon: Icons.language,
                             title: 'language'.tr(),
                             subtitle: context.locale.languageCode == 'en' ? 'english'.tr() : 'myanmar'.tr(),
-                            onTap: () => context.push('/profile/language'),
+                            onTap: () => _showLanguageDialog(context),
                           ),
-                          ProfileActionTile(icon: Icons.brightness_6_outlined, title: 'theme'.tr(), subtitle: 'Change app appearance', onTap: () => context.push('/profile/theme')),
+                          ProfileActionTile(icon: Icons.brightness_6_outlined, title: 'theme'.tr(), subtitle: _themeLabel(context), onTap: () => _showThemeDialog(context)),
                         ],
                       ),
-                      const SizedBox(height: 16),
 
                       // About Section
                       ProfileSectionCard(
@@ -147,12 +144,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ],
                       ),
 
-                      const SizedBox(height: 16),
-
                       // Logout Button
                       PrimaryButton(text: 'sign_out'.tr(), onPressed: () => _confirmSignOut(context)),
-
-                      const SizedBox(height: 120), // Bottom padding for navigation bar
                     ],
                   ),
                 ),
@@ -160,6 +153,89 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showLanguageDialog(BuildContext context) {
+    final currentLang = context.locale.languageCode;
+    showDialog(
+      context: context,
+      builder: (ctx) => SimpleDialog(title: Text('choose_language'.tr()), children: [_langOption(ctx, 'English', 'en', currentLang), _langOption(ctx, 'Myanmar', 'my', currentLang)]),
+    );
+  }
+
+  Widget _langOption(BuildContext ctx, String label, String code, String currentCode) {
+    final isSelected = code == currentCode;
+    final cs = Theme.of(ctx).colorScheme;
+    return SimpleDialogOption(
+      onPressed: () {
+        ctx.setLocale(Locale(code));
+        Navigator.pop(ctx);
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          children: [
+            Icon(isSelected ? Icons.radio_button_checked : Icons.radio_button_off, size: 20, color: isSelected ? cs.primary : cs.onSurfaceVariant),
+            const SizedBox(width: 12),
+            Text(
+              label,
+              style: TextStyle(fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal, color: isSelected ? cs.primary : null),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ─── Theme Dialog ──────────────────────────────────────────────
+
+  String _themeLabel(BuildContext context) {
+    final mode = context.watch<ThemeProvider>().themeMode;
+    return switch (mode) {
+      ThemeMode.light => 'Light',
+      ThemeMode.dark => 'Dark',
+      ThemeMode.system => 'System',
+    };
+  }
+
+  void _showThemeDialog(BuildContext context) {
+    final themeProvider = context.read<ThemeProvider>();
+    final current = themeProvider.themeMode;
+    showDialog(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: Text('theme'.tr()),
+        children: [
+          _themeOption(ctx, themeProvider, 'Light', ThemeMode.light, current),
+          _themeOption(ctx, themeProvider, 'Dark', ThemeMode.dark, current),
+          _themeOption(ctx, themeProvider, 'System', ThemeMode.system, current),
+        ],
+      ),
+    );
+  }
+
+  Widget _themeOption(BuildContext ctx, ThemeProvider provider, String label, ThemeMode mode, ThemeMode current) {
+    final isSelected = mode == current;
+    final cs = Theme.of(ctx).colorScheme;
+    return SimpleDialogOption(
+      onPressed: () {
+        provider.setThemeMode(mode);
+        Navigator.pop(ctx);
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          children: [
+            Icon(isSelected ? Icons.radio_button_checked : Icons.radio_button_off, size: 20, color: isSelected ? cs.primary : cs.onSurfaceVariant),
+            const SizedBox(width: 12),
+            Text(
+              label,
+              style: TextStyle(fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal, color: isSelected ? cs.primary : null),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -43,6 +43,10 @@ class AppRouter {
     redirect: _redirect,
     routes: [
       // Auth routes (no shell)
+      GoRoute(
+        path: '/splash',
+        pageBuilder: (context, state) => CustomTransitionPage(key: state.pageKey, child: const _SplashGate(), transitionsBuilder: (context, animation, secondaryAnimation, child) => child),
+      ),
       GoRoute(path: AppRoutes.login, builder: (context, state) => const LoginScreen()),
       GoRoute(path: AppRoutes.signUp, builder: (context, state) => const SignUpScreen()),
       GoRoute(path: AppRoutes.emailConfirmation, builder: (context, state) => const EmailConfirmationScreen()),
@@ -153,11 +157,26 @@ class AppRouter {
   ];
 
   String? _redirect(BuildContext context, GoRouterState state) {
+    final location = state.uri.toString();
+
+    // 0. While still loading the user role, hold on splash
+    if (_authProvider.initializing) {
+      if (location != '/splash') return '/splash';
+      return null;
+    }
+
+    // Once initialized, redirect splash to the right place
+    if (location == '/splash') {
+      if (!_authProvider.isLoggedIn) return AppRoutes.login;
+      if (_authProvider.isAdmin) return AppRoutes.admin;
+      if (_authProvider.isStaff) return AppRoutes.qrScanner;
+      return AppRoutes.home;
+    }
+
     final isLoggedIn = _authProvider.isLoggedIn;
     final isGuest = _authProvider.isGuest;
     final isAdmin = _authProvider.isAdmin;
     final isStaff = _authProvider.isStaff;
-    final location = state.uri.toString();
 
     final isGoingToLogin = location == AppRoutes.login;
     final isGoingToSignUp = location == AppRoutes.signUp;
@@ -204,5 +223,29 @@ class AppRouter {
     }
 
     return null;
+  }
+}
+
+/// Lightweight splash screen shown while [AuthProvider] resolves the user role.
+/// Prevents the wrong navigation tabs from flashing on cold start.
+class _SplashGate extends StatelessWidget {
+  const _SplashGate();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Scaffold(
+      backgroundColor: cs.surface,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset('assets/logos/urbancafelogo.png', width: 120, height: 120),
+            const SizedBox(height: 32),
+            SizedBox(width: 28, height: 28, child: CircularProgressIndicator(strokeWidth: 2.5, color: cs.primary)),
+          ],
+        ),
+      ),
+    );
   }
 }

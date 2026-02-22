@@ -60,10 +60,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
+    final auth = context.watch<AuthProvider>();
+    final isGuest = auth.isGuest;
+    final user = auth.currentUser;
+    final profile = auth.profile;
+
+    final email = isGuest ? 'Guest' : (user?.email ?? 'Guest');
+    final name = isGuest ? 'Guest User' : (profile?.fullName ?? email.split('@').first);
+    final initial = name.isNotEmpty ? name[0].toUpperCase() : 'G';
 
     return Scaffold(
       backgroundColor: cs.surface,
-      appBar: AppBar(title: Text('edit_profile'.tr(), style: Theme.of(context).textTheme.titleMedium), centerTitle: true, backgroundColor: cs.surface, scrolledUnderElevation: 0),
+      appBar: AppBar(
+        title: Text('edit_profile'.tr(), style: Theme.of(context).textTheme.titleMedium),
+        centerTitle: true,
+        backgroundColor: cs.surface,
+        scrolledUnderElevation: 0,
+      ),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -76,15 +89,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // Profile Icon
-                    Center(
-                      child: Container(
-                        width: 100,
-                        height: 100,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: LinearGradient(colors: [cs.primary, cs.secondary], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: cs.surface, width: 4),
+                        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, 5))],
+                      ),
+                      child: CircleAvatar(
+                        radius: 40,
+                        backgroundColor: cs.primary,
+                        child: Text(
+                          initial,
+                          style: theme.textTheme.displaySmall?.copyWith(color: cs.onPrimary, fontWeight: FontWeight.bold),
                         ),
-                        child: Icon(Icons.person_rounded, size: 50, color: cs.onPrimary),
                       ),
                     ),
                     const SizedBox(height: 32),

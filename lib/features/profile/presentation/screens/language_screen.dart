@@ -11,7 +11,12 @@ class LanguageScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
-      appBar: AppBar(title: Text('language'.tr(), style: Theme.of(context).textTheme.titleMedium), centerTitle: true, backgroundColor: theme.colorScheme.surface, scrolledUnderElevation: 0),
+      appBar: AppBar(
+        title: Text('language'.tr(), style: Theme.of(context).textTheme.titleMedium),
+        centerTitle: true,
+        backgroundColor: theme.colorScheme.surface,
+        scrolledUnderElevation: 0,
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -19,7 +24,7 @@ class LanguageScreen extends StatelessWidget {
           children: [
             Text(
               'select_language'.tr(),
-              style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
+              style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
             ),
             const SizedBox(height: 8),
             Text('choose_your_preferred_language'.tr(), style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),

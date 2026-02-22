@@ -124,7 +124,7 @@
   "see_all": "အားလုံးကြည့်ရန်",
   "no_more_items": "မနူးများ မတွေ့ပါ",
   "select_language": "ဘာသာစကား ရွေးချယ်ရန်",
-  "choose_your_preferred_language": "သင်နှစ်သက်သော ဘာသာစကား ရွေးချယ်ပါ",
+  "choose_language": "ဘာသာစကား ရွေးချယ်ပါ",
   "appearance": "အသွင်အပြင်",
   "subtotal": "စုစုပေါင်း",
   "discount": "လျှော့စျေး",
@@ -207,5 +207,6 @@
   "points_redeemed_title": "ပွိုင့်များ အသုံးပြုပြီးပါပြီ!",
   "points_deducted": "လျှော့လိုက်သော ပွိုင့်များ",
   "redeem": "အသုံးပြုမည်",
-  "transaction_type": "လုပ်ဆောင်မှု အမျိုးအစား"
+  "transaction_type": "လုပ်ဆောင်မှု အမျိုးအစား",
+  "points_history": "မှတ်တမ်း"
 }
