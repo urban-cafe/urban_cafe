@@ -26,11 +26,10 @@ BEGIN
     FROM public.point_tokens
     WHERE token = p_token
       AND expires_at > now()
-      AND redeemed = false
     FOR UPDATE; -- Lock the row
 
     IF v_user_id IS NULL THEN
-        RETURN jsonb_build_object('success', false, 'message', 'Invalid, expired, or already used QR code');
+        RETURN jsonb_build_object('success', false, 'message', 'Invalid or expired QR code');
     END IF;
 
     -- 2. Get User Profile
@@ -60,10 +59,6 @@ BEGIN
     SET loyalty_points = v_new_points
     WHERE id = v_user_id;
 
-    -- 5. Mark Token as Redeemed
-    UPDATE public.point_tokens
-    SET redeemed = true
-    WHERE token = p_token;
 
     -- 6. Log Transaction
     INSERT INTO public.loyalty_transactions (user_id, points, type, description)
