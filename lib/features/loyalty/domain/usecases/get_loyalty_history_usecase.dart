@@ -8,7 +8,7 @@ class GetLoyaltyHistoryUseCase {
 
   const GetLoyaltyHistoryUseCase(this.repository);
 
-  Future<Either<Failure, List<LoyaltyTransaction>>> call({String? userId}) {
-    return repository.getTransactionHistory(userId: userId);
+  Future<Either<Failure, List<LoyaltyTransaction>>> call({String? userId, int page = 0, int pageSize = 20, DateTime? startDate, DateTime? endDate}) {
+    return repository.getTransactionHistory(userId: userId, page: page, pageSize: pageSize, startDate: startDate, endDate: endDate);
   }
 }

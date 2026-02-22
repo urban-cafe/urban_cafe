@@ -1,5 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:urban_cafe/core/routing/routes.dart';
 import 'package:urban_cafe/features/loyalty/presentation/screens/qr_scanner_screen.dart';
 
 /// Landing screen shown when staff/admin taps the QR Scan nav item.
@@ -19,6 +21,7 @@ class QrScanLandingScreen extends StatelessWidget {
         centerTitle: true,
         backgroundColor: cs.surface,
         scrolledUnderElevation: 0,
+        actions: [IconButton(icon: const Icon(Icons.history_rounded), tooltip: 'Transaction Ledger', onPressed: () => context.push(AppRoutes.adminLoyaltyHistory))],
       ),
       body: Center(
         child: Padding(

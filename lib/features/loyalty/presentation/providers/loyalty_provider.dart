@@ -26,16 +26,8 @@ class LoyaltyProvider extends ChangeNotifier {
   bool get isGenerating => _isGenerating;
 
   Timer? _countdownTimer;
-  Duration _timeRemaining = Duration.zero;
-  Duration get timeRemaining => _timeRemaining;
 
   bool get hasActiveToken => _currentToken != null && !_currentToken!.isExpired && !_currentToken!.redeemed;
-
-  String get formattedTimeRemaining {
-    final minutes = _timeRemaining.inMinutes;
-    final seconds = _timeRemaining.inSeconds % 60;
-    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
-  }
 
   // ─── Redemption State (Staff/Admin) ──────────────────────────────
   RedemptionResult? _lastRedemption;
@@ -57,13 +49,20 @@ class LoyaltyProvider extends ChangeNotifier {
   String? _historyError;
   String? get historyError => _historyError;
 
-  // ─── Settings State (Admin) ──────────────────────────────────────
-  // Removed static point settings logic.
+  int _currentPage = 0;
+  static const int _pageSize = 20;
+  bool _hasMoreHistory = true;
+  bool get hasMoreHistory => _hasMoreHistory;
+
+  DateTime? _filterStartDate;
+  DateTime? get filterStartDate => _filterStartDate;
+  DateTime? _filterEndDate;
+  DateTime? get filterEndDate => _filterEndDate;
 
   String? _error;
   String? get error => _error;
 
-  // ─── Client Methods ──────────────────────────────────────────────
+  // ─── QR Token Fetching ───────────────────────────────────────────
 
   Future<void> generateQrToken() async {
     _isGenerating = true;
@@ -72,10 +71,10 @@ class LoyaltyProvider extends ChangeNotifier {
 
     try {
       final result = await _generatePointToken();
+
       result.fold(
         (failure) {
           _error = _getUserFriendlyError(failure.message);
-          _currentToken = null;
         },
         (token) {
           _currentToken = token;
@@ -84,8 +83,7 @@ class LoyaltyProvider extends ChangeNotifier {
       );
     } catch (e) {
       _error = 'Failed to generate QR code. Please try again.';
-      _currentToken = null;
-      debugPrint('[LoyaltyProvider] Generate QR error: $e');
+      debugPrint('[LoyaltyProvider] Generate token error: $e');
     } finally {
       _isGenerating = false;
       notifyListeners();
@@ -94,22 +92,25 @@ class LoyaltyProvider extends ChangeNotifier {
 
   void _startCountdown() {
     _countdownTimer?.cancel();
-    if (_currentToken == null) return;
-
-    _timeRemaining = _currentToken!.timeRemaining;
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (_currentToken == null || _currentToken!.isExpired) {
         _countdownTimer?.cancel();
-        _timeRemaining = Duration.zero;
-        notifyListeners();
-        return;
+        _currentToken = null;
       }
-      _timeRemaining = _currentToken!.timeRemaining;
       notifyListeners();
     });
   }
 
-  // ─── Staff/Admin Methods ─────────────────────────────────────────
+  Duration get timeRemaining => _currentToken?.timeRemaining ?? Duration.zero;
+
+  String get formattedTimeRemaining {
+    final remaining = timeRemaining;
+    final minutes = remaining.inMinutes;
+    final seconds = remaining.inSeconds % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  // ─── Transaction Processing ──────────────────────────────────────
 
   Future<bool> processScannedToken(String token, int points, bool isAward) async {
     _isRedeeming = true;
@@ -150,20 +151,52 @@ class LoyaltyProvider extends ChangeNotifier {
 
   // ─── History Fetching ────────────────────────────────────────────
 
+  /// Fetches the first page of history, resetting any existing data.
   Future<void> fetchHistory({String? userId}) async {
+    _currentPage = 0;
+    _hasMoreHistory = true;
+    _history = [];
     _isLoadingHistory = true;
     _historyError = null;
     notifyListeners();
 
+    await _loadHistoryPage(userId: userId);
+  }
+
+  /// Loads the next page of history, appending to existing data.
+  Future<void> loadMoreHistory({String? userId}) async {
+    if (!_hasMoreHistory || _isLoadingHistory) return;
+    _currentPage++;
+    _isLoadingHistory = true;
+    notifyListeners();
+
+    await _loadHistoryPage(userId: userId);
+  }
+
+  /// Sets a date filter and re-fetches history.
+  void setDateFilter({DateTime? start, DateTime? end}) {
+    _filterStartDate = start;
+    _filterEndDate = end;
+    fetchHistory(); // Re-fetch history with new filters
+  }
+
+  void clearDateFilter() {
+    _filterStartDate = null;
+    _filterEndDate = null;
+    fetchHistory(); // Re-fetch history without filters
+  }
+
+  Future<void> _loadHistoryPage({String? userId}) async {
     try {
-      final result = await _getLoyaltyHistoryUseCase(userId: userId);
+      final result = await _getLoyaltyHistoryUseCase(userId: userId, page: _currentPage, pageSize: _pageSize, startDate: _filterStartDate, endDate: _filterEndDate);
 
       result.fold(
         (failure) {
           _historyError = _getUserFriendlyError(failure.message);
         },
         (historyData) {
-          _history = historyData;
+          _history.addAll(historyData);
+          _hasMoreHistory = historyData.length >= _pageSize;
         },
       );
     } catch (e) {

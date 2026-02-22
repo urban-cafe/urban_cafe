@@ -14,7 +14,7 @@ import 'package:urban_cafe/features/auth/presentation/screens/sign_up_screen.dar
 import 'package:urban_cafe/features/loyalty/presentation/screens/admin_loyalty_history_screen.dart';
 import 'package:urban_cafe/features/loyalty/presentation/screens/client_loyalty_history_screen.dart';
 import 'package:urban_cafe/features/loyalty/presentation/screens/qr_display_screen.dart';
-import 'package:urban_cafe/features/loyalty/presentation/screens/qr_scanner_screen.dart';
+import 'package:urban_cafe/features/loyalty/presentation/screens/qr_scan_landing_screen.dart';
 import 'package:urban_cafe/features/menu/domain/entities/menu_item.dart';
 import 'package:urban_cafe/features/menu/presentation/screens/main_menu_screen.dart';
 import 'package:urban_cafe/features/menu/presentation/screens/menu_detail_screen.dart';
@@ -114,7 +114,7 @@ class AppRouter {
           ),
           // 5: QR Scanner (admin/staff)
           StatefulShellBranch(
-            routes: [GoRoute(path: AppRoutes.qrScanner, builder: (context, state) => const QrScannerScreen())],
+            routes: [GoRoute(path: AppRoutes.qrScanner, builder: (context, state) => const QrScanLandingScreen())],
           ),
         ],
       ),

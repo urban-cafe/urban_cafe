@@ -59,16 +59,35 @@ class LoyaltyRepositoryImpl implements LoyaltyRepository {
   }
 
   @override
-  Future<Either<Failure, List<LoyaltyTransaction>>> getTransactionHistory({String? userId}) async {
+  Future<Either<Failure, List<LoyaltyTransaction>>> getTransactionHistory({String? userId, int page = 0, int pageSize = 20, DateTime? startDate, DateTime? endDate}) async {
     try {
-      var query = _client.from('loyalty_transactions').select('*, profiles(id, role, loyalty_points, full_name, phone_number, address)');
+      // Join customer profile (profiles) and staff profile (staff:profiles!staff_id)
+      var query = _client
+          .from('loyalty_transactions')
+          .select(
+            '*, profiles!loyalty_transactions_user_id_fkey(id, role, loyalty_points, full_name, phone_number, address), staff:profiles!loyalty_transactions_staff_id_fkey(id, role, loyalty_points, full_name, phone_number, address)',
+          );
 
-      // If userId is provided, filter for only that user (Personal History)
+      // Filter by user if provided (Personal History)
       if (userId != null) {
         query = query.eq('user_id', userId);
       }
 
-      final response = await query.order('created_at', ascending: false);
+      // Date range filtering
+      if (startDate != null) {
+        query = query.gte('created_at', startDate.toIso8601String());
+      }
+      if (endDate != null) {
+        // Add 1 day to include the entire end date
+        final endOfDay = DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59);
+        query = query.lte('created_at', endOfDay.toIso8601String());
+      }
+
+      // Pagination
+      final from = page * pageSize;
+      final to = from + pageSize - 1;
+
+      final response = await query.order('created_at', ascending: false).range(from, to);
 
       final List<LoyaltyTransaction> transactions = response.map((json) => LoyaltyTransaction.fromJson(json)).toList();
 

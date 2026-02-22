@@ -12,12 +12,43 @@ class AdminLoyaltyHistoryScreen extends StatefulWidget {
 }
 
 class _AdminLoyaltyHistoryScreenState extends State<AdminLoyaltyHistoryScreen> {
+  final ScrollController _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<LoyaltyProvider>().fetchHistory(); // null userId fetches global ledger
+      context.read<LoyaltyProvider>().fetchHistory();
     });
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+      context.read<LoyaltyProvider>().loadMoreHistory();
+    }
+  }
+
+  Future<void> _pickDateRange() async {
+    final loyalty = context.read<LoyaltyProvider>();
+    final now = DateTime.now();
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2024),
+      lastDate: now,
+      initialDateRange: loyalty.filterStartDate != null && loyalty.filterEndDate != null
+          ? DateTimeRange(start: loyalty.filterStartDate!, end: loyalty.filterEndDate!)
+          : DateTimeRange(start: now.subtract(const Duration(days: 30)), end: now),
+    );
+    if (picked != null && mounted) {
+      loyalty.setDateFilter(start: picked.start, end: picked.end);
+    }
   }
 
   @override
@@ -33,60 +64,90 @@ class _AdminLoyaltyHistoryScreenState extends State<AdminLoyaltyHistoryScreen> {
         centerTitle: true,
         backgroundColor: cs.surface,
         scrolledUnderElevation: 0,
+        actions: [
+          if (loyalty.filterStartDate != null) IconButton(icon: const Icon(Icons.filter_alt_off_rounded), tooltip: 'Clear Filter', onPressed: () => loyalty.clearDateFilter()),
+          IconButton(icon: const Icon(Icons.date_range_rounded), tooltip: 'Filter by Date', onPressed: _pickDateRange),
+        ],
       ),
-      body: loyalty.isLoadingHistory
-          ? const Center(child: CircularProgressIndicator())
-          : loyalty.historyError != null
-          ? Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.error_outline_rounded, size: 60, color: cs.error),
-                    const SizedBox(height: 16),
-                    Text(
-                      loyalty.historyError!,
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodyLarge?.copyWith(color: cs.error),
-                    ),
-                    const SizedBox(height: 24),
-                    FilledButton(
-                      onPressed: () {
-                        context.read<LoyaltyProvider>().fetchHistory();
-                      },
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
+      body: _buildBody(loyalty, cs, theme),
+    );
+  }
+
+  Widget _buildBody(LoyaltyProvider loyalty, ColorScheme cs, ThemeData theme) {
+    if (loyalty.isLoadingHistory && loyalty.history.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (loyalty.historyError != null && loyalty.history.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline_rounded, size: 60, color: cs.error),
+              const SizedBox(height: 16),
+              Text(
+                loyalty.historyError!,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyLarge?.copyWith(color: cs.error),
               ),
-            )
-          : loyalty.history.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.history_rounded, size: 80, color: cs.onSurfaceVariant.withValues(alpha: 0.3)),
-                  const SizedBox(height: 16),
-                  Text('No transactions yet.', style: theme.textTheme.titleMedium?.copyWith(color: cs.onSurfaceVariant)),
-                ],
-              ),
-            )
-          : RefreshIndicator(
-              onRefresh: () async {
-                await context.read<LoyaltyProvider>().fetchHistory();
-              },
-              child: ListView.separated(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-                itemCount: loyalty.history.length,
-                separatorBuilder: (context, _) => const Divider(height: 32),
-                itemBuilder: (context, index) {
-                  final tx = loyalty.history[index];
-                  return _TransactionTile(tx: tx, cs: cs, theme: theme);
-                },
-              ),
+              const SizedBox(height: 24),
+              FilledButton(onPressed: () => context.read<LoyaltyProvider>().fetchHistory(), child: const Text('Retry')),
+            ],
+          ),
+        ),
+      );
+    }
+    if (loyalty.history.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.history_rounded, size: 80, color: cs.onSurfaceVariant.withValues(alpha: 0.3)),
+            const SizedBox(height: 16),
+            Text('No transactions yet.', style: theme.textTheme.titleMedium?.copyWith(color: cs.onSurfaceVariant)),
+          ],
+        ),
+      );
+    }
+
+    // Date filter chip
+    final hasFilter = loyalty.filterStartDate != null;
+    final dateFormat = DateFormat('MMM dd');
+
+    return Column(
+      children: [
+        if (hasFilter)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Chip(
+              avatar: const Icon(Icons.calendar_today_rounded, size: 16),
+              label: Text('${dateFormat.format(loyalty.filterStartDate!)} – ${dateFormat.format(loyalty.filterEndDate!)}'),
+              onDeleted: () => loyalty.clearDateFilter(),
             ),
+          ),
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: () => context.read<LoyaltyProvider>().fetchHistory(),
+            child: ListView.separated(
+              controller: _scrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              itemCount: loyalty.history.length + (loyalty.hasMoreHistory ? 1 : 0),
+              separatorBuilder: (context, _) => const Divider(height: 24),
+              itemBuilder: (context, index) {
+                if (index >= loyalty.history.length) {
+                  return const Center(
+                    child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator()),
+                  );
+                }
+                final tx = loyalty.history[index];
+                return _TransactionTile(tx: tx, cs: cs, theme: theme);
+              },
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -106,9 +167,6 @@ class _TransactionTile extends StatelessWidget {
     final icon = isEarned ? Icons.add_circle_outline_rounded : Icons.remove_circle_outline_rounded;
     final sign = isEarned ? '+' : '-';
 
-    // Admin view shows customer name
-    final customerName = tx.profile?.fullName ?? 'Unknown Customer';
-
     return Row(
       children: [
         Container(
@@ -121,15 +179,20 @@ class _TransactionTile extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(customerName, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+              Text(tx.customerName, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
               const SizedBox(height: 4),
-              Text('${tx.description} • ${dateFormat.format(tx.createdAt.toLocal())}', style: theme.textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
+              Text(dateFormat.format(tx.createdAt.toLocal()), style: theme.textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+              const SizedBox(height: 2),
+              Text(
+                'By: ${tx.staffName}',
+                style: theme.textTheme.bodySmall?.copyWith(color: cs.primary, fontWeight: FontWeight.w500),
+              ),
             ],
           ),
         ),
         const SizedBox(width: 16),
         Text(
-          '$sign${tx.points}',
+          '$sign${tx.points.abs()}',
           style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: color),
         ),
       ],

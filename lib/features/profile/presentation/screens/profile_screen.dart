@@ -115,7 +115,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       const SizedBox(height: 8),
 
                       // Account section
-                      if (auth.isClient && !isGuest) ...[
+                      if (!isGuest) ...[
                         ProfileSectionCard(
                           title: 'account'.tr(),
                           children: [ProfileActionTile(icon: Icons.edit_outlined, title: 'edit_profile'.tr(), subtitle: 'Update your name and details', onTap: () => context.push('/profile/edit'))],
