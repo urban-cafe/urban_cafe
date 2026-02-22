@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.urban_cafe"
+    namespace = "com.neoverse.urban_cafe"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -21,7 +21,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.urban_cafe"
+        applicationId = "com.neoverse.urban_cafe"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

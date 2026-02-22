@@ -1,4 +1,4 @@
-package com.example.urban_cafe
+package com.neoverse.urban_cafe
 
 import io.flutter.embedding.android.FlutterActivity
 

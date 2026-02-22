@@ -38,6 +38,7 @@ class MenuProvider extends ChangeNotifier {
   String? get currentCategoryId => _currentCategoryId; // Expose getter
 
   List<String>? _currentCategoryIds;
+  String? _currentFilter; // 'popular' or 'special'
   String _searchQuery = '';
   String get searchQuery => _searchQuery;
 
@@ -161,6 +162,7 @@ class MenuProvider extends ChangeNotifier {
     _currentCategoryId = null;
     _currentCategoryIds = null;
     _searchQuery = '';
+    _currentFilter = null;
     hasMore = true;
     _page = 1;
     error = null;
@@ -181,6 +183,7 @@ class MenuProvider extends ChangeNotifier {
     _currentCategoryId = null;
     _currentCategoryIds = null;
     _searchQuery = ''; // Reset search query
+    _currentFilter = null;
     error = null;
     loading = true;
 
@@ -252,22 +255,18 @@ class MenuProvider extends ChangeNotifier {
     _currentCategoryId = null;
     _currentCategoryIds = null;
     _searchQuery = '';
+    _currentFilter = filterType;
     error = null;
     loading = true;
+    _page = 1;
+    hasMore = true;
     notifyListeners();
 
     try {
       final isPopular = filterType == 'popular';
       final isSpecial = filterType == 'special';
 
-      final result = await getMenuItemsUseCase(
-        GetMenuItemsParams(
-          page: 1,
-          pageSize: 20, // Load more for filtered views
-          isMostPopular: isPopular,
-          isWeekendSpecial: isSpecial,
-        ),
-      );
+      final result = await getMenuItemsUseCase(GetMenuItemsParams(page: 1, pageSize: _pageSize, isMostPopular: isPopular, isWeekendSpecial: isSpecial));
 
       result.fold(
         (failure) {
@@ -275,7 +274,7 @@ class MenuProvider extends ChangeNotifier {
         },
         (newItems) {
           items = newItems;
-          hasMore = newItems.length == 20;
+          hasMore = newItems.length == _pageSize;
           if (hasMore) _page++;
         },
       );
@@ -336,7 +335,20 @@ class MenuProvider extends ChangeNotifier {
         return;
       }
 
-      final result = await getMenuItemsUseCase(GetMenuItemsParams(page: _page, pageSize: _pageSize, search: _searchQuery, categoryId: singleId, categoryIds: listIds));
+      final isPopular = _currentFilter == 'popular';
+      final isSpecial = _currentFilter == 'special';
+
+      final result = await getMenuItemsUseCase(
+        GetMenuItemsParams(
+          page: _page,
+          pageSize: _pageSize,
+          search: _searchQuery,
+          categoryId: singleId,
+          categoryIds: listIds,
+          isMostPopular: isPopular ? true : null,
+          isWeekendSpecial: isSpecial ? true : null,
+        ),
+      );
 
       result.fold(
         (failure) {
@@ -367,6 +379,7 @@ class MenuProvider extends ChangeNotifier {
     _currentCategoryIds = null;
     _currentCategoryId = null;
     _searchQuery = '';
+    _currentFilter = null;
     error = null;
     loading = true;
     notifyListeners();

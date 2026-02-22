@@ -86,7 +86,12 @@ export default {
 
     // ── 1. Check Cloudflare edge cache ────────────────────────────────────────
     const cache = caches.default;
-    const cacheKey = new Request(url.toString());
+    
+    // BUMP THIS VERSION TO FORCE A BLANKET CACHE RESET (e.g. 'v2', 'v3')
+    const CACHE_VERSION = 'v2'; 
+    const cacheUrl = new URL(request.url);
+    cacheUrl.searchParams.set('cv', CACHE_VERSION);
+    const cacheKey = new Request(cacheUrl.toString());
 
     const cached = await cache.match(cacheKey);
     if (cached) {

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:urban_cafe/core/env.dart';
 import 'package:urban_cafe/core/error/app_exception.dart';
@@ -72,17 +73,31 @@ class AuthRepositoryImpl implements AuthRepository {
     }
 
     try {
-      // On web: use an explicit https:// redirect — browsers cannot handle
-      // custom app schemes (io.supabase.urbancafe://).
-      // On mobile: use the deep-link scheme registered in AndroidManifest / Info.plist.
-      final String redirectTo = kIsWeb ? '${Env.webUrl}/#/auth/callback' : 'io.supabase.urbancafe://login-callback/';
+      if (kIsWeb) {
+        // [WEB] Standard Supabase Browser OAuth flow
+        final String redirectTo = '${Env.webUrl}/#/auth/callback';
+        final bool result = await supabaseClient.auth.signInWithOAuth(OAuthProvider.google, redirectTo: redirectTo, authScreenLaunchMode: LaunchMode.platformDefault);
+        return Right(result);
+      } else {
+        // [MOBILE / NATIVE] Triggers the beautiful native Google bottom sheet
+        final GoogleSignIn googleSignIn = GoogleSignIn(serverClientId: Env.googleWebClientId);
 
-      final bool result = await supabaseClient.auth.signInWithOAuth(
-        OAuthProvider.google,
-        redirectTo: redirectTo,
-        authScreenLaunchMode: kIsWeb ? LaunchMode.platformDefault : LaunchMode.externalApplication,
-      );
-      return Right(result);
+        final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+        if (googleUser == null) return const Left(AuthFailure('Sign in canceled by user.'));
+
+        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+        final String? idToken = googleAuth.idToken;
+        final String? accessToken = googleAuth.accessToken;
+
+        if (idToken == null || accessToken == null) {
+          return const Left(AuthFailure('Missing Google Authentication Tokens.'));
+        }
+
+        // Send tokens from the native Google plugin directly into the Supabase database
+        await supabaseClient.auth.signInWithIdToken(provider: OAuthProvider.google, idToken: idToken, accessToken: accessToken);
+
+        return const Right(true);
+      }
     } catch (e) {
       return Left(AppException.mapToFailure(e));
     }

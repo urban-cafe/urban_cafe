@@ -18,6 +18,11 @@ class Env {
     return v ?? const String.fromEnvironment('WEB_URL', defaultValue: '');
   }
 
+  static String get googleWebClientId {
+    final v = dotenv.isInitialized ? dotenv.env['GOOGLE_WEB_CLIENT_ID'] : null;
+    return v ?? const String.fromEnvironment('GOOGLE_WEB_CLIENT_ID', defaultValue: '');
+  }
+
   /// Cloudflare Worker CDN URL for Supabase Storage images.
   /// e.g. https://urbancafe-cdn.your-account.workers.dev
   static String get cdnUrl {
