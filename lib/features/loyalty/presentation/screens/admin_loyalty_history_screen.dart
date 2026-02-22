@@ -109,7 +109,7 @@ class _AdminLoyaltyHistoryScreenState extends State<AdminLoyaltyHistoryScreen> {
     return Scaffold(
       backgroundColor: cs.surface,
       appBar: AppBar(
-        title: Text('Global Transaction Ledger', style: theme.textTheme.titleMedium),
+        title: Text('points_history'.tr(), style: theme.textTheme.titleMedium),
         centerTitle: true,
         backgroundColor: cs.surface,
         scrolledUnderElevation: 0,
@@ -221,7 +221,7 @@ class _TransactionTile extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
-          child: Icon(icon, color: color, size: 24),
+          child: Icon(icon, color: color, size: 16),
         ),
         const SizedBox(width: 16),
         Expanded(
@@ -241,8 +241,8 @@ class _TransactionTile extends StatelessWidget {
         ),
         const SizedBox(width: 16),
         Text(
-          '$sign${tx.points.abs()}',
-          style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: color),
+          '$sign${tx.points.abs()} Points',
+          style: theme.textTheme.labelMedium?.copyWith(fontWeight: FontWeight.bold, color: color),
         ),
       ],
     );

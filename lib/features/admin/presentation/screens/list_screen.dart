@@ -98,6 +98,7 @@ class _AdminListScreenState extends State<AdminListScreen> {
           actions: [IconButton(icon: const Icon(Icons.history_rounded), tooltip: 'Transaction Ledger', onPressed: () => context.push(AppRoutes.adminLoyaltyHistory))],
         ),
         floatingActionButton: FloatingActionButton.extended(
+          heroTag: 'fab_admin_new_item',
           onPressed: () async {
             final menuProv = context.read<MenuProvider>();
             final bool? didCreate = await context.push<bool>('/admin/edit');

@@ -143,6 +143,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ProfileActionTile(icon: Icons.system_update_outlined, title: 'check_for_updates'.tr(), subtitle: 'check_for_updates_subtitle'.tr(), onTap: () => _checkForUpdates(context)),
                         ],
                       ),
+                      const SizedBox(height: 16),
 
                       // Logout Button
                       PrimaryButton(text: 'sign_out'.tr(), onPressed: () => _confirmSignOut(context)),

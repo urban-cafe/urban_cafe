@@ -188,7 +188,7 @@ class _ClientLoyaltyHistoryScreenState extends State<ClientLoyaltyHistoryScreen>
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Chip(
               avatar: const Icon(Icons.calendar_today_rounded, size: 16),
-              label: Text('${dateFormat.format(loyalty.filterStartDate!)} – ${dateFormat.format(loyalty.filterEndDate!)}'),
+              label: Text('${dateFormat.format(loyalty.filterStartDate!)} – ${dateFormat.format(loyalty.filterEndDate!)}', style: theme.textTheme.labelSmall),
               onDeleted: () {
                 loyalty.clearDateFilter();
                 if (_userId != null) {

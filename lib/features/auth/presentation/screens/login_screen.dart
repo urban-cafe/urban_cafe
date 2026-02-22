@@ -69,7 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: BackdropFilter(
                     filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                     child: Container(
-                      padding: const EdgeInsets.all(32),
+                      padding: const EdgeInsets.all(28),
                       decoration: BoxDecoration(
                         color: theme.cardTheme.color?.withValues(alpha: 0.85) ?? Colors.white.withValues(alpha: 0.85),
                         borderRadius: AppRadius.xxlAll,
@@ -91,7 +91,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 color: colorScheme.primary, // Tint to match theme
                               ),
                             ),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 8),
 
                             Text(
                               'welcome_back'.tr(),

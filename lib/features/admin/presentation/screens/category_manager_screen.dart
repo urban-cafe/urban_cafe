@@ -167,7 +167,12 @@ class _AdminCategoryManagerScreenState extends State<AdminCategoryManagerScreen>
       },
       child: Scaffold(
         appBar: AppBar(title: Text('manage_categories'.tr(), style: theme.textTheme.titleMedium)),
-        floatingActionButton: FloatingActionButton.extended(onPressed: () => _triggerCreate(parentId: null), label: Text('add_main'.tr()), icon: const Icon(Icons.add)),
+        floatingActionButton: FloatingActionButton.extended(
+          heroTag: 'fab_admin_add_category',
+          onPressed: () => _triggerCreate(parentId: null),
+          label: Text('add_main'.tr()),
+          icon: const Icon(Icons.add),
+        ),
 
         // Consumer to listen to Provider changes
         body: Consumer<CategoryManagerProvider>(
@@ -248,7 +253,11 @@ class _AdminCategoryManagerScreenState extends State<AdminCategoryManagerScreen>
                                             trailing: Row(
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
-                                                IconButton(icon: const Icon(Icons.edit_outlined, size: 20), tooltip: 'rename'.tr(), onPressed: isLoading ? null : () => _showRenameDialog(sub['id'], sub['name'])),
+                                                IconButton(
+                                                  icon: const Icon(Icons.edit_outlined, size: 20),
+                                                  tooltip: 'rename'.tr(),
+                                                  onPressed: isLoading ? null : () => _showRenameDialog(sub['id'], sub['name']),
+                                                ),
                                                 IconButton(
                                                   icon: Icon(Icons.delete_outline, size: 20, color: colorScheme.error),
                                                   tooltip: 'delete'.tr(),
