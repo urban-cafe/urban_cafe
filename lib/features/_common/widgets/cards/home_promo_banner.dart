@@ -20,6 +20,7 @@ class HomePromoBanner extends StatefulWidget {
 class _HomePromoBannerState extends State<HomePromoBanner> {
   final CarouselController _controller = CarouselController();
   int _currentIndex = 0;
+  double _lastItemWidth = 1.0;
 
   @override
   void initState() {
@@ -40,8 +41,7 @@ class _HomePromoBannerState extends State<HomePromoBanner> {
     if (!_controller.hasClients) return;
     final position = _controller.position;
     if (position.hasContentDimensions && position.hasPixels) {
-      final itemWidth = position.viewportDimension;
-      final newIndex = (position.pixels / itemWidth).round().clamp(0, widget.items.length - 1);
+      final newIndex = (position.pixels / _lastItemWidth).round().clamp(0, widget.items.length - 1);
       if (newIndex != _currentIndex) {
         setState(() => _currentIndex = newIndex);
       }
@@ -53,6 +53,7 @@ class _HomePromoBannerState extends State<HomePromoBanner> {
     final double height = Responsive.isCompact(context) ? 180 : 260;
     final screenWidth = MediaQuery.sizeOf(context).width;
     final itemWidth = Responsive.isCompact(context) ? screenWidth * 0.80 : Responsive.width(context, 45);
+    _lastItemWidth = itemWidth;
 
     // ── Skeleton Loading State ──────────────────────────────────────────────
     if (widget.isLoading || widget.items.isEmpty) {
