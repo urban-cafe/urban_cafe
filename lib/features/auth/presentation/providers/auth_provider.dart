@@ -34,6 +34,7 @@ class AuthProvider extends ChangeNotifier {
   UserProfile? _profile;
 
   StreamSubscription<AuthState>? _authSubscription;
+  RealtimeChannel? _profileSubscription;
 
   bool get isConfigured => Env.isConfigured;
   bool get isLoggedIn => Env.isConfigured && SupabaseClientProvider.client.auth.currentUser != null;
@@ -93,6 +94,8 @@ class AuthProvider extends ChangeNotifier {
             loading = false;
             error = null;
             _cancelOAuthTimeout(); // Cancel timeout on sign out
+            _profileSubscription?.unsubscribe();
+            _profileSubscription = null;
             notifyListeners();
             break;
 
@@ -111,6 +114,7 @@ class AuthProvider extends ChangeNotifier {
   void dispose() {
     _authSubscription?.cancel();
     _oauthTimeout?.cancel();
+    _profileSubscription?.unsubscribe();
     super.dispose();
   }
 
@@ -161,6 +165,8 @@ class AuthProvider extends ChangeNotifier {
     if (isGuest) {
       _role = UserRole.client;
       _profile = null;
+      _profileSubscription?.unsubscribe();
+      _profileSubscription = null;
       notifyListeners();
       return;
     }
@@ -176,9 +182,36 @@ class AuthProvider extends ChangeNotifier {
       (profile) {
         _profile = profile;
         _role = profile.role;
+        _listenToProfileChanges(profile.id);
       },
     );
     notifyListeners();
+  }
+
+  // ─── Realtime Profile Updates ──────────────────────────────────
+  void _listenToProfileChanges(String userId) {
+    _profileSubscription?.unsubscribe();
+
+    _profileSubscription = SupabaseClientProvider.client
+        .channel('public:profiles:id=$userId')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.update,
+          schema: 'public',
+          table: 'profiles',
+          filter: PostgresChangeFilter(type: PostgresChangeFilterType.eq, column: 'id', value: userId),
+          callback: (payload) {
+            final newPoints = payload.newRecord['loyalty_points'];
+            if (newPoints != null && _profile != null) {
+              final newPointsInt = (newPoints as num).toInt();
+              if (_profile!.loyaltyPoints != newPointsInt) {
+                _profile = _profile!.copyWith(loyaltyPoints: newPointsInt);
+                notifyListeners();
+                debugPrint('[AuthProvider] Realtime profile update: loyalty points changed to $newPointsInt');
+              }
+            }
+          },
+        )
+        .subscribe();
   }
 
   Future<void> refreshUser() async {
